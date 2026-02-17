@@ -14,6 +14,7 @@
   "dependencies": {
     "@auth/d1-adapter": "^1.11.1",
     "@auth/supabase-adapter": "^1.11.1",
+    "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.96.0",
     "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",

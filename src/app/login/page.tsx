@@ -1,20 +1,58 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { signIn } from "next-auth/react";
 import Mascot from "@/components/gamification/Mascot";
 import { Button } from "@/components/ui/button";
 import { LogIn } from "lucide-react";
-import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-
-import { useState } from "react";
 import { GraduationCap, Users, UserCog, ArrowLeft } from "lucide-react";
+import { createClient } from "@/utils/supabase/client";
 
 function LoginForm() {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const role = searchParams.get("role");
+    const supabase = createClient();
+    const [loading, setLoading] = useState(false);
+
+    const handleGoogleLogin = async () => {
+        setLoading(true);
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: `${window.location.origin}/auth/callback`,
+            },
+        });
+        if (error) {
+            console.error("Login Error:", error.message);
+            setLoading(false);
+        }
+    };
+
+    const handleEmailLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        setLoading(true);
+        const formData = new FormData(e.currentTarget);
+        const email = formData.get("email") as string;
+        const password = formData.get("password") as string;
+
+        const { error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+        });
+
+        if (error) {
+            console.error("Login Error:", error.message);
+            setLoading(false);
+            // Fallback for pre-seeded mentors if they aren't in Supabase yet? 
+            // Better to show error.
+            alert("Login gagal: " + error.message);
+        } else {
+            router.push("/mentor");
+        }
+    };
 
     return (
         <motion.div
@@ -28,18 +66,7 @@ function LoginForm() {
                         <span className="px-3 py-1 bg-slate-800 text-white rounded-full text-[10px] font-black uppercase tracking-widest">Akses Dashboard Mentor</span>
                     </div>
 
-                    <form
-                        onSubmit={(e) => {
-                            e.preventDefault();
-                            const formData = new FormData(e.currentTarget);
-                            signIn("credentials", {
-                                email: formData.get("email"),
-                                password: formData.get("password"),
-                                callbackUrl: "/mentor"
-                            });
-                        }}
-                        className="space-y-4"
-                    >
+                    <form onSubmit={handleEmailLogin} className="space-y-4">
                         <div className="space-y-2">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email</label>
                             <input
@@ -62,9 +89,10 @@ function LoginForm() {
                         </div>
                         <Button
                             type="submit"
+                            disabled={loading}
                             className="w-full py-7 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl font-bold text-lg transition-all shadow-xl active:scale-95 flex items-center justify-center gap-3"
                         >
-                            <LogIn className="h-5 w-5" /> MASUK KE DASHBOARD
+                            <LogIn className="h-5 w-5" /> {loading ? "MOHON TUNGGU..." : "MASUK KE DASHBOARD"}
                         </Button>
                     </form>
                 </div>
@@ -77,7 +105,8 @@ function LoginForm() {
                     </div>
 
                     <Button
-                        onClick={() => signIn("google", { callbackUrl: "/map" })}
+                        onClick={handleGoogleLogin}
+                        disabled={loading}
                         className="w-full py-7 bg-white hover:bg-slate-50 text-slate-700 border-2 border-slate-200 rounded-2xl shadow-[0_4px_0_rgb(226,232,240)] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-4 text-lg font-bold"
                     >
                         <svg className="w-6 h-6" viewBox="0 0 24 24">
@@ -98,7 +127,7 @@ function LoginForm() {
                                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                             />
                         </svg>
-                        Lanjutkan dengan Google
+                        {loading ? "Menghubungkan..." : "Lanjutkan dengan Google"}
                     </Button>
                 </div>
             )}

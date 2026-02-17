@@ -2,21 +2,21 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Mascot from "@/components/gamification/Mascot";
-import { User, Users, GraduationCap, CheckCircle2 } from "lucide-react";
+import { User as UserIcon, Users, GraduationCap, CheckCircle2 } from "lucide-react";
+import { useAuth } from "@/components/providers/AuthProvider";
 
 export default function ProfileRegistration() {
-    const { data: session, update } = useSession();
+    const { user } = useAuth();
     const router = useRouter();
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
 
     const [formData, setFormData] = useState({
         role: 'student',
-        name: session?.user?.name || '',
+        name: user?.user_metadata?.full_name || '',
         kelas: '',
         gender: 'Laki-laki'
     });
@@ -34,12 +34,7 @@ export default function ProfileRegistration() {
             });
 
             if (response.ok) {
-                // Update session state so middleware knows we are done
-                await update({
-                    isProfileComplete: true,
-                    name: formData.name,
-                    role: formData.role
-                });
+                // Profile updated in DB, now redirect
                 router.push('/map');
             }
         } catch (error) {
@@ -118,7 +113,7 @@ export default function ProfileRegistration() {
                             <div className="space-y-6">
                                 <div className="space-y-2">
                                     <label className="text-sm font-black text-slate-700 uppercase tracking-widest flex items-center gap-2">
-                                        <User className="h-4 w-4" /> Nama Lengkap
+                                        <UserIcon className="h-4 w-4" /> Nama Lengkap
                                     </label>
                                     <input
                                         type="text"

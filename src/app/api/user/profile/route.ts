@@ -1,29 +1,40 @@
-import { auth } from "@/auth";
+import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
 export const runtime = "edge";
 
 export async function POST(req: Request) {
     try {
-        const session = await auth();
-        if (!session?.user) {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
         const data = await req.json();
         const { role, name, kelas, gender } = data;
 
-        const db = (process.env.DB as any);
+        // Update profile in Supabase (Postgres)
+        const { error } = await supabase
+            .from('users')
+            .update({
+                role,
+                name,
+                kelas,
+                gender
+            })
+            .eq('id', user.id);
 
-        if (!db || !db.prepare) {
-            console.warn("DB binding not found or invalid. Profile update skipped (Local Dev mode).");
-            return NextResponse.json({ success: true, message: "Profile update skipped in local dev" });
+        if (error) {
+            console.error("Supabase profile update error:", error);
+            return NextResponse.json({ error: error.message }, { status: 500 });
         }
 
-        // Update the user record. Auth.js already created it on first sign in.
-        await db.prepare(
-            "UPDATE users SET role = ?, name = ?, kelas = ?, gender = ? WHERE id = ?"
-        ).bind(role, name, kelas, gender, (session.user as any).id).run();
+        // Also update auth metadata for faster UI access
+        await supabase.auth.updateUser({
+            data: { role, name, isProfileComplete: true }
+        });
 
         return NextResponse.json({ success: true });
     } catch (error) {

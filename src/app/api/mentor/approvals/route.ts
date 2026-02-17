@@ -1,32 +1,46 @@
-export const runtime = "edge";
-
+import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from 'next/server';
+
+export const runtime = "edge";
 
 export async function GET(req: NextRequest) {
     try {
-        // In real app, verify mentor session here
-        // const session = await auth();
-        // const mentorId = session.user.id;
-        const mentorId = req.nextUrl.searchParams.get('mentor_id'); // Mock for now
+        const supabase = await createClient();
+        const { data: { user: mentor } } = await supabase.auth.getUser();
 
-        const db = process.env.DB as any;
-
-        if (!db) {
-            return NextResponse.json({ error: "Database binding not found" }, { status: 500 });
+        if (!mentor || mentor.user_metadata?.role !== 'mentor') {
+            return NextResponse.json({ error: "Unauthorized: Mentors only" }, { status: 401 });
         }
 
-        // specific group's pending approvals
-        const results = await db.prepare(
-            `SELECT a.*, u.name as student_name, l.node_type 
-       FROM approvals a
-       JOIN users u ON a.student_id = u.id
-       JOIN lessons l ON a.lesson_id = l.id
-       WHERE a.mentor_id = ? AND a.status = 'pending'`
-        ).bind(mentorId).all();
+        const mentorId = mentor.id;
 
-        return NextResponse.json({ approvals: results.results });
+        // Fetch pending approvals with student and lesson info
+        const { data, error } = await supabase
+            .from('approvals')
+            .select(`
+                *,
+                student:users!student_id(name),
+                lesson:lessons!lesson_id(node_type)
+            `)
+            .eq('mentor_id', mentorId)
+            .eq('status', 'pending');
+
+        if (error) {
+            console.error("Fetch approvals error:", error);
+            return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+
+        // Map results to match expected frontend structure
+        const results = data.map(item => ({
+            ...item,
+            student_name: item.student?.name || 'Anonymous',
+            node_type: item.lesson?.node_type || 'story'
+        }));
+
+        return NextResponse.json({ approvals: results });
 
     } catch (error) {
+        console.error("Approvals fetch error:", error);
         return NextResponse.json({ error: "Failed to fetch approvals" }, { status: 500 });
     }
 }

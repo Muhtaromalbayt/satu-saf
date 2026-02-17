@@ -2,28 +2,28 @@
 
 import { Heart, Flame, LogOut, User as UserIcon } from "lucide-react";
 import { useGamification } from "@/context/GamificationContext";
-import { useSession, signOut } from "next-auth/react";
+import { useAuth } from "@/components/providers/AuthProvider";
 
 export default function Header() {
   const { hearts, streak } = useGamification();
-  const { data: session } = useSession();
+  const { user, signOut } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 max-w-md items-center justify-between px-4">
         {/* Branding & Profile */}
         <div className="flex items-center gap-3 font-geist-sans">
-          {session?.user ? (
+          {user ? (
             <div className="flex items-center gap-2">
               <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
                 <UserIcon className="h-5 w-5 text-primary" />
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="text-[13px] font-black text-slate-800 truncate max-w-[100px] leading-tight capitalize">
-                  {session.user.name?.split(' ')[0]}
+                  {user.user_metadata?.full_name?.split(' ')[0] || user.email?.split('@')[0]}
                 </span>
                 <span className="text-[9px] text-primary font-black uppercase tracking-widest leading-none">
-                  {(session.user as any).role}
+                  {user.user_metadata?.role || 'Santri'}
                 </span>
               </div>
             </div>
@@ -48,9 +48,9 @@ export default function Header() {
             <span className="font-bold text-sm tracking-tight">{hearts}</span>
           </div>
 
-          {session?.user && (
+          {user && (
             <button
-              onClick={() => signOut({ callbackUrl: '/login' })}
+              onClick={() => signOut()}
               className="ml-1 p-2 bg-slate-100/80 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-xl transition-all active:scale-95"
               title="Logout"
             >

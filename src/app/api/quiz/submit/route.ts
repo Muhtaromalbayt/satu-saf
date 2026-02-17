@@ -1,50 +1,62 @@
-export const runtime = "edge";
-
+import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from 'next/server';
 
-// Environment wrapper for TypeScript to recognize DB binding
-interface Env {
-    DB: any; // D1Database
-}
+export const runtime = "edge";
 
 export async function POST(req: NextRequest) {
     try {
-        const { userId, lessonId, result } = await req.json(); // result: { isCorrect: boolean }
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-        // Hack to get binding in Next.js (process.env.DB or req.env if using middleware)
-        // For now assuming process.env.DB as per prompt instructions, typical in some CF setups
-        const db = process.env.DB as any;
-
-        if (!db) {
-            // Fallback for local development without wrangler dev
-            return NextResponse.json({ error: "Database binding not found" }, { status: 500 });
+        if (!user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        if (result.isCorrect) {
-            // 1. Increment Quiz Progress
-            // 2. Add XP
-            await db.prepare(
-                `UPDATE users SET xp = xp + 10, last_active_at = ? WHERE id = ?`
-            ).bind(Date.now(), userId).run();
+        const { lessonId, result } = await req.json(); // result: { isCorrect: boolean }
+        const userId = user.id;
 
-            // 3. Mark Lesson as Complete in Progress
-            const existingProgress = await db.prepare(
-                `SELECT * FROM progress WHERE user_id = ? AND lesson_id = ?`
-            ).bind(userId, lessonId).first();
+        if (result.isCorrect) {
+            // 1. Add XP and update activity
+            // Using direct updates for now as fallback for no RPC
+            const { data: userData } = await supabase.from('users').select('xp').eq('id', userId).single();
+            await supabase
+                .from('users')
+                .update({
+                    xp: (userData?.xp || 0) + 10,
+                    last_active_at: new Date().toISOString()
+                })
+                .eq('id', userId);
+
+            // 2. Mark Lesson as Complete in Progress
+            const { data: existingProgress } = await supabase
+                .from('progress')
+                .select('*')
+                .eq('user_id', userId)
+                .eq('lesson_id', lessonId)
+                .single();
 
             if (!existingProgress) {
-                await db.prepare(
-                    `INSERT INTO progress (user_id, lesson_id, is_verified) VALUES (?, ?, 1)`
-                ).bind(userId, lessonId).run();
+                await supabase
+                    .from('progress')
+                    .insert({
+                        user_id: userId,
+                        lesson_id: lessonId,
+                        is_verified: true
+                    });
             }
 
             return NextResponse.json({ message: "Correct! XP Added.", correct: true });
 
         } else {
             // Wrong Answer: Decrement Hearts
-            await db.prepare(
-                `UPDATE users SET hearts = MAX(0, hearts - 1), last_active_at = ? WHERE id = ?`
-            ).bind(Date.now(), userId).run();
+            const { data: userData } = await supabase.from('users').select('hearts').eq('id', userId).single();
+            await supabase
+                .from('users')
+                .update({
+                    hearts: Math.max(0, (userData?.hearts || 0) - 1),
+                    last_active_at: new Date().toISOString()
+                })
+                .eq('id', userId);
 
             return NextResponse.json({ message: "Wrong! Heart lost.", correct: false });
         }
