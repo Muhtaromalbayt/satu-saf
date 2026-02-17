@@ -12,8 +12,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@auth/d1-adapter": "^1.11.1",
-    "@auth/supabase-adapter": "^1.11.1",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.96.0",
     "canvas-confetti": "^1.9.4",
@@ -22,7 +20,6 @@
     "framer-motion": "^12.34.0",
     "lucide-react": "^0.564.0",
     "next": "15.1.7",
-    "next-auth": "^5.0.0-beta.30",
     "radix-ui": "^1.4.3",
     "react": "19.2.3",
     "react-dom": "19.2.3",
