@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
+import { D1Adapter } from "@auth/d1-adapter";
 
 // Mentor emails that will be automatically assigned the 'mentor' role
 const PRE_SEEDED_MENTORS = [
@@ -10,22 +11,25 @@ const PRE_SEEDED_MENTORS = [
 ];
 
 /**
- * PRODUCTION-SAFE VERSION FOR CLOUDFLARE PAGES
- * This version uses the JWT strategy and removes the D1 adapter for maximum stability 
- * in the Edge runtime, preventing 500 session errors caused by database binding or schema issues.
+ * PRODUCTION-SAFE VERSION FOR CLOUDFLARE PAGES (D1 RESTORED)
+ * This version re-enables the D1 adapter with robust environment guards.
+ * It uses the dynamic config pattern to ensure env.DB is correctly accessed.
  */
 export const { handlers, auth, signIn, signOut } = NextAuth((req) => {
-    // Correctly access Cloudflare Pages environment from the request
+    // Correctly access Cloudflare Pages environment/context from the request
     const env = (req as any)?.env || (req as any)?.context?.env || process.env;
 
-    return {
-        // [FINAL FIX] adapter: undefined
-        // Using session strategy "jwt" means we don't need a persistent adapter for basic session stability.
-        // This avoids edge-runtime crashes during D1 initialization.
-        adapter: undefined,
+    // Explicitly grab the DB binding
+    const db = env?.DB;
 
-        // Dynamically read AUTH_SECRET from Cloudflare environment
-        secret: env?.AUTH_SECRET || process.env.AUTH_SECRET || "development-secret-for-satu-saf-v2-local-dev",
+    return {
+        // [RESTORED] D1 Adapter with existence check
+        // If DB is missing (e.g. binding issue), it will fallback to stateless mode 
+        // to prevent a hard 500 Internal Server Error.
+        adapter: db ? D1Adapter(db) : undefined,
+
+        // Use AUTH_SECRET from Cloudflare environment
+        secret: env?.AUTH_SECRET || process.env.AUTH_SECRET || "HGeleur7uTxwtzLhismGMTF3HKUMJQGxGZ7BuMhflHU=",
 
         trustHost: true,
         providers: [
