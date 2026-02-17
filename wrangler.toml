@@ -8,3 +8,4 @@ pages_build_output_dir = ".vercel/output/static"
 binding = "DB" # Available as process.env.DB
 database_name = "satusaf-db"
 database_id = "d166ff4b-4118-44f9-94ab-39d725c7affb"
+migrations_dir = "migrations"

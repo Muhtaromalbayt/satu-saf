@@ -6,6 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "pages:build": "npx @cloudflare/next-on-pages",
+    "db:migrate": "wrangler d1 migrations apply satusaf-db --remote",
+    "db:list": "wrangler d1 list",
     "start": "next start",
     "lint": "eslint"
   },
