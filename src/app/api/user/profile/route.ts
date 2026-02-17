@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 
-// runtime removed for diagnostic
+export const runtime = "edge";
 
 export async function POST(req: Request) {
     try {

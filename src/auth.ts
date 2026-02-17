@@ -1,7 +1,6 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
-import { D1Adapter } from "@auth/d1-adapter";
 
 // Mentor emails that will be automatically assigned the 'mentor' role
 const PRE_SEEDED_MENTORS = [
@@ -11,26 +10,25 @@ const PRE_SEEDED_MENTORS = [
 ];
 
 /**
- * Configure Auth.js with dynamic environment access for Cloudflare Edge.
- * In Cloudflare Pages, environment variables and D1 bindings are passed via the request object.
+ * PRODUCTION-SAFE VERSION FOR CLOUDFLARE PAGES
+ * This version uses the JWT strategy and removes the D1 adapter for maximum stability 
+ * in the Edge runtime, preventing 500 session errors caused by database binding or schema issues.
  */
 export const { handlers, auth, signIn, signOut } = NextAuth((req) => {
-    // Attempt to read environment from Cloudflare Request (next-on-pages)
+    // Correctly access Cloudflare Pages environment from the request
     const env = (req as any)?.env || (req as any)?.context?.env || process.env;
 
-    // Explicitly check for DB binding
-    const db = env?.DB;
-
     return {
-        // Step 1 Debug: Matikan adapter (Super Cepat)
+        // [FINAL FIX] adapter: undefined
+        // Using session strategy "jwt" means we don't need a persistent adapter for basic session stability.
+        // This avoids edge-runtime crashes during D1 initialization.
         adapter: undefined,
 
-        // Use AUTH_SECRET from Cloudflare env if available, otherwise process.env
+        // Dynamically read AUTH_SECRET from Cloudflare environment
         secret: env?.AUTH_SECRET || process.env.AUTH_SECRET || "development-secret-for-satu-saf-v2-local-dev",
 
         trustHost: true,
         providers: [
-            // Resilient Google Provider initialization
             ...(env?.AUTH_GOOGLE_ID && env?.AUTH_GOOGLE_SECRET ? [
                 Google({
                     clientId: env.AUTH_GOOGLE_ID,
@@ -49,7 +47,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => {
                     const email = credentials.email as string;
                     const password = credentials.password as string;
 
-                    // Simple check for pre-seeded mentors
                     if (PRE_SEEDED_MENTORS.includes(email) && password === "alfath2026") {
                         return { id: email, email, name: email.split('@')[0], role: 'mentor' };
                     }
