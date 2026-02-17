@@ -12,6 +12,9 @@ export async function GET(request: Request) {
 
     if (code) {
         const supabase = await createClient()
+        if (!supabase) {
+            return NextResponse.redirect(`${origin}/auth/auth-code-error?error=missing_config`)
+        }
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (!error) {
             const forwardedHost = request.headers.get('x-forwarded-host') // localhost:3000

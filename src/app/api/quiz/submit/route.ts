@@ -6,6 +6,9 @@ export const runtime = "edge";
 export async function POST(req: NextRequest) {
     try {
         const supabase = await createClient();
+        if (!supabase) {
+            return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
+        }
         const { data: { user } } = await supabase.auth.getUser();
 
         if (!user) {
