@@ -1,4 +1,4 @@
-export const runtime = "edge";
+// runtime removed for diagnostic
 
 import LessonContainer from "@/components/lesson/LessonContainer";
 import { MOCK_CHAPTERS } from "@/data/mockData";

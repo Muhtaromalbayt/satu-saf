@@ -1,4 +1,4 @@
-export const runtime = "edge";
+// runtime removed for diagnostic
 
 import { NextRequest, NextResponse } from 'next/server';
 
