@@ -11,12 +11,16 @@ const PRE_SEEDED_MENTORS = [
 ];
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-    // Use D1 Adapter ONLY if DB binding is available
+    // Use D1 Adapter ONLY if DB binding is available and working
     adapter: (() => {
-        if (process.env.DB) {
-            return D1Adapter(process.env.DB as any);
+        try {
+            if (process.env.DB) {
+                return D1Adapter(process.env.DB as any);
+            }
+        } catch (e) {
+            console.error("D1 Adapter initialization failed:", e);
         }
-        console.warn("D1 Database binding 'DB' not found. Auth.js will use temporary session strategy.");
+        console.warn("D1 Database binding 'DB' not found or failed. Auth.js will use temporary session strategy.");
         return undefined;
     })(),
     secret: process.env.AUTH_SECRET || "development-secret-for-satu-saf-v2-local-dev",
@@ -40,6 +44,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 const email = credentials.email as string;
                 const password = credentials.password as string;
 
+                // Simple check for pre-seeded mentors
                 if (PRE_SEEDED_MENTORS.includes(email) && password === "alfath2026") {
                     return { id: email, email, name: email.split('@')[0], role: 'mentor' };
                 }
