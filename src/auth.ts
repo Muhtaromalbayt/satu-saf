@@ -12,7 +12,13 @@ const PRE_SEEDED_MENTORS = [
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
     // Use D1 Adapter ONLY if DB binding is available (Production/Wrangler Dev)
-    adapter: (process.env.DB as any) ? D1Adapter(process.env.DB as any) : undefined,
+    adapter: (() => {
+        if (process.env.DB) {
+            return D1Adapter(process.env.DB as any);
+        }
+        console.warn("D1 Database binding 'DB' not found. Auth.js will use temporary session strategy.");
+        return undefined;
+    })(),
     secret: process.env.AUTH_SECRET || "development-secret-for-satu-saf-v2-local-dev", // Fallback for local dev
     trustHost: true,
     providers: [
