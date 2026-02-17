@@ -22,8 +22,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => {
     const db = env?.DB;
 
     return {
-        // Support D1 Adapter if binding exists
-        adapter: db ? D1Adapter(db) : undefined,
+        // Step 1 Debug: Matikan adapter (Super Cepat)
+        adapter: undefined,
 
         // Use AUTH_SECRET from Cloudflare env if available, otherwise process.env
         secret: env?.AUTH_SECRET || process.env.AUTH_SECRET || "development-secret-for-satu-saf-v2-local-dev",
