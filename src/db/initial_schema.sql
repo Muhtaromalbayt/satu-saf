@@ -49,10 +49,11 @@ CREATE TABLE IF NOT EXISTS verification_tokens (
 );
 
 -- Lessons Table
+DROP TABLE IF EXISTS lessons;
 CREATE TABLE IF NOT EXISTS lessons (
     id TEXT PRIMARY KEY,
     chapter_day INTEGER NOT NULL,
-    node_type TEXT CHECK(node_type IN ('story', 'quiz', 'recite', 'action', 'checklist')) NOT NULL,
+    node_type TEXT CHECK(node_type IN ('story', 'quiz', 'recite', 'action', 'checklist', 'pair_matching', 'challenge')) NOT NULL,
     content_json TEXT NOT NULL, -- JSON string of the slide content
     created_at INTEGER DEFAULT (strftime('%s', 'now'))
 );

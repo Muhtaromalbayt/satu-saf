@@ -7,4 +7,4 @@ pages_build_output_dir = ".vercel/output/static"
 [[d1_databases]]
 binding = "DB" # Available as process.env.DB
 database_name = "satusaf-db"
-database_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" # Replace with real ID
+database_id = "d166ff4b-4118-44f9-94ab-39d725c7affb"
