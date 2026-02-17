@@ -11,18 +11,8 @@ const PRE_SEEDED_MENTORS = [
 ];
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-    // Use D1 Adapter ONLY if DB binding is available and working
-    adapter: (() => {
-        try {
-            if (process.env.DB) {
-                return D1Adapter(process.env.DB as any);
-            }
-        } catch (e) {
-            console.error("D1 Adapter initialization failed:", e);
-        }
-        console.warn("D1 Database binding 'DB' not found or failed. Auth.js will use temporary session strategy.");
-        return undefined;
-    })(),
+    // Temporarily disabled D1 Adapter to isolate 500 error
+    // adapter: D1Adapter(process.env.DB as any),
     secret: process.env.AUTH_SECRET || "development-secret-for-satu-saf-v2-local-dev",
     trustHost: true,
     providers: [
