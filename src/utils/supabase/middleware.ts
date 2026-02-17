@@ -6,9 +6,18 @@ export async function updateSession(request: NextRequest) {
         request,
     })
 
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+    // Defensive check: If variables are missing, don't crash the whole site
+    if (!supabaseUrl || !supabaseAnonKey) {
+        console.warn("Supabase environment variables are missing. Middleware skipping session update.")
+        return supabaseResponse
+    }
+
     const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        supabaseUrl,
+        supabaseAnonKey,
         {
             cookies: {
                 getAll() {
@@ -37,8 +46,12 @@ export async function updateSession(request: NextRequest) {
         return supabaseResponse
     }
 
-    // refreshing the auth token
-    await supabase.auth.getUser()
+    // refreshing the auth token safely
+    try {
+        await supabase.auth.getUser()
+    } catch (e) {
+        console.error("Middleware Auth Error:", e)
+    }
 
     return supabaseResponse
 }
