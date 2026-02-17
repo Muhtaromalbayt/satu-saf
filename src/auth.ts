@@ -10,20 +10,28 @@ const PRE_SEEDED_MENTORS = [
     'mentor3@gmail.com'
 ];
 
+/**
+ * Configure Auth.js with dynamic environment access for Cloudflare Edge.
+ * In Cloudflare Pages, environment variables and D1 bindings are passed via the request object.
+ */
 export const { handlers, auth, signIn, signOut } = NextAuth((req) => {
-    // Access environment from request (Cloudflare Pages Edge Runtime) or fallback to process.env
-    const env = (req as any)?.env ?? process.env;
+    // Attempt to read environment from Cloudflare Request (next-on-pages)
+    const env = (req as any)?.env || (req as any)?.context?.env || process.env;
+
+    // Explicitly check for DB binding
+    const db = env?.DB;
 
     return {
-        // Re-enabled D1 Adapter using the correct environment binding
-        adapter: env.DB ? D1Adapter(env.DB) : undefined,
+        // Support D1 Adapter if binding exists
+        adapter: db ? D1Adapter(db) : undefined,
 
-        // Priority for secret: req.env -> process.env -> fallback
-        secret: env.AUTH_SECRET || process.env.AUTH_SECRET || "development-secret-for-satu-saf-v2-local-dev",
+        // Use AUTH_SECRET from Cloudflare env if available, otherwise process.env
+        secret: env?.AUTH_SECRET || process.env.AUTH_SECRET || "development-secret-for-satu-saf-v2-local-dev",
 
         trustHost: true,
         providers: [
-            ...(env.AUTH_GOOGLE_ID && env.AUTH_GOOGLE_SECRET ? [
+            // Resilient Google Provider initialization
+            ...(env?.AUTH_GOOGLE_ID && env?.AUTH_GOOGLE_SECRET ? [
                 Google({
                     clientId: env.AUTH_GOOGLE_ID,
                     clientSecret: env.AUTH_GOOGLE_SECRET,
