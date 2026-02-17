@@ -22,10 +22,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     secret: process.env.AUTH_SECRET || "development-secret-for-satu-saf-v2-local-dev", // Fallback for local dev
     trustHost: true,
     providers: [
-        Google({
-            clientId: process.env.AUTH_GOOGLE_ID,
-            clientSecret: process.env.AUTH_GOOGLE_SECRET,
-        }),
+        ...(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET ? [
+            Google({
+                clientId: process.env.AUTH_GOOGLE_ID,
+                clientSecret: process.env.AUTH_GOOGLE_SECRET,
+            })
+        ] : []),
         Credentials({
             name: "Mentor Credentials",
             credentials: {
