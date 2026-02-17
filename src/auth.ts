@@ -1,7 +1,8 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
-import { D1Adapter } from "@auth/d1-adapter";
+import { SupabaseAdapter } from "@auth/supabase-adapter";
+import { createClient } from "@supabase/supabase-js";
 
 // Mentor emails that will be automatically assigned the 'mentor' role
 const PRE_SEEDED_MENTORS = [
@@ -11,25 +12,31 @@ const PRE_SEEDED_MENTORS = [
 ];
 
 /**
- * PRODUCTION-SAFE VERSION FOR CLOUDFLARE PAGES (D1 RESTORED)
- * This version re-enables the D1 adapter with robust environment guards.
- * It uses the dynamic config pattern to ensure env.DB is correctly accessed.
+ * PRODUCTION-SAFE VERSION FOR CLOUDFLARE PAGES (SUPABASE RESTORED)
+ * This version uses the Supabase Adapter for maximum stability and ease of management.
+ * It initializes the Supabase client dynamically to ensure it works in the Edge runtime.
  */
 export const { handlers, auth, signIn, signOut } = NextAuth((req) => {
-    // Correctly access Cloudflare Pages environment/context from the request
+    // Access Cloudflare Pages environment/context from the request
     const env = (req as any)?.env || (req as any)?.context?.env || process.env;
 
-    // Explicitly grab the DB binding
-    const db = env?.DB;
+    // Initialize Supabase Client dynamically
+    const supabaseUrl = env?.SUPABASE_URL || process.env.SUPABASE_URL;
+    const supabaseServiceRoleKey = env?.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    // Use Supabase Adapter if credentials exist, otherwise fallback to stateless mode
+    const adapter = (supabaseUrl && supabaseServiceRoleKey)
+        ? SupabaseAdapter({
+            url: supabaseUrl,
+            secret: supabaseServiceRoleKey,
+        })
+        : undefined;
 
     return {
-        // [RESTORED] D1 Adapter with existence check
-        // If DB is missing (e.g. binding issue), it will fallback to stateless mode 
-        // to prevent a hard 500 Internal Server Error.
-        adapter: db ? D1Adapter(db) : undefined,
+        adapter: adapter,
 
         // Use AUTH_SECRET from Cloudflare environment
-        secret: env?.AUTH_SECRET || process.env.AUTH_SECRET || "HGeleur7uTxwtzLhismGMTF3HKUMJQGxGZ7BuMhflHU=",
+        secret: env?.AUTH_SECRET || process.env.AUTH_SECRET || "development-secret-for-satu-saf-v2-local-dev",
 
         trustHost: true,
         providers: [
