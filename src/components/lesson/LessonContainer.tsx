@@ -65,9 +65,10 @@ const getMockSlides = (type: NodeType, lessonId: string): Slide[] => {
     return [{ id: 'default', type: 'story', content: { title: "Loading...", text: "Content coming soon." } }];
 };
 
+import { LevelNodeData } from "@/lib/types";
 import MascotToast from "../gamification/MascotToast";
 
-export default function LessonContainer({ lessonId, type }: { lessonId: string, type: NodeType }) {
+export default function LessonContainer({ lessonId, type, initialData }: { lessonId: string, type: NodeType, initialData?: LevelNodeData }) {
     const router = useRouter();
     const { hearts, xp, streak, decrementHearts, addXp, completeNode, addOneHeart } = useGamification();
     const [slideIndex, setSlideIndex] = useState(0);
@@ -88,7 +89,12 @@ export default function LessonContainer({ lessonId, type }: { lessonId: string, 
     const { playSound } = useSound();
 
     // Initial fetch of slides
-    const [slides] = useState(() => getMockSlides(type, lessonId));
+    const [slides] = useState(() => {
+        // If initialData is provided and has slides, we could use them. 
+        // For now, LevelNodeData doesn't directly have Slide[], but MOCK_CHAPTERS nodes do.
+        // We'll keep the generator for now but accept the prop to satisfy TS.
+        return getMockSlides(type, lessonId);
+    });
     const currentSlide = slides[slideIndex];
 
     const progress = ((slideIndex + 1) / (slides.length || 1)) * 100;
