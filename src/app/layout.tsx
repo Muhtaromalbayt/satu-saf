@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-// import Header from "@/components/layout/Header";
-// import BottomNav from "@/components/layout/BottomNav";
+import Header from "@/components/layout/Header";
+import BottomNav from "@/components/layout/BottomNav";
 import { GamificationProvider } from "@/context/GamificationContext";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 
@@ -34,11 +34,11 @@ export default function RootLayout({
         <AuthProvider>
           <GamificationProvider>
             <div className="relative flex min-h-screen flex-col bg-background">
-              {/* <Header /> */}
+              <Header />
               <main className="flex-1 pb-20">
                 {children}
               </main>
-              {/* <BottomNav /> */}
+              <BottomNav />
             </div>
           </GamificationProvider>
         </AuthProvider>
