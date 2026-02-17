@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="result"></div>
+    <script>
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            
+            const threshold = 10;
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i+1];
+                const b = data[i+2];
+                if (r > 255 - threshold && g > 255 - threshold && b > 255 - threshold) {
+                    data[i+3] = 0;
+                }
+            }
+            ctx.putImageData(imageData, 0, 0);
+            
+            // Minimal autocrop (optional, but good)
+            const resultDataUrl = canvas.toDataURL('image/png');
+            document.getElementById('result').innerText = resultDataUrl;
+            console.log("DONE");
+        };
+        img.src = 'temp_icon.jpg';
+    </script>
+</body>
+</html>
