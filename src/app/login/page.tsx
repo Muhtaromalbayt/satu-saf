@@ -18,6 +18,10 @@ function LoginForm() {
     const [loading, setLoading] = useState(false);
 
     const handleGoogleLogin = async () => {
+        if (!supabase) {
+            alert("Sistem autentikasi belum siap. Periksa konfigurasi Supabase.");
+            return;
+        }
         setLoading(true);
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
@@ -33,6 +37,10 @@ function LoginForm() {
 
     const handleEmailLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (!supabase) {
+            alert("Sistem autentikasi belum siap.");
+            return;
+        }
         setLoading(true);
         const formData = new FormData(e.currentTarget);
         const email = formData.get("email") as string;
