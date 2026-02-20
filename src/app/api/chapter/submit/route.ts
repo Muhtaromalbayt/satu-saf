@@ -1,5 +1,7 @@
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/server/db";
+
+export const dynamic = 'force-dynamic';
 import { progress } from "@/lib/server/db/schema";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
