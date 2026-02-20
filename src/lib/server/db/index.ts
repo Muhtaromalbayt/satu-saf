@@ -10,15 +10,17 @@ export function getDb(databaseUrl?: string) {
     const url = databaseUrl || process.env.DATABASE_URL;
 
     if (!url) {
-        // Avoid crashing during static analysis or build phase
-        if (process.env.NODE_ENV === 'production' || process.env.NEXT_PHASE === 'phase-production-build') {
+        // Avoid crashing ONLY during the build phase. 
+        // At runtime, we WANT it to throw if the DB is missing so we can see the error.
+        const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build' || process.env.CI;
+
+        if (isBuildPhase) {
             console.warn("⚠️ DATABASE_URL is not set. Using a dummy connection for build/compatibility.");
-            // Returning a dummy client that won't throw until actually called
             const client = createClient({ url: "https://dummy.db" });
             dbInstance = drizzleLibSql(client, { schema });
             return dbInstance;
         }
-        throw new Error("No database configuration found. Set DATABASE_URL in .env");
+        throw new Error("No database configuration found. Set DATABASE_URL in Cloudflare environment variables.");
     }
 
     const client = createClient({ url });
