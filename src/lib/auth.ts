@@ -8,7 +8,7 @@ export const auth = betterAuth({
     database: drizzleAdapter(getDb(), {
         provider: "sqlite",
     }),
-    baseURL: process.env.BETTER_AUTH_URL || (isBuildPhase ? "https://dummy.com" : undefined),
+    baseURL: process.env.BETTER_AUTH_URL || (isBuildPhase ? "https://dummy.com" : process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : undefined),
     secret: process.env.BETTER_AUTH_SECRET || (isBuildPhase ? "dummy-secret-only-for-build-phase-12345678" : undefined),
     emailAndPassword: {
         enabled: true,
