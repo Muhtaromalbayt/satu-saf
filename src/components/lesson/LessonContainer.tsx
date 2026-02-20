@@ -71,8 +71,20 @@ export default function LessonContainer({
 
     const handleClose = () => router.push("/map");
 
+    const playSound = (type: 'ding' | 'success' | 'error') => {
+        const sounds = {
+            ding: "https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3",
+            success: "https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3",
+            error: "https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3"
+        };
+        const audio = new Audio(sounds[type]);
+        audio.volume = 0.3;
+        audio.play().catch(() => { });
+    };
+
     const handleNext = () => {
         if (slideIndex < slides.length - 1) {
+            playSound('ding');
             setSlideIndex(prev => prev + 1);
         }
     };
@@ -83,8 +95,10 @@ export default function LessonContainer({
 
     const handleQuizAnswer = (isCorrect: boolean) => {
         if (!isCorrect) {
+            playSound('error');
             decrementHearts();
         } else {
+            playSound('success');
             handleNext();
         }
     };
