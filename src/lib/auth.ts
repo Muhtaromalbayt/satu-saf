@@ -6,7 +6,7 @@ export const auth = betterAuth({
     database: drizzleAdapter(getDb(), {
         provider: "sqlite",
     }),
-    baseURL: process.env.BETTER_AUTH_URL || "https://satusaf.vercel.app",
+    baseURL: process.env.BETTER_AUTH_URL,
     secret: process.env.BETTER_AUTH_SECRET,
     emailAndPassword: {
         enabled: true,
