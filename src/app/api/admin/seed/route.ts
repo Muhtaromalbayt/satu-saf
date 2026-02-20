@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/server/db";

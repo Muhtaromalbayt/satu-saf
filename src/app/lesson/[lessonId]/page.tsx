@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import LessonContainer from "@/components/lesson/LessonContainer";
 import { notFound } from "next/navigation";
 import { getLessonSlides } from "@/lib/server/lessons";

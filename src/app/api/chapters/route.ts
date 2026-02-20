@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { getChapters } from "@/lib/server/lessons";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
