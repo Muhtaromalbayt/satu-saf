@@ -3,64 +3,81 @@
 import { motion } from "framer-motion";
 import Mascot from "@/components/gamification/Mascot";
 import { Button } from "@/components/ui/button";
-import { LogIn } from "lucide-react";
+import { LogIn, UserPlus, ArrowLeft } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
 import Link from "next/link";
-import { GraduationCap, Users, UserCog, ArrowLeft } from "lucide-react";
-import { createClient } from "@/utils/supabase/client";
+import { authClient } from "@/lib/auth-client";
 
 function LoginForm() {
     const searchParams = useSearchParams();
     const router = useRouter();
-    const role = searchParams.get("role");
-    const supabase = createClient();
+    const role = searchParams.get("role") || "santri";
+    const mode = searchParams.get("mode");
     const [loading, setLoading] = useState(false);
-
-    const handleGoogleLogin = async () => {
-        if (!supabase) {
-            alert("Sistem autentikasi belum siap. Periksa konfigurasi Supabase.");
-            return;
-        }
-        setLoading(true);
-        const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: `${window.location.origin}/auth/callback`,
-            },
-        });
-        if (error) {
-            console.error("Login Error:", error.message);
-            setLoading(false);
-        }
-    };
+    const [error, setError] = useState("");
+    const [isRegister, setIsRegister] = useState(mode === "register");
 
     const handleEmailLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!supabase) {
-            alert("Sistem autentikasi belum siap.");
-            return;
-        }
         setLoading(true);
+        setError("");
+
         const formData = new FormData(e.currentTarget);
         const email = formData.get("email") as string;
         const password = formData.get("password") as string;
 
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
+        try {
+            if (isRegister) {
+                const name = formData.get("name") as string;
+                // Add role to the sign-up payload
+                const { error: signUpError } = await authClient.signUp.email({
+                    email,
+                    password,
+                    name,
+                    role: role, // Pass the role from the URL
+                } as any);
+                if (signUpError) {
+                    console.error("Registration Error:", signUpError);
+                    setError(signUpError.message || JSON.stringify(signUpError) || "Registrasi gagal");
+                    setLoading(false);
+                    return;
+                }
+            } else {
+                const { error: signInError } = await authClient.signIn.email({
+                    email,
+                    password,
+                });
+                if (signInError) {
+                    setError(signInError.message || "Login gagal");
+                    setLoading(false);
+                    return;
+                }
+            }
 
-        if (error) {
-            console.error("Login Error:", error.message);
+            // Redirect based on role
+            if (role === 'mentor') {
+                router.push("/mentor");
+            } else if (role === 'parent') {
+                router.push("/parent");
+            } else if (role === 'admin') {
+                router.push("/admin");
+            } else {
+                router.push("/map");
+            }
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan";
+            setError(errorMessage);
             setLoading(false);
-            // Fallback for pre-seeded mentors if they aren't in Supabase yet? 
-            // Better to show error.
-            alert("Login gagal: " + error.message);
-        } else {
-            router.push("/mentor");
         }
     };
+
+    const roleLabel = role === 'mentor' ? 'Mentor' : role === 'parent' ? 'Orang Tua' : role === 'admin' ? 'Administrator' : 'Santri';
+    const roleColor = role === 'mentor'
+        ? 'bg-slate-800 text-white'
+        : role === 'admin'
+            ? 'bg-red-600 text-white'
+            : 'bg-blue-50 text-blue-600';
 
     return (
         <motion.div
@@ -68,77 +85,76 @@ function LoginForm() {
             animate={{ opacity: 1, x: 0 }}
             className="space-y-6"
         >
-            {role === 'mentor' ? (
-                <div className="space-y-6">
-                    <div className="text-center">
-                        <span className="px-3 py-1 bg-slate-800 text-white rounded-full text-[10px] font-black uppercase tracking-widest">Akses Dashboard Mentor</span>
-                    </div>
+            <div className="text-center">
+                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${roleColor}`}>
+                    {isRegister ? `Daftar` : `Masuk`} sebagai {roleLabel}
+                </span>
+            </div>
 
-                    <form onSubmit={handleEmailLogin} className="space-y-4">
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email</label>
-                            <input
-                                name="email"
-                                type="email"
-                                placeholder="nama@mentor.com"
-                                required
-                                className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-primary outline-none text-slate-700 font-bold transition-all"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Password</label>
-                            <input
-                                name="password"
-                                type="password"
-                                placeholder="••••••••"
-                                required
-                                className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-primary outline-none text-slate-700 font-bold transition-all"
-                            />
-                        </div>
-                        <Button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full py-7 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl font-bold text-lg transition-all shadow-xl active:scale-95 flex items-center justify-center gap-3"
-                        >
-                            <LogIn className="h-5 w-5" /> {loading ? "MOHON TUNGGU..." : "MASUK KE DASHBOARD"}
-                        </Button>
-                    </form>
-                </div>
-            ) : (
-                <div className="space-y-6">
-                    <div className="text-center">
-                        <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest">
-                            Masuk sebagai {role === 'parent' ? 'Orang Tua' : 'Santri'}
-                        </span>
+            <form onSubmit={handleEmailLogin} className="space-y-4">
+                {isRegister && (
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Lengkap</label>
+                        <input
+                            name="name"
+                            type="text"
+                            placeholder="Nama kamu"
+                            required
+                            className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-primary outline-none text-slate-700 font-bold transition-all"
+                        />
                     </div>
-
-                    <Button
-                        onClick={handleGoogleLogin}
-                        disabled={loading}
-                        className="w-full py-7 bg-white hover:bg-slate-50 text-slate-700 border-2 border-slate-200 rounded-2xl shadow-[0_4px_0_rgb(226,232,240)] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-4 text-lg font-bold"
-                    >
-                        <svg className="w-6 h-6" viewBox="0 0 24 24">
-                            <path
-                                fill="#4285F4"
-                                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                            />
-                            <path
-                                fill="#34A853"
-                                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                            />
-                            <path
-                                fill="#FBBC05"
-                                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                            />
-                            <path
-                                fill="#EA4335"
-                                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                            />
-                        </svg>
-                        {loading ? "Menghubungkan..." : "Lanjutkan dengan Google"}
-                    </Button>
+                )}
+                <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email</label>
+                    <input
+                        name="email"
+                        type="email"
+                        placeholder="nama@email.com"
+                        required
+                        className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-primary outline-none text-slate-700 font-bold transition-all"
+                    />
                 </div>
-            )}
+                <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Password</label>
+                    <input
+                        name="password"
+                        type="password"
+                        placeholder="••••••••"
+                        required
+                        minLength={8}
+                        className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-primary outline-none text-slate-700 font-bold transition-all"
+                    />
+                </div>
+
+                {error && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-medium text-center break-words">
+                        {error}
+                        {/* DEBUGGING INFO */}
+                        <div className="mt-2 text-xs text-left bg-white p-2 rounded border border-red-100 overflow-auto max-h-20">
+                            Debug: {error}
+                        </div>
+                    </div>
+                )}
+
+                <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-7 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl font-bold text-lg transition-all shadow-xl active:scale-95 flex items-center justify-center gap-3"
+                >
+                    {isRegister ? (
+                        <><UserPlus className="h-5 w-5" /> {loading ? "MEMPROSES..." : "DAFTAR AKUN"}</>
+                    ) : (
+                        <><LogIn className="h-5 w-5" /> {loading ? "MOHON TUNGGU..." : "MASUK"}</>
+                    )}
+                </Button>
+            </form>
+
+            <button
+                onClick={() => { setIsRegister(!isRegister); setError(""); }}
+                className="w-full text-center text-sm font-bold text-primary hover:underline"
+            >
+                {isRegister ? "Sudah punya akun? Masuk di sini" : "Belum punya akun? Daftar di sini"}
+            </button>
 
             <Link href="/" className="flex items-center justify-center gap-2 text-slate-400 hover:text-slate-600 font-bold text-sm transition-colors pt-2">
                 <ArrowLeft className="h-4 w-4" /> UBAH PERAN
@@ -148,6 +164,14 @@ function LoginForm() {
                 Dengan mendaftar, kamu menyetujui <br />
                 <span className="font-bold text-slate-500 cursor-pointer hover:underline">Ketentuan Layanan</span> dan <span className="font-bold text-slate-500 cursor-pointer hover:underline">Kebijakan Privasi</span> kami.
             </p>
+
+            {!isRegister && role !== 'admin' && (
+                <div className="pt-4 border-t border-slate-100 flex justify-center">
+                    <Link href="/login?role=admin" className="text-[10px] font-bold text-slate-300 hover:text-slate-500 transition-colors uppercase tracking-widest">
+                        Masuk sebagai Admin
+                    </Link>
+                </div>
+            )}
         </motion.div>
     );
 }
@@ -179,10 +203,10 @@ export default function LoginPage() {
             </motion.div>
 
             <p className="mt-8 text-center text-[10px] text-slate-400">
-                Masalah login? Hubungi Superadmim Tutorial.
+                Masalah login? Hubungi Superadmin Tutorial.
             </p>
 
-            {/* Decorative BG mascot bits or text */}
+            {/* Decorative BG mascot */}
             <div className="fixed bottom-10 left-10 opacity-10 hidden lg:block pointer-events-none">
                 <Mascot pose="thinking" className="scale-150 rotate-12" />
             </div>

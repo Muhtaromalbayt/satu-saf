@@ -1,4 +1,4 @@
-export type NodeType = 'story' | 'recite' | 'challenge' | 'action' | 'quiz' | 'checklist' | 'pair_matching';
+export type NodeType = 'story' | 'recite' | 'challenge' | 'action' | 'quiz' | 'checklist' | 'pair_matching' | 'chapter';
 export type NodeStatus = 'locked' | 'active' | 'completed';
 
 export interface LevelNodeData {
@@ -16,7 +16,7 @@ export interface Chapter {
     colorTheme?: string;
 }
 
-export type SlideType = 'story' | 'quiz' | 'recite' | 'action' | 'checklist' | 'pair_matching';
+export type SlideType = 'story' | 'quiz' | 'recite' | 'action' | 'checklist' | 'pair_matching' | 'sentence_arrange' | 'material' | 'amalan' | 'sorting' | 'final_submit' | 'tarteel';
 
 export interface Slide {
     id: string;
@@ -37,4 +37,32 @@ export interface User {
     gender?: string;
     last_active_at?: number;
     group_id?: string;
+}
+export interface ChapterContent {
+    chapterId: string;
+    preTest: {
+        type: 'mcq' | 'match' | 'reorder';
+        question?: string;
+        options?: string[];
+        correct?: number;
+        pairs?: { left: string; right: string }[];
+        items?: string[];
+    }[];
+    material: {
+        driveLink: string;
+        type: 'pdf' | 'video';
+    };
+    postQuiz: {
+        type: 'mcq' | 'match' | 'reorder';
+        question?: string;
+        options?: string[];
+        correct?: number;
+        feedbackText: string;
+    }[];
+    amalanList: string[];
+    recitation: {
+        surahName: string;
+        verseRange: string;
+        transcript: string;
+    };
 }

@@ -1,49 +1,30 @@
-import { createClient } from "@/utils/supabase/server";
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
-export const runtime = "edge";
-
-export async function GET(req: NextRequest) {
+export async function GET() {
     try {
-        const supabase = await createClient();
-        if (!supabase) {
-            return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
-        }
-        const { data: { user: mentor } } = await supabase.auth.getUser();
+        const session = await auth.api.getSession({
+            headers: await headers(),
+        });
 
-        if (!mentor || mentor.user_metadata?.role !== 'mentor') {
-            return NextResponse.json({ error: "Unauthorized: Mentors only" }, { status: 401 });
+        if (!session?.user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const mentorId = mentor.id;
-
-        // Fetch pending approvals with student and lesson info
-        const { data, error } = await supabase
-            .from('approvals')
-            .select(`
-                *,
-                student:users!student_id(name),
-                lesson:lessons!lesson_id(node_type)
-            `)
-            .eq('mentor_id', mentorId)
-            .eq('status', 'pending');
-
-        if (error) {
-            console.error("Fetch approvals error:", error);
-            return NextResponse.json({ error: error.message }, { status: 500 });
-        }
-
-        // Map results to match expected frontend structure
-        const results = data.map(item => ({
-            ...item,
-            student_name: item.student?.name || 'Anonymous',
-            node_type: item.lesson?.node_type || 'story'
-        }));
-
-        return NextResponse.json({ approvals: results });
-
+        // TODO: Fetch real pending approvals from database via Drizzle
+        const mockApprovals = [
+            {
+                id: '1',
+                user_id: 'user-1',
+                lesson_id: 'ch1-action-1',
+                status: 'pending',
+                users: { name: 'Santri Ahmad' },
+                lessons: { title: 'Misi Sedekah' }
+            }
+        ];
+        return NextResponse.json(mockApprovals);
     } catch (error) {
-        console.error("Approvals fetch error:", error);
-        return NextResponse.json({ error: "Failed to fetch approvals" }, { status: 500 });
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

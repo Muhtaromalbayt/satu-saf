@@ -1,4 +1,4 @@
-import { Chapter, NodeType, Slide } from "@/lib/types";
+import { Chapter, NodeType, Slide, ChapterContent } from "@/lib/types";
 
 // Helper to create nodes for each chapter
 const createChapterNodes = (chapterId: string, status: 'locked' | 'active' | 'completed') => {
@@ -115,4 +115,94 @@ export const LESSON_CONTENT: Record<string, Slide[]> = {
         { id: 'r3', type: 'recite', content: { surahName: "QS Al-Insyirah : 3", verseText: "الَّذِي أَنقَضَ ظَهْرَكَ", targetString: "Alladzi anqadha zhahrak", translation: "Yang memberatkan punggungmu." } },
         { id: 'r4', type: 'recite', content: { surahName: "QS Al-Insyirah : 4", verseText: "وَرَفَعْنَا لَكَ ذِكْرَكَ", targetString: "Wa rafa'na laka dzikrak", translation: "Dan Kami tinggikan sebutan (nama)mu bagimu." } },
     ],
+};
+
+export const STANDARDIZED_CHAPTER_CONTENT: Record<string, ChapterContent> = {
+    "ch-1": {
+        chapterId: "ch-1",
+        preTest: [
+            { type: 'mcq', question: "Apa niat utama kita beri'tikaf di masjid?", options: ["Mencari ketenangan tidur", "Mendapat pujian teman", "Mendekatkan diri kepada Allah", "Menghindari tugas rumah"], correct: 2 },
+            { type: 'match', pairs: [{ left: "Niat", right: "Menyengaja" }, { left: "Ikhlas", right: "Murni" }] },
+            { type: 'reorder', items: ["Niat", "Takbir", "Ruku", "Sujud"] }
+        ],
+        material: { driveLink: "https://drive.google.com/...", type: "pdf" },
+        postQuiz: [
+            { type: 'mcq', question: "Apa arti Ikhlas?", feedbackText: "Ikhlas berarti memurnikan niat hanya untuk Allah." }
+        ],
+        amalanList: ["Sholat Berjamaah", "Tilawah", "Sedekah"],
+        recitation: { surahName: "Ad-Dhuha", verseRange: "1-3", transcript: "Wad dhuha wal laili idza saja..." }
+    },
+    // Repeat for ch-2 to ch-10 with placeholder data
+    "ch-2": {
+        chapterId: "ch-2",
+        preTest: [{ type: 'mcq', question: "Apa hukum bicara baik?", options: ["Wajib", "Sunnah", "Haram", "Makruh"], correct: 1 }],
+        material: { driveLink: "https://drive.google.com/...", type: "video" },
+        postQuiz: [{ type: 'mcq', question: "Diam lebih baik?", feedbackText: "Jika tidak bisa bicara baik, diam adalah emas." }],
+        amalanList: ["Bicara Baik", "Tilawah", "Dzikir"],
+        recitation: { surahName: "Al-Insyirah", verseRange: "1-4", transcript: "Alam nasyrah laka shadrak..." }
+    },
+    "ch-3": {
+        chapterId: "ch-3",
+        preTest: [{ type: 'mcq', question: "Apa itu Amanah?", options: ["Titipan", "Hadiah", "Pemberian", "Pinjaman"], correct: 0 }],
+        material: { driveLink: "https://drive.google.com/...", type: "pdf" },
+        postQuiz: [{ type: 'mcq', question: "Menjaga amanah wajib?", feedbackText: "Amanah adalah tanda orang beriman." }],
+        amalanList: ["Jujur", "Menjaga Barang", "Wudhu"],
+        recitation: { surahName: "Al-Tin", verseRange: "1-3", transcript: "Wat tini waz zaitun..." }
+    },
+    "ch-4": {
+        chapterId: "ch-4",
+        preTest: [{ type: 'mcq', question: "Bakti orang tua?", options: ["Birrul Walidain", "Ukhuwah", "Silaturahmi", "Zakat"], correct: 0 }],
+        material: { driveLink: "https://drive.google.com/...", type: "video" },
+        postQuiz: [{ type: 'mcq', question: "Doa orang tua?", feedbackText: "Redha Allah ada pada redha orang tua." }],
+        amalanList: ["Membantu Ibu", "Mendoakan Ayah", "Tahajud"],
+        recitation: { surahName: "Al-Alaq", verseRange: "1-5", transcript: "Iqra bismi rabbikal ladzi khalaq..." }
+    },
+    "ch-5": {
+        chapterId: "ch-5",
+        preTest: [{ type: 'mcq', question: "Khusyuk dalam?", options: ["Makan", "Tidur", "Sholat", "Main"], correct: 2 }],
+        material: { driveLink: "https://drive.google.com/...", type: "pdf" },
+        postQuiz: [{ type: 'mcq', question: "Dzikir menenangkan?", feedbackText: "Hanya dengan mengingat Allah hati menjadi tenang." }],
+        amalanList: ["Sholat Khusyuk", "Dzikir Pagi", "Istighfar"],
+        recitation: { surahName: "Al-Qadr", verseRange: "1-3", transcript: "Inna anzalnahu fi lailatil qadr..." }
+    },
+    "ch-6": {
+        chapterId: "ch-6",
+        preTest: [{ type: 'mcq', question: "Ukhuwah artinya?", options: ["Permusuhan", "Persaudaraan", "Pertemanan", "Persaingan"], correct: 1 }],
+        material: { driveLink: "https://drive.google.com/...", type: "video" },
+        postQuiz: [{ type: 'mcq', question: "Berbagi itu indah?", feedbackText: "Muslim adalah saudara bagi muslim lainnya." }],
+        amalanList: ["Berbagi Iftar", "Sapa Teman", "Senyum"],
+        recitation: { surahName: "Al-Bayyinah", verseRange: "1-3", transcript: "Lam yakunil ladzina kafaru..." }
+    },
+    "ch-7": {
+        chapterId: "ch-7",
+        preTest: [{ type: 'mcq', question: "Adab di medsos?", options: ["Saling hina", "Saling fitnah", "Saling nasihat", "Saling pamer"], correct: 2 }],
+        material: { driveLink: "https://drive.google.com/...", type: "pdf" },
+        postQuiz: [{ type: 'mcq', question: "Tabayyun?", feedbackText: "Periksalah berita sebelum menyebarkannya." }],
+        amalanList: ["No Hoax", "Komentar Baik", "Batasi Gadget"],
+        recitation: { surahName: "Al-Zalzalah", verseRange: "1-4", transcript: "Idza zulzilatil ardhu zilzalaha..." }
+    },
+    "ch-8": {
+        chapterId: "ch-8",
+        preTest: [{ type: 'mcq', question: "Kebersihan?", options: ["Beban", "Hobi", "Sebagian Iman", "Tugas"], correct: 2 }],
+        material: { driveLink: "https://drive.google.com/...", type: "video" },
+        postQuiz: [{ type: 'mcq', question: "Bersih itu sehat?", feedbackText: "Allah mencintai orang yang bersih dan suci." }],
+        amalanList: ["Pikun Masjid", "Buang Sampah", "Pakai Wangian"],
+        recitation: { surahName: "Al-Adiyat", verseRange: "1-5", transcript: "Wal adiyati dhabha..." }
+    },
+    "ch-9": {
+        chapterId: "ch-9",
+        preTest: [{ type: 'mcq', question: "Malam Lailatul Qadr?", options: ["Satu tahun", "Seribu bulan", "Satu abad", "Satu hari"], correct: 1 }],
+        material: { driveLink: "https://drive.google.com/...", type: "pdf" },
+        postQuiz: [{ type: 'mcq', question: "Mencari Qadr?", feedbackText: "Malam yang lebih baik dari seribu bulan." }],
+        amalanList: ["Itikaf", "Doa Lailatul Qadr", "Sedekah Subuh"],
+        recitation: { surahName: "Al-Qariah", verseRange: "1-5", transcript: "Al qari'ah mal qari'ah..." }
+    },
+    "ch-10": {
+        chapterId: "ch-10",
+        preTest: [{ type: 'mcq', question: "Istiqaamah?", options: ["Berhenti", "Berubah", "Konsisten", "Berlari"], correct: 2 }],
+        material: { driveLink: "https://drive.google.com/...", type: "video" },
+        postQuiz: [{ type: 'mcq', question: "Terus beramal?", feedbackText: "Amalan yang paling dicintai adalah yang rutin walau sedikit." }],
+        amalanList: ["Rencana Pasca Ramadhan", "Puasa Syawal", "Sholat Tahajud"],
+        recitation: { surahName: "At-Takathur", verseRange: "1-3", transcript: "Alhakumut takathur..." }
+    }
 };

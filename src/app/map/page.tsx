@@ -2,23 +2,38 @@
 
 import { useState, useEffect } from "react";
 import PathCanvas from "@/components/map/PathCanvas";
-import { MOCK_CHAPTERS } from "@/data/mockData";
-import { Button } from "@/components/ui/button"; // Use our custom button
+import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Lock, Flame, Heart, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useGamification } from "@/context/GamificationContext";
 import StreakPopup from "@/components/gamification/StreakPopup";
 import { motion, AnimatePresence } from "framer-motion";
-import Mascot from "@/components/gamification/Mascot";
-import MascotToast from "@/components/gamification/MascotToast";
 import ChapterFinishModal from "@/components/map/ChapterFinishModal";
 import { CheckCircle2, Clock } from "lucide-react";
+import { Chapter } from "@/lib/types";
 
 export default function MapPage() {
     const { hearts, xp, streak, completedNodes, chapterStatus, submitChapter } = useGamification();
+    const [chapters, setChapters] = useState<Chapter[] | null>(null);
     const [activeChapterIndex, setActiveChapterIndex] = useState(0);
     const [showStreak, setShowStreak] = useState(false);
     const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchChapters = async () => {
+            try {
+                const res = await fetch("/api/chapters");
+                const data = await res.json();
+                setChapters(Array.isArray(data) ? data : []);
+            } catch (error) {
+                console.error("Failed to fetch chapters:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchChapters();
+    }, []);
 
     useEffect(() => {
         const hasSeenStreak = sessionStorage.getItem('hasSeenStreak');
@@ -28,20 +43,35 @@ export default function MapPage() {
         }
     }, [streak]);
 
-    const activeChapter = MOCK_CHAPTERS[activeChapterIndex];
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+                <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+        );
+    }
+
+    if (!chapters || chapters.length === 0) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-slate-50">
+                <h1 className="text-2xl font-black text-slate-800 mb-2">Belum ada materi pelajaran</h1>
+                <p className="text-slate-500 mb-6">Hubungi admin untuk menambahkan materi baru.</p>
+                <Button onClick={() => window.location.reload()}>Coba Lagi</Button>
+            </div>
+        );
+    }
+
+    const activeChapter = chapters[activeChapterIndex] || chapters[0];
 
     // Check if previous chapter is completed to unlock next
-    // For mock purposes, we just check if it's index 0 (always unlocked) 
-    // or if the previous chapter is "completed" in mock data.
-    // In real app, this would check user progress.
     const isChapterUnlocked = (index: number) => {
         if (index === 0) return true;
-        const prevChapter = MOCK_CHAPTERS[index - 1];
-        return chapterStatus[prevChapter.id] === 'approved';
+        const prevChapter = chapters[index - 1];
+        return chapterStatus[prevChapter.id] === 'approved' || chapterStatus[prevChapter.id] === 'submitted';
     };
 
     const handleNext = () => {
-        if (activeChapterIndex < MOCK_CHAPTERS.length - 1) {
+        if (activeChapterIndex < chapters.length - 1) {
             setActiveChapterIndex(prev => prev + 1);
         }
     };
@@ -114,7 +144,7 @@ export default function MapPage() {
                         variant="ghost"
                         size="icon"
                         onClick={handleNext}
-                        disabled={activeChapterIndex >= MOCK_CHAPTERS.length - 1}
+                        disabled={activeChapterIndex >= chapters.length - 1}
                     >
                         <ChevronRight className="h-6 w-6" />
                     </Button>

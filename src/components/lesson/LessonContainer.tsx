@@ -1,296 +1,237 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { X, Heart, RefreshCw } from "lucide-react";
+import { X, Heart, Zap, ChevronLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from 'canvas-confetti';
 import { cn } from "@/lib/utils";
 import { NodeType, Slide } from "@/lib/types";
+
+// Slide Components
 import StorySlide from "./StorySlide";
 import QuizSlide from "./QuizSlide";
 import ReciteSlide from "./ReciteSlide";
 import ActionSlide from "./ActionSlide";
 import ChecklistSlide from "./ChecklistSlide";
 import PairMatchingSlide from "./PairMatchingSlide";
-import LessonSummary from "./LessonSummary";
-import HeartRecoverySlide from "./HeartRecoverySlide";
-import FeedbackModal from "./FeedbackModal";
-import { useSound } from "@/hooks/useSound";
+import SentenceArrangeSlide from "./SentenceArrangeSlide";
+import MaterialSlide from "./MaterialSlide";
+import AmalanSlide from "./AmalanSlide";
+import SortingSlide from "./SortingSlide";
+import TarteelSlide from "./TarteelSlide";
+import FinalSubmitSlide from "./FinalSubmitSlide";
+
 import { useGamification } from "@/context/GamificationContext";
-
-// Mock data generator
-import { LESSON_CONTENT } from "@/data/mockData";
-
-const getMockSlides = (type: NodeType, lessonId: string): Slide[] => {
-    // 1. Try to find specific content for this lessonId
-    if (LESSON_CONTENT[lessonId]) {
-        return LESSON_CONTENT[lessonId];
-    }
-
-    // 2. Fallback to generic content based on type if specific content missing
-    if (type === 'story') {
-        return [
-            { id: 's1', type: 'story', content: { title: "Materi", text: "Konten materi belum tersedia untuk bab ini.", image: "Illustration 1" } },
-        ];
-    } else if (type === 'quiz' || type === 'challenge') {
-        return [
-            { id: 'q1', type: 'quiz', content: { question: "Contoh Pertanyaan?", options: ["A", "B", "C", "D"], correctIndex: 0 } },
-        ];
-    } else if (type === 'recite') {
-        return [
-            { id: 'r1', type: 'recite', content: { surahName: "Al-Fatihah", verseText: "Bismillah", targetString: "Bismillah" } }
-        ];
-    } else if (type === 'action') {
-        return [
-            { id: 'a1', type: 'action', content: { title: "Misi Harian", description: "Lakukan kebaikan hari ini." } }
-        ];
-    } else if (type === 'checklist') {
-        return [
-            {
-                id: 'ch1',
-                type: 'checklist',
-                content: {
-                    title: "Amalan Yaumi",
-                    items: [
-                        { id: 'sholat', label: 'Sholat Berjamaah', description: 'Tepat waktu di masjid' },
-                        { id: 'tilawah', label: 'Tilawah Al-Quran' },
-                        { id: 'dzikir', label: 'Dzikir Pagi/Petang' },
-                        { id: 'akhlak', label: 'Menjaga Akhlak' }
-                    ]
-                }
-            }
-        ];
-    }
-    return [{ id: 'default', type: 'story', content: { title: "Loading...", text: "Content coming soon." } }];
-};
-
-import { LevelNodeData } from "@/lib/types";
 import MascotToast from "../gamification/MascotToast";
 
-export default function LessonContainer({ lessonId, type, initialData }: { lessonId: string, type: NodeType, initialData?: LevelNodeData }) {
+export default function LessonContainer({
+    lessonId,
+    initialSlides
+}: {
+    lessonId: string,
+    initialSlides?: Slide[]
+}) {
     const router = useRouter();
-    const { hearts, xp, streak, decrementHearts, addXp, completeNode, addOneHeart } = useGamification();
+    const { hearts, xp, streak, decrementHearts, addXp, completeNode } = useGamification();
     const [slideIndex, setSlideIndex] = useState(0);
-    const [showSummary, setShowSummary] = useState(false);
-    const [isRecovering, setIsRecovering] = useState(false);
-    const [heartShake, setHeartShake] = useState(false);
-    const [showFeedback, setShowFeedback] = useState<{ open: boolean, type: 'success' | 'heart_lost', message: string }>({ open: false, type: 'success', message: '' });
-    const [sessionStreak, setSessionStreak] = useState(0);
-    const [showMascotToast, setShowMascotToast] = useState<{
-        visible: boolean;
-        message: string;
-        pose?: "success" | "cheer" | "thinking" | "idle";
-    }>({
+    const [showMascotToast] = useState({
         visible: false,
         message: '',
         pose: 'success'
     });
-    const { playSound } = useSound();
 
-    // Initial fetch of slides
-    const [slides] = useState(() => {
-        // If initialData is provided and has slides, we could use them. 
-        // For now, LevelNodeData doesn't directly have Slide[], but MOCK_CHAPTERS nodes do.
-        // We'll keep the generator for now but accept the prop to satisfy TS.
-        return getMockSlides(type, lessonId);
-    });
+    const slides = useMemo(() => initialSlides || [], [initialSlides]);
     const currentSlide = slides[slideIndex];
 
-    const progress = ((slideIndex + 1) / (slides.length || 1)) * 100;
+    // Grouping logic for the 6-stage progress bar
+    const stages = useMemo(() => {
+        const groups: { name: string, start: number, end: number }[] = [];
+        let currentStage: any = null;
 
-    const handleClose = () => {
-        router.push("/map");
-    };
+        slides.forEach((slide, idx) => {
+            let stageName = "Other";
+            if (slide.id.includes("-pre-")) stageName = "Pre-test";
+            else if (slide.id.includes("-mat-")) stageName = "Materi";
+            else if (slide.id.includes("-quiz-") || slide.type === 'sorting') stageName = "Kuis";
+            else if (slide.type === 'amalan') stageName = "Amalan";
+            else if (slide.type === 'tarteel') stageName = "Tarteel";
+            else if (slide.type === 'final_submit') stageName = "Submit";
+
+            if (!currentStage || currentStage.name !== stageName) {
+                if (currentStage) groups.push(currentStage);
+                currentStage = { name: stageName, start: idx, end: idx };
+            } else {
+                currentStage.end = idx;
+            }
+        });
+        if (currentStage) groups.push(currentStage);
+        return groups;
+    }, [slides]);
+
+    const handleClose = () => router.push("/map");
 
     const handleNext = () => {
         if (slideIndex < slides.length - 1) {
             setSlideIndex(prev => prev + 1);
-        } else {
-            // Show summary and trigger confetti
-            confetti({
-                particleCount: 150,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#1B4332', '#FFB703', '#FDFCF6', '#2D6A4F']
-            });
-            addXp(50);
-            completeNode(lessonId);
-            setShowSummary(true);
         }
     };
 
-    const handleFinish = () => {
-        router.push("/map");
+    const handleBack = () => {
+        if (slideIndex > 0) setSlideIndex(prev => prev - 1);
     };
 
     const handleQuizAnswer = (isCorrect: boolean) => {
         if (!isCorrect) {
-            playSound('incorrect');
-            setHeartShake(true);
-            setTimeout(() => setHeartShake(false), 500);
             decrementHearts();
-            setShowFeedback({ open: true, type: 'heart_lost', message: 'Hati-hati, periksa kembali jawabanmu!' });
         } else {
-            playSound('correct');
-            setShowFeedback({ open: true, type: 'success', message: 'Jawabanmu benar! Pertahankan!' });
+            handleNext();
         }
     };
 
-    if (hearts === 0 && !isRecovering) {
-        return (
-            <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background p-8 text-center space-y-6">
-                <div className="relative">
-                    <motion.div
-                        animate={{ scale: [1, 1.1, 1] }}
-                        transition={{ repeat: Infinity, duration: 2 }}
-                    >
-                        <Heart className="h-24 w-24 text-slate-300 fill-current" />
-                    </motion.div>
-                    <X className="h-10 w-10 text-red-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-                </div>
-                <div className="space-y-2">
-                    <h1 className="text-3xl font-bold text-slate-800">Yah, hatimu habis!</h1>
-                    <p className="text-muted-foreground text-sm max-w-[250px] mx-auto">
-                        Jangan menyerah! Bacalah ayat Al-Quran untuk mendapatkan tambahan hati.
-                    </p>
-                </div>
-                <div className="w-full space-y-3 pt-4 max-w-xs">
-                    <button
-                        onClick={() => setIsRecovering(true)}
-                        className="w-full py-4 bg-primary text-primary-foreground font-bold rounded-2xl shadow-lg hover:bg-primary/90 flex items-center justify-center gap-2"
-                    >
-                        <RefreshCw className="h-5 w-5" />
-                        PULIHKAN DENGAN AYAT
-                    </button>
-                    <button
-                        onClick={() => router.push("/map")}
-                        className="w-full py-4 text-slate-500 font-bold hover:bg-slate-50 rounded-2xl transition-colors"
-                    >
-                        KEMBALI KE MAP
-                    </button>
-                </div>
-            </div>
-        );
-    }
+    const handleFinalComplete = () => {
+        confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#10b981', '#f59e0b', '#ffffff']
+        });
+        addXp(100);
+        completeNode(lessonId);
+    };
 
-    if (isRecovering) {
-        return (
-            <div className="fixed inset-0 z-[100] flex flex-col bg-background">
-                <div className="p-4 border-b flex items-center justify-between">
-                    <button onClick={() => setIsRecovering(false)}>
-                        <X className="h-6 w-6" />
-                    </button>
-                    <span className="font-bold text-slate-600">Recovery Mode</span>
-                    <div className="w-6" />
-                </div>
-                <div className="flex-1 flex flex-col items-center justify-center">
-                    <HeartRecoverySlide
-                        onComplete={() => {
-                            addOneHeart();
-                            setIsRecovering(false);
-                        }}
-                        onCancel={() => setIsRecovering(false)}
-                    />
-                </div>
-            </div>
-        );
-    }
+    if (!currentSlide) return null;
+
+    const currentStageInfo = stages.find(s => slideIndex >= s.start && slideIndex <= s.end);
 
     return (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-background">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b">
-                <button onClick={handleClose}>
-                    <X className="h-6 w-6 text-muted-foreground" />
-                </button>
-                {!showSummary && (
-                    <div className="flex-1 mx-4 h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200 shadow-inner">
-                        <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${progress}%` }}
-                            transition={{ type: "spring", stiffness: 100, damping: 20 }}
-                            className="h-full bg-primary rounded-full transition-all duration-300"
-                        />
+        <div className="fixed inset-0 z-[100] flex flex-col bg-white">
+            {/* Header / Premium Progress Bar */}
+            <div className="px-6 pt-8 pb-4 max-w-5xl mx-auto w-full">
+                <div className="flex items-center gap-6 mb-6">
+                    <button
+                        onClick={handleClose}
+                        className="p-2 text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                        <X className="h-7 w-7" />
+                    </button>
+
+                    {/* Multi-segment Segmented Progress Bar */}
+                    <div className="flex-1 flex gap-2 h-3.5 items-center">
+                        {stages.map((stage, idx) => {
+                            const isPast = slideIndex > stage.end;
+                            const isActive = slideIndex >= stage.start && slideIndex <= stage.end;
+                            const progress = isActive
+                                ? ((slideIndex - stage.start + 1) / (stage.end - stage.start + 1)) * 100
+                                : isPast ? 100 : 0;
+
+                            return (
+                                <div key={idx} className="flex-1 h-full bg-slate-100 rounded-full relative overflow-hidden ring-1 ring-slate-100">
+                                    <motion.div
+                                        initial={false}
+                                        animate={{ width: `${progress}%` }}
+                                        className={cn(
+                                            "absolute inset-0 transition-colors duration-500",
+                                            isPast || isActive ? 'bg-emerald-500' : 'bg-slate-200'
+                                        )}
+                                    />
+                                    {isActive && (
+                                        <motion.div
+                                            animate={{ opacity: [0.3, 0.6, 0.3] }}
+                                            transition={{ repeat: Infinity, duration: 2 }}
+                                            className="absolute inset-0 bg-white"
+                                        />
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
-                )}
-                <motion.div
-                    animate={heartShake ? { x: [-5, 5, -5, 5, 0], scale: [1, 1.2, 1] } : {}}
-                    className="flex items-center gap-1.5 bg-red-50 px-3 py-1.5 rounded-2xl border border-red-100"
-                >
-                    <Heart className={cn("h-5 w-5", hearts > 0 ? "text-red-500 fill-red-500" : "text-slate-300 fill-slate-300")} />
-                    <span className={cn("font-black text-lg", hearts > 0 ? "text-red-600" : "text-slate-400")}>
-                        {hearts}
-                    </span>
-                </motion.div>
+
+                    <div className="flex items-center gap-5 ml-2">
+                        <div className="flex items-center gap-1.5">
+                            <Heart className={cn("h-7 w-7", hearts > 0 ? "text-red-500 fill-red-500" : "text-slate-300 fill-slate-300")} />
+                            <span className="font-black text-slate-700 text-xl">{hearts}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <Zap className="h-7 w-7 text-amber-400 fill-amber-400" />
+                            <span className="font-black text-slate-700 text-xl">{streak}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Stage Indicator */}
+                <div className="flex justify-start">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={currentStageInfo?.name}
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-emerald-50 px-4 py-1.5 rounded-2xl border-2 border-emerald-100/50"
+                        >
+                            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                                STAGE {stages.indexOf(currentStageInfo!) + 1}: {currentStageInfo?.name}
+                            </span>
+                        </motion.div>
+                    </AnimatePresence>
+                </div>
             </div>
 
             <MascotToast
                 isVisible={showMascotToast.visible}
                 message={showMascotToast.message}
-                pose={showMascotToast.pose}
-                onClose={() => setShowMascotToast(prev => ({ ...prev, visible: false }))}
-            />
-
-            <FeedbackModal
-                isOpen={showFeedback.open}
-                type={showFeedback.type}
-                message={showFeedback.message}
-                onClose={() => setShowFeedback(prev => ({ ...prev, open: false }))}
+                pose={showMascotToast.pose as any}
+                onClose={() => { }}
             />
 
             {/* Content Area */}
-            <div className="flex-1 flex flex-col items-center justify-center p-6 bg-background relative overflow-hidden">
+            <main className="flex-1 overflow-y-auto relative flex flex-col pt-4">
                 <AnimatePresence mode="wait">
-                    {showSummary ? (
-                        <motion.div
-                            key="summary"
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
-                            transition={{ duration: 0.3 }}
-                            className="w-full flex flex-col items-center"
-                        >
-                            <LessonSummary
-                                xp={50}
-                                hearts={hearts}
-                                streak={streak}
-                                onFinish={handleFinish}
-                            />
-                        </motion.div>
-                    ) : (
-                        currentSlide && (
-                            <motion.div
-                                key={slideIndex}
-                                initial={{ opacity: 0, x: 50 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -50 }}
-                                transition={{ duration: 0.3 }}
-                                className="w-full flex flex-col items-center"
-                            >
-                                {currentSlide.type === 'story' && <StorySlide data={currentSlide.content} />}
-                                {currentSlide.type === 'quiz' && <QuizSlide data={currentSlide.content} onAnswer={handleQuizAnswer} />}
-                                {currentSlide.type === 'recite' && <ReciteSlide data={currentSlide.content} onComplete={(success) => console.log(success)} />}
-                                {currentSlide.type === 'action' && <ActionSlide data={currentSlide.content} onComplete={(data) => console.log(data)} />}
-                                {currentSlide.type === 'checklist' && <ChecklistSlide data={currentSlide.content} onComplete={(data) => console.log(data)} />}
-                                {currentSlide.type === 'pair_matching' && <PairMatchingSlide data={currentSlide.content} onComplete={(success) => console.log(success)} />}
-                            </motion.div>
-                        )
-                    )}
+                    <motion.div
+                        key={currentSlide.id}
+                        initial={{ opacity: 0, x: 40, scale: 0.98 }}
+                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                        exit={{ opacity: 0, x: -40, scale: 0.98 }}
+                        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                        className="flex-1 w-full max-w-4xl mx-auto px-6"
+                    >
+                        {currentSlide.type === 'story' && <StorySlide data={currentSlide.content} />}
+                        {currentSlide.type === 'quiz' && <QuizSlide data={currentSlide.content} onAnswer={handleQuizAnswer} />}
+                        {currentSlide.type === 'recite' && <ReciteSlide data={currentSlide.content} onComplete={() => handleNext()} />}
+                        {currentSlide.type === 'action' && <ActionSlide data={currentSlide.content} onComplete={() => handleNext()} />}
+                        {currentSlide.type === 'checklist' && <ChecklistSlide data={currentSlide.content} onComplete={() => handleNext()} />}
+                        {currentSlide.type === 'pair_matching' && <PairMatchingSlide data={currentSlide.content} onComplete={() => handleNext()} />}
+                        {currentSlide.type === 'sentence_arrange' && <SentenceArrangeSlide data={currentSlide.content} onComplete={() => handleNext()} />}
+                        {currentSlide.type === 'material' && <MaterialSlide data={currentSlide.content} onComplete={handleNext} />}
+                        {currentSlide.type === 'amalan' && <AmalanSlide data={currentSlide.content} onComplete={() => handleNext()} />}
+                        {currentSlide.type === 'sorting' && <SortingSlide data={currentSlide.content} onComplete={() => handleNext()} />}
+                        {currentSlide.type === 'tarteel' && <TarteelSlide data={currentSlide.content} onComplete={() => handleNext()} />}
+                        {currentSlide.type === 'final_submit' && <FinalSubmitSlide lessonId={lessonId} onComplete={handleFinalComplete} />}
+                    </motion.div>
                 </AnimatePresence>
-            </div>
+            </main>
 
-            {/* Footer */}
-            {!showSummary && (
-                <div className="p-4 border-t bg-background">
+            {/* Footer / Navigation Support */}
+            <div className="p-6 max-w-4xl mx-auto w-full flex justify-between items-center">
+                {slideIndex > 0 && currentSlide.type !== 'final_submit' ? (
+                    <button
+                        onClick={handleBack}
+                        className="flex items-center gap-2 text-slate-400 font-black text-sm hover:text-slate-600 transition-all px-4 py-2 rounded-xl hover:bg-slate-50"
+                    >
+                        <ChevronLeft className="h-5 w-5" /> KEMBALI
+                    </button>
+                ) : <div />}
+
+                {/* Optional "Continue" button for types that don't have built-in completion buttons */}
+                {(currentSlide.type === 'story' || currentSlide.type === 'material') && (
                     <button
                         onClick={handleNext}
-                        className="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-2xl shadow-lg transition-transform active:scale-95 uppercase tracking-wider"
+                        className="px-8 py-4 bg-emerald-500 text-white font-black rounded-2xl shadow-lg shadow-emerald-100 hover:scale-105 active:scale-95 transition-all uppercase tracking-widest text-sm"
                     >
-                        {slideIndex >= slides.length - 1 ? "Finish" : "Continue"}
+                        LANJUTKAN
                     </button>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 }

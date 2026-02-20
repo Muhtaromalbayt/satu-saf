@@ -3,10 +3,18 @@
 import { Heart, Flame, LogOut, User as UserIcon } from "lucide-react";
 import { useGamification } from "@/context/GamificationContext";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { useState, useEffect } from "react";
 
 export default function Header() {
   const { hearts, streak } = useGamification();
   const { user, signOut } = useAuth();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -20,10 +28,10 @@ export default function Header() {
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="text-[13px] font-black text-slate-800 truncate max-w-[100px] leading-tight capitalize">
-                  {user.user_metadata?.full_name?.split(' ')[0] || user.email?.split('@')[0]}
+                  {user.name?.split(' ')[0] || user.email?.split('@')[0]}
                 </span>
                 <span className="text-[9px] text-primary font-black uppercase tracking-widest leading-none">
-                  {user.user_metadata?.role || 'Santri'}
+                  {user.role || 'Santri'}
                 </span>
               </div>
             </div>

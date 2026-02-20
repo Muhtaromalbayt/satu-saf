@@ -1,8 +1,27 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { createClient } from '@/utils/supabase/client';
-import { User, Session } from '@supabase/supabase-js';
+import React, { createContext, useContext } from 'react';
+import { authClient } from '@/lib/auth-client';
+
+type User = {
+    id: string;
+    name: string;
+    email: string;
+    emailVerified: boolean;
+    image?: string | null;
+    role?: string;
+    createdAt: Date;
+    updatedAt: Date;
+};
+
+type Session = {
+    id: string;
+    userId: string;
+    token: string;
+    expiresAt: Date;
+    createdAt: Date;
+    updatedAt: Date;
+};
 
 type AuthContextType = {
     user: User | null;
@@ -14,44 +33,17 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [user, setUser] = useState<User | null>(null);
-    const [session, setSession] = useState<Session | null>(null);
-    const [loading, setLoading] = useState(true);
-    const supabase = createClient();
+    const {
+        data: sessionData,
+        isPending: loading,
+    } = authClient.useSession();
 
-    useEffect(() => {
-        if (!supabase) {
-            setLoading(false);
-            return;
-        }
-
-        const setData = async () => {
-            const { data: { session }, error } = await supabase.auth.getSession();
-            if (error) {
-                console.error("Error fetching session:", error.message);
-            }
-            setSession(session);
-            setUser(session?.user ?? null);
-            setLoading(false);
-        };
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setSession(session);
-            setUser(session?.user ?? null);
-            setLoading(false);
-        });
-
-        setData();
-
-        return () => {
-            subscription.unsubscribe();
-        };
-    }, [supabase]);
+    const user = sessionData?.user as User | null ?? null;
+    const session = sessionData?.session as Session | null ?? null;
 
     const signOut = async () => {
-        if (supabase) {
-            await supabase.auth.signOut();
-        }
+        await authClient.signOut();
+        window.location.href = "/login";
     };
 
     return (
