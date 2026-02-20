@@ -9,8 +9,7 @@
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio",
-    "pages:build": "npx @cloudflare/next-on-pages"
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@libsql/client": "^0.17.0",
