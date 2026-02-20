@@ -33,4 +33,8 @@ export const auth = betterAuth({
     advanced: {
         trustHost: true,
     },
+    trustedOrigins: [
+        "https://satu-saf.vercel.app",
+        "https://satusaf.vercel.app"
+    ]
 });
