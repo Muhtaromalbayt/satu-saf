@@ -1,5 +1,3 @@
-export const runtime = 'edge';
-
 import LessonContainer from "@/components/lesson/LessonContainer";
 import { notFound } from "next/navigation";
 import { getLessonSlides } from "@/lib/server/lessons";
@@ -45,7 +43,6 @@ export default async function LessonPage(props: { params: Promise<{ lessonId: st
         <main className="min-h-screen bg-white">
             <LessonContainer
                 lessonId={lessonId}
-                type={lesson.type as any}
                 initialSlides={slides}
             />
         </main>

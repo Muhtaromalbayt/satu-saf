@@ -1,5 +1,3 @@
-export const runtime = 'edge';
-
 import { getAdminSession } from "@/lib/admin";
 import { getDb } from "@/lib/server/db";
 import { user as userTable } from "@/lib/server/db/schema";

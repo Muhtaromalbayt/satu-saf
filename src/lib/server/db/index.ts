@@ -20,7 +20,7 @@ export function getDb(databaseUrl?: string) {
             dbInstance = drizzleLibSql(client, { schema });
             return dbInstance;
         }
-        throw new Error("No database configuration found. Set DATABASE_URL in Cloudflare environment variables.");
+        throw new Error("No database configuration found. Please set DATABASE_URL in your environment variables.");
     }
 
     const client = createClient({ url });
