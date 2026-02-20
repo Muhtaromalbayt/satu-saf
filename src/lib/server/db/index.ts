@@ -14,7 +14,7 @@ export function getDb(databaseUrl?: string) {
         if (process.env.NODE_ENV === 'production' || process.env.NEXT_PHASE === 'phase-production-build') {
             console.warn("⚠️ DATABASE_URL is not set. Using a dummy connection for build/compatibility.");
             // Returning a dummy client that won't throw until actually called
-            const client = createClient({ url: "file:dummy.db" });
+            const client = createClient({ url: "https://dummy.db" });
             dbInstance = drizzleLibSql(client, { schema });
             return dbInstance;
         }
