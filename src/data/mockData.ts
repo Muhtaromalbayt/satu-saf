@@ -122,87 +122,131 @@ export const STANDARDIZED_CHAPTER_CONTENT: Record<string, ChapterContent> = {
         chapterId: "ch-1",
         preTest: [
             { type: 'mcq', question: "Apa niat utama kita beri'tikaf di masjid?", options: ["Mencari ketenangan tidur", "Mendapat pujian teman", "Mendekatkan diri kepada Allah", "Menghindari tugas rumah"], correct: 2 },
-            { type: 'match', pairs: [{ left: "Niat", right: "Menyengaja" }, { left: "Ikhlas", right: "Murni" }] },
-            { type: 'reorder', items: ["Niat", "Takbir", "Ruku", "Sujud"] }
+            { type: 'match', pairs: [{ left: "Niat", right: "Menyengaja melakukan sesuatu karena Allah" }, { left: "Ikhlas", right: "Murni / Tanpa pamrih" }] },
+            { type: 'reorder', items: ["Menata Niat", "Berwudhu", "Melangkah dengan Kaki Kanan", "Berdoa"] }
         ],
-        material: { driveLink: "https://drive.google.com/...", type: "pdf" },
+        material: { driveLink: "https://docs.google.com/viewer?url=https://satusaf.com/ch1-materi.pdf", type: "pdf" },
         postQuiz: [
-            { type: 'mcq', question: "Apa arti Ikhlas?", feedbackText: "Ikhlas berarti memurnikan niat hanya untuk Allah." }
+            { type: 'mcq', question: "Apa arti Ikhlasul Amal?", feedbackText: "Ikhlasul Amal berarti memurnikan niat beramal hanya untuk mengharap ridho Allah SWT." }
         ],
-        amalanList: ["Sholat Berjamaah", "Tilawah", "Sedekah"],
-        recitation: { surahName: "Ad-Dhuha", verseRange: "1-3", transcript: "Wad dhuha wal laili idza saja..." }
+        amalanList: ["Sholat 5 Waktu Berjamaah", "Sholat Sunnah Rawatib", "Merapikan Sandal Jamaah"],
+        recitation: { surahName: "Ad-Dhuha", verseRange: "1-3", transcript: "Wad dhuha wal laili idza saja ma wadda'aka rabbuka wa ma qala" }
     },
-    // Repeat for ch-2 to ch-10 with placeholder data
     "ch-2": {
         chapterId: "ch-2",
-        preTest: [{ type: 'mcq', question: "Apa hukum bicara baik?", options: ["Wajib", "Sunnah", "Haram", "Makruh"], correct: 1 }],
-        material: { driveLink: "https://drive.google.com/...", type: "video" },
-        postQuiz: [{ type: 'mcq', question: "Diam lebih baik?", feedbackText: "Jika tidak bisa bicara baik, diam adalah emas." }],
-        amalanList: ["Bicara Baik", "Tilawah", "Dzikir"],
-        recitation: { surahName: "Al-Insyirah", verseRange: "1-4", transcript: "Alam nasyrah laka shadrak..." }
+        preTest: [
+            { type: 'mcq', question: "Jika tidak bisa berkata baik, maka sebaiknya?", options: ["Berkata kasar", "Berdiam diri", "Bicara seadanya", "Berteriak"], correct: 1 },
+            { type: 'match', pairs: [{ left: "Ghibah", right: "Membicarakan aib orang lain" }, { left: "Sidiq", right: "Berkata Jujur" }] }
+        ],
+        material: { driveLink: "https://www.youtube.com/embed/ch2-video-id", type: "video" },
+        postQuiz: [
+            { type: 'mcq', question: "Hukum menjaga lisan adalah?", feedbackText: "Menjaga lisan adalah kewajiban setiap muslim untuk menjaga perasaan orang lain dan menghindari dosa." }
+        ],
+        amalanList: ["Tidak Bergosip", "Tilawah 1 Juz", "Istighfar 100x"],
+        recitation: { surahName: "Al-Insyirah", verseRange: "1-4", transcript: "Alam nasyrah laka shadrak wa wadha'na 'anka wizrak alladzi anqadha zhahrak wa rafa'na laka dzikrak" }
     },
     "ch-3": {
         chapterId: "ch-3",
-        preTest: [{ type: 'mcq', question: "Apa itu Amanah?", options: ["Titipan", "Hadiah", "Pemberian", "Pinjaman"], correct: 0 }],
-        material: { driveLink: "https://drive.google.com/...", type: "pdf" },
-        postQuiz: [{ type: 'mcq', question: "Menjaga amanah wajib?", feedbackText: "Amanah adalah tanda orang beriman." }],
-        amalanList: ["Jujur", "Menjaga Barang", "Wudhu"],
-        recitation: { surahName: "Al-Tin", verseRange: "1-3", transcript: "Wat tini waz zaitun..." }
+        preTest: [
+            { type: 'mcq', question: "Apa yang dimaksud dengan Amanah?", options: ["Titipan", "Hadiah", "Pemberian", "Pinjaman"], correct: 0 },
+            { type: 'reorder', items: ["Menerima Titipan", "Menjaga dengan Baik", "Mengembalikan sesuai Janji"] }
+        ],
+        material: { driveLink: "https://docs.google.com/viewer?url=https://satusaf.com/ch3-materi.pdf", type: "pdf" },
+        postQuiz: [
+            { type: 'mcq', question: "Tanda-tanda orang munafik salah satunya adalah?", feedbackText: "Salah satu tanda munafik adalah jika diberi amanah dia berkhianat." }
+        ],
+        amalanList: ["Menjaga Barang Titipan", "Jujur dalam Berkata", "Wudhu sebelum Tidur"],
+        recitation: { surahName: "Al-Tin", verseRange: "1-3", transcript: "Wat tini waz zaitun wa thuri sinin wa hadzal baladil amin" }
     },
     "ch-4": {
         chapterId: "ch-4",
-        preTest: [{ type: 'mcq', question: "Bakti orang tua?", options: ["Birrul Walidain", "Ukhuwah", "Silaturahmi", "Zakat"], correct: 0 }],
-        material: { driveLink: "https://drive.google.com/...", type: "video" },
-        postQuiz: [{ type: 'mcq', question: "Doa orang tua?", feedbackText: "Redha Allah ada pada redha orang tua." }],
-        amalanList: ["Membantu Ibu", "Mendoakan Ayah", "Tahajud"],
-        recitation: { surahName: "Al-Alaq", verseRange: "1-5", transcript: "Iqra bismi rabbikal ladzi khalaq..." }
+        preTest: [
+            { type: 'mcq', question: "Apa arti Birrul Walidain?", options: ["Bakti Ibu Bapak", "Bakti kepada Guru", "Bakti kepada Negara", "Bakti kepada Teman"], correct: 0 },
+            { type: 'match', pairs: [{ left: "Ibu", right: "Mulia 3x lebih utama" }, { left: "Ayah", right: "Pintu surga paling tengah" }] }
+        ],
+        material: { driveLink: "https://www.youtube.com/embed/ch4-video-id", type: "video" },
+        postQuiz: [
+            { type: 'mcq', question: "Redha Allah terletak pada?", feedbackText: "Redha Allah terletak pada redha kedua orang tua, and murka Allah ada pada murka mereka." }
+        ],
+        amalanList: ["Membantu Pekerjaan Rumah", "Mendoakan Orang Tua", "Qiyamul Lail"],
+        recitation: { surahName: "Al-Alaq", verseRange: "1-5", transcript: "Iqra bismi rabbikal ladzi khalaq khalaqal insana min 'alaq iqra wa rabbukal akram alladzi 'allama bil qalam 'allamal insana ma lam ya'lam" }
     },
     "ch-5": {
         chapterId: "ch-5",
-        preTest: [{ type: 'mcq', question: "Khusyuk dalam?", options: ["Makan", "Tidur", "Sholat", "Main"], correct: 2 }],
-        material: { driveLink: "https://drive.google.com/...", type: "pdf" },
-        postQuiz: [{ type: 'mcq', question: "Dzikir menenangkan?", feedbackText: "Hanya dengan mengingat Allah hati menjadi tenang." }],
-        amalanList: ["Sholat Khusyuk", "Dzikir Pagi", "Istighfar"],
-        recitation: { surahName: "Al-Qadr", verseRange: "1-3", transcript: "Inna anzalnahu fi lailatil qadr..." }
+        preTest: [
+            { type: 'mcq', question: "Khusyuk paling utama dilakukan saat?", options: ["Makan", "Tidur", "Sholat", "Bermain"], correct: 2 },
+            { type: 'reorder', items: ["Tenangkan Hati", "Ingat Kebesaran Allah", "Fokus pada Bacaan"] }
+        ],
+        material: { driveLink: "https://docs.google.com/viewer?url=https://satusaf.com/ch5-materi.pdf", type: "pdf" },
+        postQuiz: [
+            { type: 'mcq', question: "Apa manfaat Dzikir?", feedbackText: "Dzikir dapat menenangkan hati and menjauhkan kita dari gangguan setan." }
+        ],
+        amalanList: ["Sholat Khusyuk", "Dzikir Pagi & Petang", "Istighfar Selepas Sholat"],
+        recitation: { surahName: "Al-Qadr", verseRange: "1-3", transcript: "Inna anzalnahu fi lailatil qadr wa ma adraka ma lailatul qadr lailatul qadri khairum min alfi syahr" }
     },
     "ch-6": {
         chapterId: "ch-6",
-        preTest: [{ type: 'mcq', question: "Ukhuwah artinya?", options: ["Permusuhan", "Persaudaraan", "Pertemanan", "Persaingan"], correct: 1 }],
-        material: { driveLink: "https://drive.google.com/...", type: "video" },
-        postQuiz: [{ type: 'mcq', question: "Berbagi itu indah?", feedbackText: "Muslim adalah saudara bagi muslim lainnya." }],
-        amalanList: ["Berbagi Iftar", "Sapa Teman", "Senyum"],
-        recitation: { surahName: "Al-Bayyinah", verseRange: "1-3", transcript: "Lam yakunil ladzina kafaru..." }
+        preTest: [
+            { type: 'mcq', question: "Ukhuwah Islamiyah artinya?", options: ["Permusuhan", "Persaudaraan Islam", "Persaingan", "Perdebatan"], correct: 1 },
+            { type: 'match', pairs: [{ left: "Muslim", right: "Bersaudara" }, { left: "Berbagi", right: "Iftar / Makanan" }] }
+        ],
+        material: { driveLink: "https://www.youtube.com/embed/ch6-video-id", type: "video" },
+        postQuiz: [
+            { type: 'mcq', question: "Salah satu hak muslim atas muslim lainnya adalah?", feedbackText: "Menjawab salam, menjenguk yang sakit, and mendoakan saat bersin." }
+        ],
+        amalanList: ["Berbagi Makanan Buka", "Menyapa Teman Baru", "Tebarkan Salam"],
+        recitation: { surahName: "Al-Bayyinah", verseRange: "1-3", transcript: "Lam yakunil ladzina kafaru min ahlil kitabi wal musyrikina munfakkina hatta ta'tiyahumul bayyinah rasulum minallahi yatlu suhufam muthahharah fiha kutubun qayyimah" }
     },
     "ch-7": {
         chapterId: "ch-7",
-        preTest: [{ type: 'mcq', question: "Adab di medsos?", options: ["Saling hina", "Saling fitnah", "Saling nasihat", "Saling pamer"], correct: 2 }],
-        material: { driveLink: "https://drive.google.com/...", type: "pdf" },
-        postQuiz: [{ type: 'mcq', question: "Tabayyun?", feedbackText: "Periksalah berita sebelum menyebarkannya." }],
-        amalanList: ["No Hoax", "Komentar Baik", "Batasi Gadget"],
-        recitation: { surahName: "Al-Zalzalah", verseRange: "1-4", transcript: "Idza zulzilatil ardhu zilzalaha..." }
+        preTest: [
+            { type: 'mcq', question: "Bagaimana adab di media sosial?", options: ["Menghujat", "Berbagi Kebaikan", "Pamer Harta", "Ghibah Online"], correct: 1 },
+            { type: 'reorder', items: ["Cek Kebenaran", "Gunakan Bahasa Sopan", "Sebarkan Manfaat"] }
+        ],
+        material: { driveLink: "https://docs.google.com/viewer?url=https://satusaf.com/ch7-materi.pdf", type: "pdf" },
+        postQuiz: [
+            { type: 'mcq', question: "Apa itu Tabayyun?", feedbackText: "Tabayyun adalah meneliti atau mengklarifikasi kebenaran sebuah berita sebelum menyebarkannya." }
+        ],
+        amalanList: ["No Hoax", "Komentar Positif", "Mengurangi Waktu Screen"],
+        recitation: { surahName: "Al-Zalzalah", verseRange: "1-4", transcript: "Idza zulzilatil ardhu zilzalaha wa akhrajatil ardhu atsqalaha wa qalal insanu ma laha yauma'idzin tuhadditsu akhbaraha" }
     },
     "ch-8": {
         chapterId: "ch-8",
-        preTest: [{ type: 'mcq', question: "Kebersihan?", options: ["Beban", "Hobi", "Sebagian Iman", "Tugas"], correct: 2 }],
-        material: { driveLink: "https://drive.google.com/...", type: "video" },
-        postQuiz: [{ type: 'mcq', question: "Bersih itu sehat?", feedbackText: "Allah mencintai orang yang bersih dan suci." }],
-        amalanList: ["Pikun Masjid", "Buang Sampah", "Pakai Wangian"],
-        recitation: { surahName: "Al-Adiyat", verseRange: "1-5", transcript: "Wal adiyati dhabha..." }
+        preTest: [
+            { type: 'mcq', question: "Kebersihan adalah sebagian dari?", options: ["Hobi", "Beban", "Iman", "Tugas"], correct: 2 },
+            { type: 'match', pairs: [{ left: "Masjid", right: "Rumah Allah" }, { left: "Sampah", right: "Dibuang pada tempatnya" }] }
+        ],
+        material: { driveLink: "https://www.youtube.com/embed/ch8-video-id", type: "video" },
+        postQuiz: [
+            { type: 'mcq', question: "Mengapa kita harus wangi ke masjid?", feedbackText: "Kita harus tampil terbaik and bersih saat menghadap Allah SWT and agar tidak mengganggu jamaah lain." }
+        ],
+        amalanList: ["Memungut Sampah", "Merapikan Mushaf", "Memakai Wangian saat Sholat"],
+        recitation: { surahName: "Al-Adiyat", verseRange: "1-5", transcript: "Wal adiyati dhabha fal muriyati qadha fal mughirati subha fa atsarna bihi naq'a fa wasathna bihi jam'a" }
     },
     "ch-9": {
         chapterId: "ch-9",
-        preTest: [{ type: 'mcq', question: "Malam Lailatul Qadr?", options: ["Satu tahun", "Seribu bulan", "Satu abad", "Satu hari"], correct: 1 }],
-        material: { driveLink: "https://drive.google.com/...", type: "pdf" },
-        postQuiz: [{ type: 'mcq', question: "Mencari Qadr?", feedbackText: "Malam yang lebih baik dari seribu bulan." }],
-        amalanList: ["Itikaf", "Doa Lailatul Qadr", "Sedekah Subuh"],
-        recitation: { surahName: "Al-Qariah", verseRange: "1-5", transcript: "Al qari'ah mal qari'ah..." }
+        preTest: [
+            { type: 'mcq', question: "Lailatul Qadr lebih baik dari?", options: ["100 hari", "10 bulan", "1000 bulan", "100 tahun"], correct: 2 },
+            { type: 'reorder', items: ["Berniat Itikaf", "Memperbanyak Doa", "Membaca Al-Qur'an"] }
+        ],
+        material: { driveLink: "https://docs.google.com/viewer?url=https://satusaf.com/ch9-materi.pdf", type: "pdf" },
+        postQuiz: [
+            { type: 'mcq', question: "Malam Lailatul Qadr terjadi pada?", feedbackText: "Lailatul Qadr sering terjadi pada malam-malam ganjil di 10 hari terakhir bulan Ramadhan." }
+        ],
+        amalanList: ["Itikaf di Masjid", "Membaca Doa Sapu Jagad", "Sedekah di Malam Hari"],
+        recitation: { surahName: "Al-Qariah", verseRange: "1-5", transcript: "Al qari'ah mal qari'ah wa ma adraka mal qari'ah yauma yakunun nasu kal farasyil mabtsuts wa takunul jibalu kal 'ihnil manfusy" }
     },
     "ch-10": {
         chapterId: "ch-10",
-        preTest: [{ type: 'mcq', question: "Istiqaamah?", options: ["Berhenti", "Berubah", "Konsisten", "Berlari"], correct: 2 }],
-        material: { driveLink: "https://drive.google.com/...", type: "video" },
-        postQuiz: [{ type: 'mcq', question: "Terus beramal?", feedbackText: "Amalan yang paling dicintai adalah yang rutin walau sedikit." }],
-        amalanList: ["Rencana Pasca Ramadhan", "Puasa Syawal", "Sholat Tahajud"],
-        recitation: { surahName: "At-Takathur", verseRange: "1-3", transcript: "Alhakumut takathur..." }
+        preTest: [
+            { type: 'mcq', question: "Apa arti Istiqaamah?", options: ["Berhenti", "Berubah", "Teguh Pendirian / Konsisten", "Berlari"], correct: 2 },
+            { type: 'match', pairs: [{ left: "Amal", right: "Konsisten walau sedikit" }, { left: "Tujuan", right: "Husnul Khatimah" }] }
+        ],
+        material: { driveLink: "https://www.youtube.com/embed/ch10-video-id", type: "video" },
+        postQuiz: [
+            { type: 'mcq', question: "Bagaimana cara menjaga semangat ibadah?", feedbackText: "Berdoa memohon keteguhan hati, berteman dengan orang sholeh, and mengingat kematian." }
+        ],
+        amalanList: ["Membuat Jadwal Sholat Sunnah", "Puasa Syawal", "Mengikuti Kajian Rutin"],
+        recitation: { surahName: "At-Takathur", verseRange: "1-3", transcript: "Alhakumut takathur hatta zurtumul maqabir kalla saufa ta'lamun" }
     }
 };

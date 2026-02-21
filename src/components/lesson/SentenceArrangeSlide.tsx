@@ -54,25 +54,27 @@ export default function SentenceArrangeSlide({ data, onComplete }: SentenceArran
     };
 
     return (
-        <div className="w-full max-w-lg p-4 flex flex-col items-center space-y-8">
-            <h2 className="text-xl font-medium text-center text-slate-600 mb-4">{data.question}</h2>
+        <div className="w-full max-w-2xl mx-auto p-4 flex flex-col items-center space-y-10">
+            <h2 className="text-3xl font-black text-center text-slate-800 mb-2 tracking-tight leading-tight">
+                {data.question}
+            </h2>
 
             {/* Sentence Display Area */}
-            <div className="min-h-[120px] w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-200 flex flex-wrap gap-2 content-start transition-colors duration-300"
-                style={{
-                    borderColor: checkStatus === 'correct' ? '#22c55e' : checkStatus === 'incorrect' ? '#ef4444' : '#e2e8f0'
-                }}
-            >
+            <div className={cn(
+                "min-h-[140px] w-full p-6 rounded-[2.5rem] bg-slate-50 border-4 transition-all duration-300 flex flex-wrap gap-3 content-start shadow-inner",
+                checkStatus === 'correct' ? 'border-emerald-500 bg-emerald-50/50' :
+                    checkStatus === 'incorrect' ? 'border-red-500 bg-red-50/50' : 'border-slate-100'
+            )}>
                 <AnimatePresence>
                     {selectedWords.map((word) => (
                         <motion.button
                             key={word.id}
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.8, opacity: 0 }}
+                            initial={{ scale: 0.8, opacity: 0, y: 10 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.8, opacity: 0, y: 10 }}
                             layoutId={word.id}
                             onClick={() => handleDeselectWord(word)}
-                            className="px-4 py-2 bg-white rounded-xl border-2 border-b-4 border-slate-200 text-slate-700 font-bold shadow-sm hover:bg-slate-50 text-base"
+                            className="px-5 py-3 bg-white rounded-2xl border-b-4 border-2 border-slate-200 text-slate-700 font-black shadow-sm hover:translate-y-0.5 active:translate-y-1 transition-all text-lg uppercase tracking-wide"
                         >
                             {word.text}
                         </motion.button>
@@ -80,14 +82,14 @@ export default function SentenceArrangeSlide({ data, onComplete }: SentenceArran
                 </AnimatePresence>
 
                 {selectedWords.length === 0 && (
-                    <div className="w-full h-full flex items-center justify-center text-slate-300 text-sm font-medium italic">
-                        Tap words to build the sentence
+                    <div className="w-full flex items-center justify-center text-slate-300 text-sm font-black uppercase tracking-[0.2em] italic mt-8">
+                        TAP KATA UNTUK MENYUSUN
                     </div>
                 )}
             </div>
 
             {/* Available Words */}
-            <div className="w-full flex flex-wrap gap-3 justify-center min-h-[100px]">
+            <div className="w-full flex flex-wrap gap-4 justify-center min-h-[120px]">
                 <AnimatePresence>
                     {availableWords.map((word) => (
                         <motion.button
@@ -96,8 +98,10 @@ export default function SentenceArrangeSlide({ data, onComplete }: SentenceArran
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.8, opacity: 0 }}
                             layoutId={word.id}
+                            whileHover={{ scale: 1.05, y: -2 }}
+                            whileTap={{ scale: 0.95 }}
                             onClick={() => handleSelectWord(word)}
-                            className="px-4 py-2 bg-white rounded-xl border-2 border-b-4 border-slate-200 text-slate-700 font-bold shadow-sm hover:bg-slate-50 text-base"
+                            className="px-5 py-3 bg-white rounded-2xl border-b-4 border-2 border-slate-200 text-slate-600 font-black shadow-md hover:border-emerald-200 text-lg uppercase tracking-wide"
                         >
                             {word.text}
                         </motion.button>
@@ -106,34 +110,37 @@ export default function SentenceArrangeSlide({ data, onComplete }: SentenceArran
             </div>
 
             {/* Check Button */}
-            <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={handleCheck}
-                disabled={selectedWords.length === 0 || checkStatus === 'correct'}
-                className={cn(
-                    "w-full py-4 rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2 transition-all",
-                    checkStatus === 'correct'
-                        ? "bg-green-500 text-white"
-                        : checkStatus === 'incorrect'
-                            ? "bg-red-500 text-white"
-                            : selectedWords.length > 0
-                                ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                                : "bg-slate-200 text-slate-400 cursor-not-allowed"
-                )}
-            >
-                {checkStatus === 'correct' ? (
-                    <>
-                        <Check className="w-6 h-6" />
-                        Benar!
-                    </>
-                ) : checkStatus === 'incorrect' ? (
-                    <>
-                        Salah, Coba Lagi
-                    </>
-                ) : (
-                    "Periksa Jawaban"
-                )}
-            </motion.button>
+            <div className="w-full flex justify-center pt-4">
+                <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleCheck}
+                    disabled={selectedWords.length === 0 || checkStatus === 'correct'}
+                    className={cn(
+                        "w-full max-w-sm py-5 rounded-[2.5rem] font-black text-2xl uppercase tracking-widest transition-all shadow-xl flex items-center justify-center gap-3",
+                        checkStatus === 'correct'
+                            ? "bg-emerald-500 text-white shadow-emerald-200"
+                            : checkStatus === 'incorrect'
+                                ? "bg-red-500 text-white shadow-red-200"
+                                : selectedWords.length > 0
+                                    ? "bg-emerald-500 text-white shadow-emerald-200 hover:scale-105 active:scale-95"
+                                    : "bg-slate-100 text-slate-400 shadow-none cursor-not-allowed"
+                    )}
+                >
+                    {checkStatus === 'correct' ? (
+                        <>
+                            <Check className="w-8 h-8 stroke-[4]" />
+                            BENAR!
+                        </>
+                    ) : checkStatus === 'incorrect' ? (
+                        <>
+                            <RotateCcw className="w-8 h-8 stroke-[4] animate-spin-slow" />
+                            COBA LAGI
+                        </>
+                    ) : (
+                        "PERIKSA JAWABAN"
+                    )}
+                </motion.button>
+            </div>
         </div>
     );
 }

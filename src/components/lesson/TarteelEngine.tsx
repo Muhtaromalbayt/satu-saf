@@ -1,13 +1,13 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Mic, MicOff, CheckCircle2 } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Mic, MicOff, CheckCircle2, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface TarteelEngineProps {
-    targetVerse: string; // The Arabic text to recite
+    targetVerse: string; // The Arabic text to recite (with diacritics)
     targetTranscript: string; // The clean Arabic text for matching (no diacritics)
     onComplete?: () => void;
     onProgress?: (matchedCount: number, totalCount: number) => void;
@@ -22,64 +22,83 @@ export default function TarteelEngine({
     const [listening, setListening] = useState(false);
     const [recognizedWords, setRecognizedWords] = useState<Set<number>>(new Set());
     const [isFinished, setIsFinished] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const recognitionRef = useRef<any>(null);
     const targetWords = targetTranscript.split(/\s+/).filter(Boolean);
     const verseWords = targetVerse.split(/\s+/).filter(Boolean);
 
+    // Optimized matching function
+    const processTranscript = useCallback((text: string) => {
+        const spokenWords = text.toLowerCase().split(/\s+/).filter(Boolean);
+
+        setRecognizedWords(prev => {
+            const next = new Set(prev);
+            targetWords.forEach((target, index) => {
+                if (next.has(index)) return;
+
+                // Simple fuzzy matching: check if target word exists in the spoken words
+                const isMatch = spokenWords.some(spoken => {
+                    // Normalize (simplistic version, can be expanded)
+                    const normalizedSpoken = spoken.replace(/[^\u0621-\u064A]/g, '');
+                    const normalizedTarget = target.replace(/[^\u0621-\u064A]/g, '');
+
+                    return normalizedSpoken.includes(normalizedTarget) ||
+                        normalizedTarget.includes(normalizedSpoken) ||
+                        spoken.length > 2 && target.includes(spoken);
+                });
+
+                if (isMatch) {
+                    next.add(index);
+                }
+            });
+            return next;
+        });
+    }, [targetWords]);
+
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-            if (SpeechRecognition) {
-                recognitionRef.current = new SpeechRecognition();
-                recognitionRef.current.continuous = true;
-                recognitionRef.current.interimResults = true;
-                recognitionRef.current.lang = "ar-SA";
+        if (typeof window === "undefined") return;
 
-                recognitionRef.current.onresult = (event: any) => {
-                    let interimTranscript = "";
-                    for (let i = event.resultIndex; i < event.results.length; ++i) {
-                        const transcriptSegment = event.results[i][0].transcript;
-                        if (event.results[i].isFinal) {
-                            processTranscript(transcriptSegment);
-                        } else {
-                            interimTranscript += transcriptSegment;
-                            processTranscript(interimTranscript);
-                        }
-                    }
-                };
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
-                recognitionRef.current.onerror = (event: any) => {
-                    console.error("Speech recognition error", event.error);
-                    setListening(false);
-                };
-
-                recognitionRef.current.onend = () => {
-                    setListening(false);
-                };
-            }
+        if (!SpeechRecognition) {
+            setError("Browser anda tidak mendukung pengenalan suara.");
+            return;
         }
+
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = "ar-SA";
+
+        recognition.onresult = (event: any) => {
+            let combinedTranscript = "";
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                combinedTranscript += event.results[i][0].transcript;
+            }
+            processTranscript(combinedTranscript);
+        };
+
+        recognition.onerror = (event: any) => {
+            console.error("Speech recognition error", event.error);
+            if (event.error === 'not-allowed') {
+                setError("Izin mikrofon ditolak.");
+            }
+            setListening(false);
+        };
+
+        recognition.onend = () => {
+            setListening(false);
+        };
+
+        recognitionRef.current = recognition;
 
         return () => {
             if (recognitionRef.current) {
                 recognitionRef.current.stop();
             }
         };
-    }, [targetTranscript]);
-
-    const processTranscript = (text: string) => {
-        const spokenWords = text.toLowerCase().split(/\s+/).filter(Boolean);
-
-        setRecognizedWords(prev => {
-            const next = new Set(prev);
-            targetWords.forEach((target, index) => {
-                if (spokenWords.some(spoken => spoken.includes(target) || target.includes(spoken))) {
-                    next.add(index);
-                }
-            });
-            return next;
-        });
-    };
+    }, [processTranscript]);
 
     useEffect(() => {
         if (onProgress) {
@@ -88,38 +107,42 @@ export default function TarteelEngine({
 
         if (recognizedWords.size >= targetWords.length && targetWords.length > 0 && !isFinished) {
             setIsFinished(true);
-            if (listening) stopListening();
+            stopListening();
             if (onComplete) onComplete();
         }
-    }, [recognizedWords, targetWords.length]);
+    }, [recognizedWords.size, targetWords.length, onProgress, isFinished, onComplete]);
 
     const startListening = () => {
-        if (recognitionRef.current) {
-            setRecognizedWords(new Set());
-            setIsFinished(false);
-            try {
-                recognitionRef.current.start();
-                setListening(true);
-            } catch (e) {
-                console.error("Start error:", e);
-            }
-        } else {
-            alert("Browser Anda tidak mendukung Web Speech API.");
+        if (!recognitionRef.current) return;
+
+        setError(null);
+        setRecognizedWords(new Set());
+        setIsFinished(false);
+
+        try {
+            recognitionRef.current.start();
+            setListening(true);
+        } catch (e) {
+            console.error("Start error:", e);
+            // If already started, just ensure state is correct
+            setListening(true);
         }
     };
 
     const stopListening = () => {
         if (recognitionRef.current) {
-            recognitionRef.current.stop();
+            try {
+                recognitionRef.current.stop();
+            } catch (e) { }
             setListening(false);
         }
     };
 
     return (
-        <div className="flex flex-col items-center w-full space-y-12">
+        <div className="flex flex-col items-center w-full space-y-10">
             {/* Display Area with Ghost Text Effect */}
             <div
-                className="flex flex-wrap justify-center gap-4 p-8 rounded-[3rem] bg-slate-50/50 border-4 border-slate-100/50 min-h-[160px] w-full items-center font-arabic"
+                className="flex flex-wrap justify-center gap-x-4 gap-y-6 p-10 rounded-[3rem] bg-white border-4 border-slate-50 min-h-[180px] w-full items-center font-arabic shadow-xl relative"
                 dir="rtl"
             >
                 {verseWords.map((word, idx) => {
@@ -129,60 +152,106 @@ export default function TarteelEngine({
                             key={idx}
                             initial={false}
                             animate={{
-                                color: isMatched ? "#064e3b" : "#cbd5e1", // Dark Green vs Light Gray (Ghost Text)
+                                color: isMatched ? "#064E3B" : "#D1D5DB", // Dark Emerald vs Light Gray
                                 scale: isMatched ? 1.15 : 1,
-                                filter: isMatched ? "blur(0px)" : "blur(0.5px)"
+                                filter: isMatched ? "blur(0px)" : "blur(0.3px)",
+                                textShadow: isMatched ? "0px 0px 8px rgba(16, 185, 129, 0.2)" : "none"
                             }}
-                            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                            transition={{
+                                type: "spring",
+                                stiffness: 400,
+                                damping: 15,
+                                color: { duration: 0.2 }
+                            }}
                             className={cn(
-                                "text-4xl md:text-5xl font-bold transition-all duration-500",
-                                isMatched ? "drop-shadow-sm" : "select-none"
+                                "text-4xl md:text-5xl lg:text-6xl font-black relative z-10",
+                                isMatched ? "drop-shadow-sm" : "select-none opacity-60"
                             )}
                         >
                             {word}
                         </motion.span>
-                    )
+                    );
                 })}
             </div>
 
-            {/* Pulsing Mic Button */}
-            <div className="flex flex-col items-center gap-6">
+            {/* Controls & Feedback */}
+            <div className="flex flex-col items-center gap-4">
                 <AnimatePresence mode="wait">
-                    {isFinished ? (
+                    {error ? (
                         <motion.div
-                            initial={{ scale: 0, rotate: -45 }}
-                            animate={{ scale: 1, rotate: 0 }}
-                            className="bg-emerald-500 text-white p-6 rounded-full shadow-xl shadow-emerald-200"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex items-center gap-2 text-red-500 font-bold bg-red-50 p-3 px-6 rounded-full border border-red-100"
                         >
-                            <CheckCircle2 className="h-12 w-12" />
+                            <AlertCircle className="w-5 h-5" />
+                            <span>{error}</span>
+                        </motion.div>
+                    ) : isFinished ? (
+                        <motion.div
+                            initial={{ scale: 0, rotate: -15 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            className="bg-emerald-500 text-white p-6 rounded-full shadow-lg shadow-emerald-200"
+                        >
+                            <CheckCircle2 className="h-10 w-10" />
                         </motion.div>
                     ) : (
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={listening ? stopListening : startListening}
-                            className={cn(
-                                "h-24 w-24 rounded-full flex items-center justify-center shadow-2xl transition-all relative z-10",
-                                listening
-                                    ? "bg-red-500 text-white shadow-red-200"
-                                    : "bg-primary text-white shadow-primary/30"
-                            )}
-                        >
-                            {listening && (
-                                <motion.div
-                                    animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0, 0.5] }}
-                                    transition={{ repeat: Infinity, duration: 1.5 }}
-                                    className="absolute inset-0 bg-red-400 rounded-full -z-10"
-                                />
-                            )}
-                            {listening ? <MicOff className="h-10 w-10" /> : <Mic className="h-10 w-10" />}
-                        </motion.button>
+                        <div className="relative">
+                            {/* Pulse background */}
+                            <AnimatePresence>
+                                {listening && (
+                                    <>
+                                        <motion.div
+                                            initial={{ scale: 1, opacity: 0.5 }}
+                                            animate={{ scale: 2, opacity: 0 }}
+                                            exit={{ opacity: 0 }}
+                                            transition={{ repeat: Infinity, duration: 1.5, ease: "easeOut" }}
+                                            className="absolute inset-0 bg-emerald-400 rounded-full -z-10"
+                                        />
+                                        <motion.div
+                                            initial={{ scale: 1, opacity: 0.3 }}
+                                            animate={{ scale: 1.6, opacity: 0 }}
+                                            exit={{ opacity: 0 }}
+                                            transition={{ repeat: Infinity, duration: 1.5, ease: "easeOut", delay: 0.5 }}
+                                            className="absolute inset-0 bg-emerald-300 rounded-full -z-10"
+                                        />
+                                    </>
+                                )}
+                            </AnimatePresence>
+
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={listening ? stopListening : startListening}
+                                className={cn(
+                                    "h-20 w-20 rounded-full flex items-center justify-center shadow-xl transition-all relative z-10",
+                                    listening
+                                        ? "bg-red-500 text-white"
+                                        : "bg-emerald-500 text-white hover:bg-emerald-600"
+                                )}
+                            >
+                                {listening ? (
+                                    <motion.div
+                                        animate={{ scale: [1, 1.1, 1] }}
+                                        transition={{ repeat: Infinity, duration: 0.5 }}
+                                    >
+                                        <MicOff className="h-8 w-8" />
+                                    </motion.div>
+                                ) : (
+                                    <Mic className="h-8 w-8" />
+                                )}
+                            </motion.button>
+                        </div>
                     )}
                 </AnimatePresence>
 
-                <p className="font-black text-slate-400 uppercase text-xs tracking-[0.2em]">
-                    {listening ? "MENDENGARKAN..." : isFinished ? "SELESAI!" : "TEKAN & MULAI BACA"}
-                </p>
+                <div className="text-center h-6">
+                    <p className={cn(
+                        "font-black uppercase text-[10px] tracking-[0.25em] transition-colors",
+                        listening ? "text-red-500" : "text-slate-400"
+                    )}>
+                        {listening ? "SAYA MENDENGARKAN..." : isFinished ? "MAASYA ALLAH!" : "MULAI REKAMAN"}
+                    </p>
+                </div>
             </div>
         </div>
     );

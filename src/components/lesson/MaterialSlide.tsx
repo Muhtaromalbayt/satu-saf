@@ -32,20 +32,20 @@ export default function MaterialSlide({ data, onComplete }: MaterialSlideProps) 
     const embedUrl = getEmbedUrl(data.url);
 
     return (
-        <div className="w-full max-w-4xl flex flex-col items-center space-y-6 h-full min-h-[500px]">
-            <div className="text-center space-y-2">
-                <h2 className="text-2xl font-bold text-slate-800">{data.title}</h2>
+        <div className="w-full max-w-4xl mx-auto flex flex-col items-center space-y-8 h-full min-h-[500px]">
+            <div className="text-center space-y-4">
+                <h2 className="text-3xl md:text-4xl font-black text-slate-800 leading-tight">{data.title}</h2>
                 {data.description && (
-                    <p className="text-slate-500 max-w-lg mx-auto">{data.description}</p>
+                    <p className="text-slate-500 font-bold max-w-lg mx-auto text-lg leading-relaxed">{data.description}</p>
                 )}
             </div>
 
-            <div className="w-full flex-1 bg-slate-100 rounded-2xl overflow-hidden border-2 border-slate-200 relative shadow-inner min-h-[400px]">
+            <div className="w-full flex-1 bg-slate-100 rounded-[3rem] overflow-hidden border-8 border-white shadow-2xl relative min-h-[450px]">
                 {!isLoaded && (
-                    <div className="absolute inset-0 flex items-center justify-center text-slate-400">
-                        <div className="animate-pulse flex flex-col items-center gap-2">
-                            <div className="h-8 w-8 rounded-full border-2 border-t-blue-500 animate-spin" />
-                            <span>Memuat Materi...</span>
+                    <div className="absolute inset-0 flex items-center justify-center bg-slate-50">
+                        <div className="animate-pulse flex flex-col items-center gap-4">
+                            <div className="h-12 w-12 rounded-full border-4 border-slate-200 border-t-emerald-500 animate-spin" />
+                            <span className="font-black text-slate-400 uppercase tracking-widest text-xs">Menyiapkan Materi...</span>
                         </div>
                     </div>
                 )}
@@ -57,21 +57,21 @@ export default function MaterialSlide({ data, onComplete }: MaterialSlideProps) 
                 />
             </div>
 
-            <div className="flex gap-4 w-full max-w-sm">
+            <div className="flex flex-col md:flex-row gap-4 w-full max-w-xl pt-4">
                 <a
                     href={data.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 py-3 px-4 bg-white border-2 border-slate-200 text-slate-600 font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors"
+                    className="flex-1 py-5 px-6 bg-white border-4 border-slate-100 text-slate-600 font-black rounded-[2rem] flex items-center justify-center gap-3 hover:bg-slate-50 hover:border-emerald-100 transition-all uppercase tracking-widest text-sm shadow-lg"
                 >
-                    <ExternalLink className="w-4 h-4" />
-                    Buka di Drive
+                    <ExternalLink className="w-5 h-5 text-emerald-500" />
+                    Buka File Asli
                 </a>
                 <button
                     onClick={onComplete}
-                    className="flex-1 py-3 px-4 bg-primary text-primary-foreground font-bold rounded-xl shadow-md hover:bg-primary/90 transition-colors"
+                    className="flex-1 py-5 px-6 bg-emerald-500 text-white font-black rounded-[2rem] shadow-xl shadow-emerald-200 hover:scale-105 active:scale-95 transition-all uppercase tracking-widest text-sm"
                 >
-                    Selesai Membaca
+                    Tandai Selesai & Lanjut
                 </button>
             </div>
         </div>

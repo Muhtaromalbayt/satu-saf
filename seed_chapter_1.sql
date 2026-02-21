@@ -4,77 +4,73 @@ INSERT INTO lessons (id, chapter, type, title, content, created_at) VALUES (
     'chapter-1-main',
     1,
     'chapter',
-    'Bab 1: Dasar Islam & Iman',
+    'Bab 1: Niat & Keikhlasan',
     '{
   "preTest": [
     {
       "type": "multiple_choice",
-      "question": "Apa tujuan utama kita mempelajari Tauhid?",
-      "options": ["Mengenal Allah", "Mengenal Sejarah", "Belajar Bahasa", "Hanya Kewajiban"],
-      "correctAnswer": 0
+      "question": "Apa niat utama kita saat berangkat ke masjid?",
+      "options": ["Mencari teman", "Hanya ikut-ikutan", "Mendekatkan diri kepada Allah", "Menghindari pekerjaan"],
+      "correctAnswer": 2
     },
     {
       "type": "pair_matching",
-      "title": "Pasangkan Sifat Allah",
+      "title": "Hubungkan Adab & Artinya",
       "pairs": [
-        {"id": "1", "left": "Wujud", "right": "Ada"},
-        {"id": "2", "left": "Qidam", "right": "Terdahulu"},
-        {"id": "3", "left": "Baqa", "right": "Kekal"},
-        {"id": "4", "left": "Mukhalafatu lil hawaditsi", "right": "Berbeda dengan makhluk"}
+        {"id": "1", "left": "Ikhlas", "right": "Murni karena Allah"},
+        {"id": "2", "left": "Sidiq", "right": "Jujur dalam Niat"},
+        {"id": "3", "left": "Ittiba", "right": "Mengikuti Sunnah"}
       ]
     },
     {
       "type": "sentence_arrange",
-      "question": "Susun Syahadat Tauhid:",
-      "correctSentence": "Asyhadu alla ilaha illallah",
-      "words": ["ilaha", "Asyhadu", "illallah", "alla", "Muhammad"]
+      "question": "Susun Niat Beramal:",
+      "correctSentence": "Innamal a''malu bin niyat",
+      "words": ["niyat", "Innamal", "bin", "a''malu"]
     }
   ],
   "material": [
     {
-      "title": "Video: Pengenalan Iman dan Islam",
-      "description": "Tonton video berikut untuk memahami dasar-dasar agama kita.",
+      "title": "Visi SATU SAF",
+      "description": "Memahami pentingnya i''tikaf dan kebersihan hati di masjid.",
       "type": "video",
-      "url": "https://drive.google.com/file/d/1BfVn1wXU2k9P-Yy5Z9X-u8W8m6V7Y-L1/preview"
+      "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
     },
     {
-      "title": "PDF: Ringkasan Rukun Iman",
-      "description": "Baca ringkasan ini untuk persiapan kuis penguasaan.",
+      "title": "Panduan Adab Masjid",
+      "description": "Pelajari tata krama sebelum melangkah masuk ke rumah Allah.",
       "type": "pdf",
-      "url": "https://drive.google.com/file/d/1y0_uXW5Z9V-Z8X7-u9W8m6V7Y-L1/preview"
+      "url": "https://satusaf.com/adab-masjid.pdf"
     }
   ],
   "quiz": [
     {
-      "type": "multiple_choice",
-      "question": "Rukun Iman yang kedua adalah iman kepada...?",
-      "options": ["Kitab Allah", "Malaikat Allah", "Rasul Allah", "Hari Akhir"],
-      "correctAnswer": 1
-    },
-    {
-      "type": "multiple_choice",
-      "question": "Manakah yang termasuk amalan hati?",
-      "options": ["Sholat", "Puasa", "Ikhlas", "Zakat"],
-      "correctAnswer": 2
+      "type": "sorting",
+      "title": "Urutan Melangkah Masuk Masjid",
+      "description": "Urutkan langkah yang benar agar berkah.",
+      "items": [
+        {"id": "1", "text": "Berdoa Keluar Rumah"},
+        {"id": "2", "text": "Melangkah Kaki Kanan"},
+        {"id": "3", "text": "Membaca Doa Masuk Masjid"},
+        {"id": "4", "text": "Sholat Tahiyatul Masjid"}
+      ]
     }
   ],
   "amalan": {
-    "title": "Amalan Yaumi Pekan Pertama",
+    "title": "Tantangan Kebaikan Hari Ini",
     "items": [
-      {"id": "subuh", "label": "Sholat Subuh Berjamaah", "icon": "sholat", "category": "wajib"},
-      {"id": "zuhur", "label": "Sholat Zuhur Tepat Waktu", "icon": "sholat", "category": "wajib"},
-      {"id": "asar", "label": "Sholat Asar Tepat Waktu", "icon": "sholat", "category": "wajib"},
-      {"id": "maghrib", "label": "Sholat Maghrib di Masjid", "icon": "sholat", "category": "wajib"},
-      {"id": "isya", "label": "Sholat Isya Berjamaah", "icon": "sholat", "category": "wajib"},
-      {"id": "quran", "label": "Baca Al-Quran 1 Ruku", "icon": "quran", "category": "sunnah"},
-      {"id": "sedekah", "label": "Sedekah Subuh / Jariyah", "icon": "sedekah", "category": "other"}
+      {"id": "sholat", "label": "Sholat Berjamaah", "icon": "mosque"},
+      {"id": "tadarus", "label": "Tadarus Quran", "icon": "quran", "isSpecial": true},
+      {"id": "sedekah", "label": "Sedekah Subuh", "icon": "heart"},
+      {"id": "sandal", "label": "Rapikan Sandal", "icon": "sparkles"},
+      {"id": "dzikir", "label": "Dzikir Pagi", "icon": "moon"}
     ]
   },
   "tadarus": {
-    "surahName": "QS. Al-Ikhlas",
-    "verseText": "قُلْ هُوَ اللَّهُ أَحَدٌ",
-    "targetString": "Qul huwallahu ahad",
-    "translation": "Katakanlah (Muhammad), Dialah Allah, Yang Maha Esa."
+    "surahName": "QS. Al-Insyirah : 1",
+    "verseText": "أَلَمْ نَشْرَحْ لَكَ صَدْرَكَ",
+    "targetString": "Alam nasyrah laka shadrak",
+    "translation": "Bukankah Kami telah melapangkan dadamu (Muhammad)?"
   }
 }',
     datetime('now')

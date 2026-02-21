@@ -7,10 +7,10 @@ interface AmalanSlideProps {
     onComplete: (data: any) => void;
 }
 
-export default function AmalanSlide({ onComplete }: AmalanSlideProps) {
+export default function AmalanSlide({ data, onComplete }: AmalanSlideProps) {
     return (
         <div className="flex flex-col h-full w-full">
-            <AmalanTracker onComplete={onComplete} />
+            <AmalanTracker items={data?.items} onComplete={onComplete} />
         </div>
     );
 }

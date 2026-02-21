@@ -30,12 +30,11 @@ function LoginForm() {
         try {
             if (isRegister) {
                 const name = formData.get("name") as string;
-                // Add role to the sign-up payload
                 const { error: signUpError } = await authClient.signUp.email({
                     email,
                     password,
                     name,
-                    role: role, // Pass the role from the URL
+                    role: role,
                 } as any);
                 if (signUpError) {
                     console.error("Registration Error:", signUpError);
@@ -55,7 +54,6 @@ function LoginForm() {
                 }
             }
 
-            // Redirect based on role
             if (role === 'mentor') {
                 router.push("/mentor");
             } else if (role === 'parent') {
@@ -83,7 +81,7 @@ function LoginForm() {
         <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="space-y-6"
+            className="space-y-5"
         >
             <div className="text-center">
                 <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${roleColor}`}>
@@ -91,30 +89,30 @@ function LoginForm() {
                 </span>
             </div>
 
-            <form onSubmit={handleEmailLogin} className="space-y-4">
+            <form onSubmit={handleEmailLogin} className="space-y-3.5">
                 {isRegister && (
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Lengkap</label>
                         <input
                             name="name"
                             type="text"
                             placeholder="Nama kamu"
                             required
-                            className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-primary outline-none text-slate-700 font-bold transition-all"
+                            className="w-full p-3.5 rounded-xl border-2 border-slate-100 focus:border-primary outline-none text-slate-700 font-bold transition-all text-sm"
                         />
                     </div>
                 )}
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email</label>
                     <input
                         name="email"
                         type="email"
                         placeholder="nama@email.com"
                         required
-                        className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-primary outline-none text-slate-700 font-bold transition-all"
+                        className="w-full p-3.5 rounded-xl border-2 border-slate-100 focus:border-primary outline-none text-slate-700 font-bold transition-all text-sm"
                     />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Password</label>
                     <input
                         name="password"
@@ -122,24 +120,20 @@ function LoginForm() {
                         placeholder="••••••••"
                         required
                         minLength={8}
-                        className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-primary outline-none text-slate-700 font-bold transition-all"
+                        className="w-full p-3.5 rounded-xl border-2 border-slate-100 focus:border-primary outline-none text-slate-700 font-bold transition-all text-sm"
                     />
                 </div>
 
                 {error && (
-                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-medium text-center break-words">
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs font-medium text-center break-words">
                         {error}
-                        {/* DEBUGGING INFO */}
-                        <div className="mt-2 text-xs text-left bg-white p-2 rounded border border-red-100 overflow-auto max-h-20">
-                            Debug: {error}
-                        </div>
                     </div>
                 )}
 
                 <Button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-7 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl font-bold text-lg transition-all shadow-xl active:scale-95 flex items-center justify-center gap-3"
+                    className="w-full py-5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold text-base transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2"
                 >
                     {isRegister ? (
                         <><UserPlus className="h-5 w-5" /> {loading ? "MEMPROSES..." : "DAFTAR AKUN"}</>
@@ -156,7 +150,7 @@ function LoginForm() {
                 {isRegister ? "Sudah punya akun? Masuk di sini" : "Belum punya akun? Daftar di sini"}
             </button>
 
-            <Link href="/" className="flex items-center justify-center gap-2 text-slate-400 hover:text-slate-600 font-bold text-sm transition-colors pt-2">
+            <Link href="/" className="flex items-center justify-center gap-2 text-slate-400 hover:text-slate-600 font-bold text-sm transition-colors pt-1">
                 <ArrowLeft className="h-4 w-4" /> UBAH PERAN
             </Link>
 
@@ -166,7 +160,7 @@ function LoginForm() {
             </p>
 
             {!isRegister && role !== 'admin' && (
-                <div className="pt-4 border-t border-slate-100 flex justify-center">
+                <div className="pt-3 border-t border-slate-100 flex justify-center">
                     <Link href="/login?role=admin" className="text-[10px] font-bold text-slate-300 hover:text-slate-500 transition-colors uppercase tracking-widest">
                         Masuk sebagai Admin
                     </Link>
@@ -178,22 +172,22 @@ function LoginForm() {
 
 export default function LoginPage() {
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:20px_20px]">
+        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-5 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:20px_20px]">
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border-2 border-slate-100"
+                className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100"
             >
                 {/* Header Decoration */}
-                <div className="bg-primary/5 p-8 flex flex-col items-center border-b-2 border-slate-50">
-                    <Mascot pose="success" className="mb-4" />
-                    <h1 className="text-4xl font-black text-slate-800 tracking-tight">SATU SAF</h1>
-                    <p className="text-slate-500 font-medium whitespace-nowrap">Platform Belajar PAI Masa Kini</p>
+                <div className="bg-primary/5 p-6 flex flex-col items-center border-b border-slate-50">
+                    <Mascot pose="success" className="mb-3 scale-90" />
+                    <h1 className="text-3xl font-black text-slate-800 tracking-tight">SATU SAF</h1>
+                    <p className="text-slate-500 font-medium text-sm whitespace-nowrap">Platform Belajar PAI Masa Kini</p>
                 </div>
 
-                <div className="p-8 sm:p-10 space-y-6">
-                    <div className="space-y-2 text-center">
-                        <h2 className="text-2xl font-bold text-slate-800">Selamat Datang!</h2>
+                <div className="p-6 space-y-5">
+                    <div className="space-y-1 text-center">
+                        <h2 className="text-xl font-bold text-slate-800">Selamat Datang!</h2>
                     </div>
 
                     <Suspense fallback={<div className="h-60 animate-pulse bg-slate-50 rounded-2xl" />}>
@@ -202,7 +196,7 @@ export default function LoginPage() {
                 </div>
             </motion.div>
 
-            <p className="mt-8 text-center text-[10px] text-slate-400">
+            <p className="mt-6 text-center text-[10px] text-slate-400">
                 Masalah login? Hubungi Superadmin Tutorial.
             </p>
 

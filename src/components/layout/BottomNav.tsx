@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { Home, Trophy, User, BookOpen, ShieldCheck, Map as MapIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { motion } from "framer-motion";
 
 export default function BottomNav() {
     const pathname = usePathname();
@@ -31,8 +32,8 @@ export default function BottomNav() {
     if (!mounted) return null;
 
     return (
-        <nav className="fixed bottom-0 z-50 w-full border-t border-border bg-background pb-safe pt-2">
-            <div className="flex h-16 items-center justify-around px-4">
+        <nav className="fixed bottom-0 z-50 w-full glass border-t border-white/20 shadow-[0_-4px_30px_rgba(0,0,0,0.06)]">
+            <div className="flex h-16 items-center justify-around px-2 pb-safe max-w-lg mx-auto">
                 {links.map((link) => {
                     const Icon = link.icon;
                     const isActive = pathname === link.href;
@@ -41,14 +42,27 @@ export default function BottomNav() {
                             key={link.href}
                             href={link.href}
                             className={cn(
-                                "flex flex-col items-center justify-center gap-1 transition-colors",
+                                "relative flex flex-col items-center justify-center gap-0.5 py-1.5 px-3 rounded-2xl transition-all duration-200",
                                 isActive
-                                    ? "text-primary font-bold"
-                                    : "text-muted-foreground hover:text-primary/70"
+                                    ? "text-primary"
+                                    : "text-slate-400 active:text-primary/70"
                             )}
                         >
-                            <Icon className={cn("h-6 w-6", isActive && "fill-current")} />
-                            <span className="text-[10px] uppercase tracking-wide">
+                            {isActive && (
+                                <motion.div
+                                    layoutId="activeTab"
+                                    className="absolute inset-0 bg-primary/10 rounded-2xl"
+                                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                                />
+                            )}
+                            <Icon className={cn(
+                                "h-5 w-5 relative z-10 transition-transform duration-200",
+                                isActive && "fill-current scale-110"
+                            )} />
+                            <span className={cn(
+                                "text-[9px] uppercase tracking-wider relative z-10 font-semibold",
+                                isActive && "font-black"
+                            )}>
                                 {link.label}
                             </span>
                         </Link>

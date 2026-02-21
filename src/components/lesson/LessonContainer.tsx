@@ -35,11 +35,6 @@ export default function LessonContainer({
     const router = useRouter();
     const { hearts, xp, streak, decrementHearts, addXp, completeNode } = useGamification();
     const [slideIndex, setSlideIndex] = useState(0);
-    const [showMascotToast] = useState({
-        visible: false,
-        message: '',
-        pose: 'success'
-    });
 
     const slides = useMemo(() => initialSlides || [], [initialSlides]);
     const currentSlide = slides[slideIndex];
@@ -50,10 +45,10 @@ export default function LessonContainer({
         let currentStage: any = null;
 
         slides.forEach((slide, idx) => {
-            let stageName = "Other";
+            let stageName = "Materi";
             if (slide.id.includes("-pre-")) stageName = "Pre-test";
-            else if (slide.id.includes("-mat-")) stageName = "Materi";
-            else if (slide.id.includes("-quiz-") || slide.type === 'sorting') stageName = "Kuis";
+            else if (slide.type === 'material') stageName = "Materi";
+            else if (slide.type === 'quiz' || slide.type === 'sorting') stageName = "Kuis";
             else if (slide.type === 'amalan') stageName = "Amalan";
             else if (slide.type === 'tarteel') stageName = "Tarteel";
             else if (slide.type === 'final_submit') stageName = "Submit";
@@ -66,6 +61,9 @@ export default function LessonContainer({
             }
         });
         if (currentStage) groups.push(currentStage);
+
+        // Ensure we always have exactly 6 stages visually if possible, 
+        // but here we follow the content.
         return groups;
     }, [slides]);
 
@@ -90,7 +88,10 @@ export default function LessonContainer({
     };
 
     const handleBack = () => {
-        if (slideIndex > 0) setSlideIndex(prev => prev - 1);
+        if (slideIndex > 0) {
+            playSound('ding');
+            setSlideIndex(prev => prev - 1);
+        }
     };
 
     const handleQuizAnswer = (isCorrect: boolean) => {
@@ -104,12 +105,6 @@ export default function LessonContainer({
     };
 
     const handleFinalComplete = () => {
-        confetti({
-            particleCount: 150,
-            spread: 70,
-            origin: { y: 0.6 },
-            colors: ['#10b981', '#f59e0b', '#ffffff']
-        });
         addXp(100);
         completeNode(lessonId);
     };
@@ -117,21 +112,24 @@ export default function LessonContainer({
     if (!currentSlide) return null;
 
     const currentStageInfo = stages.find(s => slideIndex >= s.start && slideIndex <= s.end);
+    const stageIndex = stages.indexOf(currentStageInfo!) + 1;
 
     return (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-white">
+        <div className="fixed inset-0 z-[100] flex flex-col bg-[#FDFCF6]">
             {/* Header / Premium Progress Bar */}
-            <div className="px-6 pt-8 pb-4 max-w-5xl mx-auto w-full">
-                <div className="flex items-center gap-6 mb-6">
-                    <button
+            <div className="px-4 pt-6 pb-2 max-w-5xl mx-auto w-full">
+                <div className="flex items-center gap-4 md:gap-8 mb-6">
+                    <motion.button
+                        whileHover={{ scale: 1.1, rotate: -90 }}
+                        whileTap={{ scale: 0.9 }}
                         onClick={handleClose}
-                        className="p-2 text-slate-400 hover:text-slate-600 transition-colors"
+                        className="p-2 text-slate-400 hover:text-red-500 transition-colors bg-white rounded-2xl shadow-sm border-2 border-slate-50"
                     >
-                        <X className="h-7 w-7" />
-                    </button>
+                        <X className="h-6 w-6 stroke-[3]" />
+                    </motion.button>
 
                     {/* Multi-segment Segmented Progress Bar */}
-                    <div className="flex-1 flex gap-2 h-3.5 items-center">
+                    <div className="flex-1 flex gap-2 h-4 items-center">
                         {stages.map((stage, idx) => {
                             const isPast = slideIndex > stage.end;
                             const isActive = slideIndex >= stage.start && slideIndex <= stage.end;
@@ -140,20 +138,20 @@ export default function LessonContainer({
                                 : isPast ? 100 : 0;
 
                             return (
-                                <div key={idx} className="flex-1 h-full bg-slate-100 rounded-full relative overflow-hidden ring-1 ring-slate-100">
+                                <div key={idx} className="flex-1 h-full bg-slate-100/50 rounded-full relative overflow-hidden border-2 border-white shadow-inner">
                                     <motion.div
                                         initial={false}
                                         animate={{ width: `${progress}%` }}
                                         className={cn(
-                                            "absolute inset-0 transition-colors duration-500",
+                                            "absolute inset-0 transition-colors duration-700",
                                             isPast || isActive ? 'bg-emerald-500' : 'bg-slate-200'
                                         )}
                                     />
                                     {isActive && (
                                         <motion.div
-                                            animate={{ opacity: [0.3, 0.6, 0.3] }}
-                                            transition={{ repeat: Infinity, duration: 2 }}
-                                            className="absolute inset-0 bg-white"
+                                            animate={{ opacity: [0.2, 0.5, 0.2], x: ["-100%", "100%"] }}
+                                            transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+                                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent w-full"
                                         />
                                     )}
                                 </div>
@@ -161,15 +159,21 @@ export default function LessonContainer({
                         })}
                     </div>
 
-                    <div className="flex items-center gap-5 ml-2">
-                        <div className="flex items-center gap-1.5">
-                            <Heart className={cn("h-7 w-7", hearts > 0 ? "text-red-500 fill-red-500" : "text-slate-300 fill-slate-300")} />
-                            <span className="font-black text-slate-700 text-xl">{hearts}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <Zap className="h-7 w-7 text-amber-400 fill-amber-400" />
-                            <span className="font-black text-slate-700 text-xl">{streak}</span>
-                        </div>
+                    <div className="flex items-center gap-4">
+                        <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-2xl border-2 border-slate-50 shadow-sm"
+                        >
+                            <Heart className={cn("h-5 w-5", hearts > 0 ? "text-red-500 fill-red-500" : "text-slate-200 fill-slate-200")} />
+                            <span className="font-black text-slate-700 text-sm">{hearts}</span>
+                        </motion.div>
+                        <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-2xl border-2 border-slate-50 shadow-sm"
+                        >
+                            <Zap className="h-5 w-5 text-amber-500 fill-amber-500" />
+                            <span className="font-black text-slate-700 text-sm">{streak}</span>
+                        </motion.div>
                     </div>
                 </div>
 
@@ -178,35 +182,28 @@ export default function LessonContainer({
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={currentStageInfo?.name}
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="bg-emerald-50 px-4 py-1.5 rounded-2xl border-2 border-emerald-100/50"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="bg-emerald-500 text-white px-4 py-1.5 rounded-2xl border-4 border-emerald-400 shadow-lg shadow-emerald-100 flex items-center gap-2"
                         >
-                            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2">
-                                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                                STAGE {stages.indexOf(currentStageInfo!) + 1}: {currentStageInfo?.name}
+                            <div className="h-2 w-2 rounded-full bg-white animate-pulse" />
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">
+                                TAHAP {stageIndex}: {currentStageInfo?.name}
                             </span>
                         </motion.div>
                     </AnimatePresence>
                 </div>
             </div>
 
-            <MascotToast
-                isVisible={showMascotToast.visible}
-                message={showMascotToast.message}
-                pose={showMascotToast.pose as any}
-                onClose={() => { }}
-            />
-
             {/* Content Area */}
-            <main className="flex-1 overflow-y-auto relative flex flex-col pt-4">
+            <main className="flex-1 overflow-y-auto relative flex flex-col pt-4 pb-20 no-scrollbar">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={currentSlide.id}
-                        initial={{ opacity: 0, x: 40, scale: 0.98 }}
+                        initial={{ opacity: 0, x: 50, scale: 0.95 }}
                         animate={{ opacity: 1, x: 0, scale: 1 }}
-                        exit={{ opacity: 0, x: -40, scale: 0.98 }}
-                        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                        exit={{ opacity: 0, x: -50, scale: 0.95 }}
+                        transition={{ type: "spring", damping: 25, stiffness: 150 }}
                         className="flex-1 w-full max-w-4xl mx-auto px-6"
                     >
                         {currentSlide.type === 'story' && <StorySlide data={currentSlide.content} />}
@@ -225,26 +222,32 @@ export default function LessonContainer({
                 </AnimatePresence>
             </main>
 
-            {/* Footer / Navigation Support */}
-            <div className="p-6 max-w-4xl mx-auto w-full flex justify-between items-center">
-                {slideIndex > 0 && currentSlide.type !== 'final_submit' ? (
-                    <button
-                        onClick={handleBack}
-                        className="flex items-center gap-2 text-slate-400 font-black text-sm hover:text-slate-600 transition-all px-4 py-2 rounded-xl hover:bg-slate-50"
-                    >
-                        <ChevronLeft className="h-5 w-5" /> KEMBALI
-                    </button>
-                ) : <div />}
+            {/* Footer Navigation */}
+            <div className="fixed bottom-0 left-0 right-0 p-4 pb-8 bg-gradient-to-t from-[#FDFCF6] via-[#FDFCF6]/90 to-transparent">
+                <div className="max-w-4xl mx-auto w-full flex justify-between items-center">
+                    {slideIndex > 0 && currentSlide.type !== 'final_submit' ? (
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={handleBack}
+                            className="flex items-center gap-2 text-slate-400 font-black text-xs hover:text-emerald-600 transition-all px-5 py-3 rounded-2xl bg-white border-2 border-slate-50 shadow-sm"
+                        >
+                            <ChevronLeft className="h-4 w-4 stroke-[3]" /> KEMBALI
+                        </motion.button>
+                    ) : <div />}
 
-                {/* Optional "Continue" button for types that don't have built-in completion buttons */}
-                {(currentSlide.type === 'story' || currentSlide.type === 'material') && (
-                    <button
-                        onClick={handleNext}
-                        className="px-8 py-4 bg-emerald-500 text-white font-black rounded-2xl shadow-lg shadow-emerald-100 hover:scale-105 active:scale-95 transition-all uppercase tracking-widest text-sm"
-                    >
-                        LANJUTKAN
-                    </button>
-                )}
+                    {/* Auto-continue hints for story slides */}
+                    {currentSlide.type === 'story' && (
+                        <motion.button
+                            whileHover={{ scale: 1.05, y: -2 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={handleNext}
+                            className="px-8 py-4 bg-emerald-500 text-white font-black rounded-[2rem] shadow-xl shadow-emerald-200 uppercase tracking-widest text-xs border-b-4 border-emerald-600 active:border-b-0 transition-all"
+                        >
+                            LANJUTKAN
+                        </motion.button>
+                    )}
+                </div>
             </div>
         </div>
     );

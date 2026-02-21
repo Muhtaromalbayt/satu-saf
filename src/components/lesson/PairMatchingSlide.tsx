@@ -79,29 +79,31 @@ export default function PairMatchingSlide({ data, onComplete }: PairMatchingSlid
     };
 
     return (
-        <div className="w-full max-w-lg p-4">
-            <h2 className="text-2xl font-bold text-center mb-8 text-slate-700">{data.title}</h2>
+        <div className="w-full max-w-2xl mx-auto p-4 flex flex-col items-center">
+            <h2 className="text-3xl font-black text-center mb-10 text-slate-800 tracking-tight leading-tight">
+                {data.title}
+            </h2>
 
-            <div className="flex justify-between gap-8">
+            <div className="flex justify-between gap-6 w-full">
                 {/* Left Column */}
                 <div className="flex flex-col gap-4 w-1/2">
                     {leftItems.map((item) => (
                         <motion.button
                             key={`left-${item.id}`}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
+                            whileHover={!matchedIds.includes(item.id) ? { scale: 1.02, x: 5 } : {}}
+                            whileTap={!matchedIds.includes(item.id) ? { scale: 0.98 } : {}}
                             onClick={() => handleLeftClick(item.id)}
                             disabled={matchedIds.includes(item.id)}
                             className={cn(
-                                "p-4 rounded-xl border-2 border-b-4 font-bold text-sm md:text-base transition-colors min-h-[80px] flex items-center justify-center text-center",
+                                "p-4 md:p-6 rounded-[1.5rem] border-4 font-black transition-all flex items-center justify-center text-center shadow-lg h-24",
                                 matchedIds.includes(item.id)
-                                    ? "bg-slate-100 border-slate-200 text-slate-300 scale-95 opacity-50"
+                                    ? "bg-slate-50 border-slate-100 text-slate-200 shadow-none opacity-40"
                                     : selectedLeft === item.id
-                                        ? "bg-blue-100 border-blue-400 text-blue-700"
-                                        : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                                        ? "bg-emerald-50 border-emerald-500 text-emerald-700 shadow-emerald-100"
+                                        : "bg-white border-slate-100 text-slate-600 hover:border-emerald-200"
                             )}
                         >
-                            {item.left}
+                            <span className="text-sm md:text-base leading-tight uppercase tracking-wide">{item.left}</span>
                         </motion.button>
                     ))}
                 </div>
@@ -111,23 +113,29 @@ export default function PairMatchingSlide({ data, onComplete }: PairMatchingSlid
                     {rightItems.map((item) => (
                         <motion.button
                             key={`right-${item.id}`}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
+                            whileHover={!matchedIds.includes(item.id) ? { scale: 1.02, x: -5 } : {}}
+                            whileTap={!matchedIds.includes(item.id) ? { scale: 0.98 } : {}}
                             onClick={() => handleRightClick(item.id)}
                             disabled={matchedIds.includes(item.id)}
                             animate={errorPair?.includes(item.id) ? { x: [-10, 10, -10, 10, 0] } : {}}
                             className={cn(
-                                "p-4 rounded-xl border-2 border-b-4 font-bold text-sm md:text-base transition-colors min-h-[80px] flex items-center justify-center text-center",
+                                "p-4 md:p-6 rounded-[1.5rem] border-4 font-black transition-all flex items-center justify-center text-center shadow-lg h-24",
                                 matchedIds.includes(item.id)
-                                    ? "bg-green-100 border-green-200 text-green-300 scale-95 opacity-50"
+                                    ? "bg-emerald-500 border-emerald-400 text-white shadow-emerald-200 scale-95 opacity-50"
                                     : selectedRight === item.id
-                                        ? "bg-blue-100 border-blue-400 text-blue-700"
-                                        : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                                        ? "bg-emerald-50 border-emerald-500 text-emerald-700 shadow-emerald-100"
+                                        : "bg-white border-slate-100 text-slate-600 hover:border-emerald-200"
                             )}
                         >
-                            {item.right}
+                            <span className="text-sm md:text-base leading-tight uppercase tracking-wide">{item.right}</span>
                         </motion.button>
                     ))}
+                </div>
+            </div>
+
+            <div className="mt-12 w-full flex justify-center">
+                <div className="bg-slate-50 text-slate-400 font-bold px-6 py-2 rounded-full text-xs uppercase tracking-[0.2em] border-2 border-slate-100">
+                    Jodohkan Semua Pasangan ({matchedIds.length}/{data.pairs.length})
                 </div>
             </div>
         </div>
