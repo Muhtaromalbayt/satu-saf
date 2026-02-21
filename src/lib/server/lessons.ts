@@ -2,12 +2,18 @@ import { getDb } from "@/lib/server/db";
 import { lessons as lessonsTable, progress as progressTable } from "@/lib/server/db/schema";
 import { eq, and, asc } from "drizzle-orm";
 import { Chapter, LevelNodeData, Slide, NodeType } from "@/lib/types";
+import { MOCK_CHAPTERS } from "@/data/mockData";
 
 export async function getChapters(userId?: string): Promise<Chapter[]> {
     const db = getDb();
 
     // Fetch all lessons ordered by chapter and creation
     const allLessons = await db.select().from(lessonsTable).orderBy(asc(lessonsTable.chapter), asc(lessonsTable.createdAt));
+
+    // Fallback to mock data if DB is empty
+    if (allLessons.length === 0) {
+        return MOCK_CHAPTERS;
+    }
 
     // Fetch user progress if userId is provided
     const userProgress = userId
@@ -18,19 +24,84 @@ export async function getChapters(userId?: string): Promise<Chapter[]> {
 
     // Group by chapter
     const chaptersMap = new Map<number, LevelNodeData[]>();
+    let nodes: LevelNodeData[] = [];
 
     allLessons.forEach((lesson) => {
-        const node: LevelNodeData = {
-            id: lesson.id,
-            type: lesson.type as NodeType,
-            status: completedLessonIds.has(lesson.id) ? 'completed' : 'active',
-            label: lesson.title || undefined
-        };
+        let content: any = {};
+        try {
+            content = JSON.parse(lesson.content || "{}");
+        } catch (e) { }
+
+        if (content.preTest || content.material || content.amalan || content.tadarus) {
+            // New 5-part structure: Expand into multiple nodes
+            const baseId = lesson.id;
+
+            // 1. Pre-test
+            if (content.preTest) {
+                nodes.push({
+                    id: `${baseId}-pretest`,
+                    type: "quiz",
+                    status: completedLessonIds.has(baseId) ? 'completed' : 'active',
+                    label: "Pre-Test"
+                });
+            }
+
+            // 2. Material
+            if (content.material) {
+                nodes.push({
+                    id: `${baseId}-material`,
+                    type: "story",
+                    status: "locked",
+                    label: "Materi"
+                });
+            }
+
+            // 3. Quiz
+            if (content.quiz) {
+                nodes.push({
+                    id: `${baseId}-quiz`,
+                    type: "quiz",
+                    status: "locked",
+                    label: "Quiz"
+                });
+            }
+
+            // 4. Amalan
+            if (content.amalan) {
+                nodes.push({
+                    id: `${baseId}-amalan`,
+                    type: "checklist",
+                    status: "locked",
+                    label: "Amalan"
+                });
+            }
+
+            // 5. Tadarus
+            if (content.tadarus) {
+                nodes.push({
+                    id: `${baseId}-tadarus`,
+                    type: "recite",
+                    status: "locked",
+                    label: "Tadarus"
+                });
+            }
+        } else {
+            // Legacy/Simple structure: Single node
+            nodes.push({
+                id: lesson.id,
+                type: lesson.type as NodeType,
+                status: completedLessonIds.has(lesson.id) ? 'completed' : 'active',
+                label: lesson.title || undefined
+            });
+        }
 
         if (!chaptersMap.has(lesson.chapter)) {
             chaptersMap.set(lesson.chapter, []);
         }
-        chaptersMap.get(lesson.chapter)?.push(node);
+        chaptersMap.get(lesson.chapter)?.push(...nodes);
+
+        // Reset nodes for next lesson
+        nodes = [];
     });
 
     // Convert to Chapter array
@@ -53,7 +124,21 @@ export async function getChapters(userId?: string): Promise<Chapter[]> {
 
 export async function getLessonSlides(lessonId: string): Promise<Slide[]> {
     const db = getDb();
-    const result = await db.select().from(lessonsTable).where(eq(lessonsTable.id, lessonId)).limit(1);
+
+    // Handle sub-node IDs from the map (e.g., chapter-1-main-pretest)
+    let searchId = lessonId;
+    let targetSegment: string | null = null;
+
+    if (lessonId.includes('-')) {
+        const parts = lessonId.split('-');
+        const lastPart = parts[parts.length - 1];
+        if (['pretest', 'material', 'quiz', 'amalan', 'tadarus'].includes(lastPart)) {
+            targetSegment = lastPart;
+            searchId = parts.slice(0, -1).join('-');
+        }
+    }
+
+    const result = await db.select().from(lessonsTable).where(eq(lessonsTable.id, searchId)).limit(1);
 
     if (result.length === 0) return [];
 
