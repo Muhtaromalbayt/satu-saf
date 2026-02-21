@@ -12,18 +12,16 @@ export default async function LessonPage(props: { params: Promise<{ lessonId: st
     const params = await props.params;
     const lessonId = decodeURIComponent(params.lessonId);
 
-    // Fetch lesson basic info from DB
-    const db = getDb();
-    const lessonResult = await db.select().from(lessonsTable).where(eq(lessonsTable.id, lessonId)).limit(1);
+    const slides = await getLessonSlides(lessonId);
 
-    if (lessonResult.length === 0) {
+    if (slides.length === 0) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center bg-cream">
                 <div className="bg-white p-8 rounded-2xl shadow-xl border-2 border-slate-100">
                     <h1 className="text-3xl font-bold text-red-500 mb-2">Aduh! Materi Hilang</h1>
                     <p className="text-slate-600 mb-4">ID Pelajaran: <span className="font-mono bg-slate-100 px-2 py-1 rounded">{lessonId}</span></p>
                     <p className="text-sm text-slate-400">
-                        Pastikan ID ini terdaftar di database D1 lewat dashboard admin.
+                        Pastikan ID ini terdaftar di database D1 lewat dashboard admin atau periksa `mockData.ts`.
                     </p>
                     <a
                         href="/map"
@@ -35,9 +33,6 @@ export default async function LessonPage(props: { params: Promise<{ lessonId: st
             </div>
         );
     }
-
-    const lesson = lessonResult[0];
-    const slides = await getLessonSlides(lessonId);
 
     return (
         <main className="min-h-screen bg-white">

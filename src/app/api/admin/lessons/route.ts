@@ -30,24 +30,24 @@ export async function POST(req: Request) {
         }
 
         const data = await req.json();
-        const { chapter, type, title, content } = data;
+        const { id, chapter, type, title, content } = data;
 
         if (!chapter || !type) {
             return NextResponse.json({ error: "Chapter and Type are required" }, { status: 400 });
         }
 
         const db = getDb();
-        const id = uuidv4();
+        const finalId = id || uuidv4();
 
         await db.insert(lessons).values({
-            id,
+            id: finalId,
             chapter: Number(chapter),
             type,
             title: title || "",
             content: typeof content === 'string' ? content : JSON.stringify(content),
         });
 
-        return NextResponse.json({ success: true, id });
+        return NextResponse.json({ success: true, id: finalId });
     } catch (error) {
         console.error("Admin lessons POST error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

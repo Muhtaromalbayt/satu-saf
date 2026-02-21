@@ -2,7 +2,7 @@ import { getDb } from "@/lib/server/db";
 import { lessons as lessonsTable, progress as progressTable } from "@/lib/server/db/schema";
 import { eq, and, asc } from "drizzle-orm";
 import { Chapter, LevelNodeData, Slide, NodeType } from "@/lib/types";
-import { MOCK_CHAPTERS } from "@/data/mockData";
+import { MOCK_CHAPTERS, LESSON_CONTENT } from "@/data/mockData";
 
 export async function getChapters(userId?: string): Promise<Chapter[]> {
     const db = getDb();
@@ -140,10 +140,29 @@ export async function getLessonSlides(lessonId: string): Promise<Slide[]> {
 
     const result = await db.select().from(lessonsTable).where(eq(lessonsTable.id, searchId)).limit(1);
 
-    if (result.length === 0) return [];
+    let lesson: any = result[0];
+    let content: any = {};
 
-    const lesson = result[0];
-    const content = JSON.parse(lesson.content || "{}");
+    // Fallback to mock data if DB is empty or lesson not found
+    if (!lesson) {
+        if (LESSON_CONTENT[lessonId]) {
+            return LESSON_CONTENT[lessonId];
+        }
+        // If searching by baseId, look for mock content
+        if (LESSON_CONTENT[`${searchId}-${targetSegment}`]) {
+            return LESSON_CONTENT[`${searchId}-${targetSegment}`];
+        }
+        // If it's a 5-part lesson in mock data (some are structured as LESSON_CONTENT["ch-1-pretest"])
+        // and others might be in a different format. But for now, we follow LESSON_CONTENT keys.
+        return [];
+    }
+
+    try {
+        content = JSON.parse(lesson.content || "{}");
+    } catch (e) {
+        console.error("Error parsing lesson content:", e);
+        return [];
+    }
 
     // Check for new 5-part structure
     if (content.preTest || content.material || content.amalan) {
@@ -200,6 +219,21 @@ export async function getLessonSlides(lessonId: string): Promise<Slide[]> {
             type: 'final_submit',
             content: { lessonId: lesson.id }
         });
+
+        // Filter slides based on target segment if specified
+        if (targetSegment) {
+            if (targetSegment === 'pretest') {
+                return slides.filter(s => s.id.includes('-pre-') || s.id.includes('-pretest'));
+            } else if (targetSegment === 'material') {
+                return slides.filter(s => s.id.includes('-mat-') || s.id.includes('-material'));
+            } else if (targetSegment === 'quiz') {
+                return slides.filter(s => s.id.includes('-quiz-'));
+            } else if (targetSegment === 'amalan') {
+                return slides.filter(s => s.id.includes('-amalan'));
+            } else if (targetSegment === 'tadarus') {
+                return slides.filter(s => s.id.includes('-tarteel') || s.id.includes('-tadarus'));
+            }
+        }
 
         return slides;
     }
