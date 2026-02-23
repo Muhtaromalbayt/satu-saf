@@ -100,8 +100,8 @@ export default function LessonContainer({
             decrementHearts();
         } else {
             playSound('success');
-            handleNext();
         }
+        handleNext();
     };
 
     const handleFinalComplete = () => {

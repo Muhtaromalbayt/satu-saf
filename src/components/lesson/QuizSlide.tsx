@@ -26,10 +26,16 @@ export default function QuizSlide({ data, onAnswer }: QuizSlideProps) {
         typeof opt === 'string' ? { text: opt } : opt
     );
 
-    const handleCheck = () => {
-        if (selected === null) return;
+    const handleSelect = (index: number) => {
+        if (isSubmitted) return;
+
+        setSelected(index);
         setIsSubmitted(true);
-        onAnswer(selected === data.correctIndex);
+
+        // Brief delay to show feedback (green/red) before moving to next slide
+        setTimeout(() => {
+            onAnswer(index === data.correctIndex);
+        }, 1200);
     };
 
     return (
@@ -50,7 +56,7 @@ export default function QuizSlide({ data, onAnswer }: QuizSlideProps) {
             </motion.div>
 
             <div className={cn(
-                "grid gap-4 w-full",
+                "grid gap-4 w-full px-2",
                 options.some(o => o.image) ? "grid-cols-2" : "grid-cols-1"
             )}>
                 {options.map((option, index) => {
@@ -64,7 +70,8 @@ export default function QuizSlide({ data, onAnswer }: QuizSlideProps) {
                             key={index}
                             whileHover={!isSubmitted ? { scale: 1.02, y: -2 } : {}}
                             whileTap={!isSubmitted ? { scale: 0.98 } : {}}
-                            onClick={() => !isSubmitted && setSelected(index)}
+                            onClick={() => handleSelect(index)}
+                            disabled={isSubmitted}
                             className={cn(
                                 "relative p-4 md:p-6 rounded-[2rem] border-4 transition-all duration-300 text-left flex flex-col items-center gap-4 group",
                                 isSelected ? (
@@ -120,21 +127,6 @@ export default function QuizSlide({ data, onAnswer }: QuizSlideProps) {
                         </motion.button>
                     );
                 })}
-            </div>
-
-            <div className="w-full flex justify-center pt-4">
-                <button
-                    onClick={handleCheck}
-                    disabled={selected === null || isSubmitted}
-                    className={cn(
-                        "w-full max-w-sm py-5 rounded-[2rem] font-black text-2xl uppercase tracking-widest transition-all shadow-xl",
-                        selected === null || isSubmitted
-                            ? "bg-slate-100 text-slate-400 shadow-none cursor-not-allowed"
-                            : "bg-emerald-500 text-white shadow-emerald-200 hover:scale-105 active:scale-95"
-                    )}
-                >
-                    {isSubmitted ? (selected === data.correctIndex ? "LUAR BIASA!" : "COBA LAGI") : "PERIKSA"}
-                </button>
             </div>
         </div>
     );
