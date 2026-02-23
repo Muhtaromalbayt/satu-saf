@@ -116,3 +116,13 @@ export const userAmalan = sqliteTable("user_amalan", {
         .notNull()
         .default(sql`CURRENT_TIMESTAMP`),
 });
+
+export const matchingPool = sqliteTable("matching_pool", {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    left: text("left").notNull(),
+    right: text("right").notNull(),
+    category: text("category"), // can be used to filter for specific chapters/topics
+    createdAt: text("created_at")
+        .notNull()
+        .default(sql`CURRENT_TIMESTAMP`),
+});

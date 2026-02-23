@@ -1,6 +1,6 @@
 import { getDb } from "@/lib/server/db";
-import { lessons as lessonsTable, progress as progressTable } from "@/lib/server/db/schema";
-import { eq, and, asc } from "drizzle-orm";
+import { lessons as lessonsTable, progress as progressTable, matchingPool } from "@/lib/server/db/schema";
+import { eq, and, asc, sql } from "drizzle-orm";
 import { Chapter, LevelNodeData, Slide, NodeType } from "@/lib/types";
 import { MOCK_CHAPTERS, LESSON_CONTENT } from "@/data/mockData";
 
@@ -179,16 +179,38 @@ export async function getLessonSlides(lessonId: string): Promise<Slide[]> {
 
         // 1. Pre-test
         if (content.preTest && Array.isArray(content.preTest)) {
-            content.preTest.forEach((item: any, idx: number) => {
-                const id = `${lesson.id}-pre-${idx}`;
+            let idx = 0;
+            for (const item of content.preTest) {
+                const id = `${lesson.id}-pre-${idx++}`;
                 if (item.type === 'multiple_choice') {
                     slides.push({ id, type: 'quiz', content: item });
                 } else if (item.type === 'pair_matching') {
+                    if (item.usePool) {
+                        try {
+                            const db = getDb();
+                            const limit = item.limit || 20;
+                            const poolItems = await db.select()
+                                .from(matchingPool)
+                                .where(item.category ? eq(matchingPool.category, item.category) : undefined)
+                                .orderBy(sql`RANDOM()`)
+                                .limit(limit);
+
+                            if (poolItems.length > 0) {
+                                item.pairs = poolItems.map(p => ({
+                                    id: `pool-${p.id}`,
+                                    left: p.left,
+                                    right: p.right
+                                }));
+                            }
+                        } catch (err) {
+                            console.error("Error fetching from matching pool:", err);
+                        }
+                    }
                     slides.push({ id, type: 'pair_matching', content: item });
                 } else if (item.type === 'sentence_arrange') {
                     slides.push({ id, type: 'sentence_arrange', content: item });
                 }
-            });
+            }
         }
 
         // 2. Material
