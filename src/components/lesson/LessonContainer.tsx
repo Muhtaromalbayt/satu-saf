@@ -35,8 +35,18 @@ export default function LessonContainer({
     const router = useRouter();
     const { hearts, xp, streak, decrementHearts, addXp, completeNode } = useGamification();
     const [slideIndex, setSlideIndex] = useState(0);
+    const [quizStreak, setQuizStreak] = useState(0);
+    const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
+    const [toast, setToast] = useState<{ message: string, pose: "success" | "cheer", isVisible: boolean }>({
+        message: "",
+        pose: "success",
+        isVisible: false
+    });
 
     const slides = useMemo(() => initialSlides || [], [initialSlides]);
+    const quizSlidesCount = useMemo(() =>
+        slides.filter(s => s.type === 'quiz' || s.type === 'sorting' || s.type === 'pair_matching').length,
+        [slides]);
     const currentSlide = slides[slideIndex];
 
     // Grouping logic for the 6-stage progress bar
@@ -98,14 +108,48 @@ export default function LessonContainer({
         if (!isCorrect) {
             playSound('error');
             decrementHearts();
+            setQuizStreak(0);
         } else {
             playSound('success');
+            setCorrectAnswersCount(prev => prev + 1);
+            const newStreak = quizStreak + 1;
+            setQuizStreak(newStreak);
+
+            // Milestone rewards
+            if (newStreak === 3) {
+                addXp(50);
+                setToast({
+                    message: "Luar Biasa! 3 Benar Berurutan! 🔥 +50 XP",
+                    pose: "cheer",
+                    isVisible: true
+                });
+            } else if (newStreak === 5) {
+                addXp(100);
+                setToast({
+                    message: "Menakjubkan! 5 Benar Berurutan! ⚡ +100 XP",
+                    pose: "cheer",
+                    isVisible: true
+                });
+            }
         }
         handleNext();
     };
 
     const handleFinalComplete = () => {
-        addXp(100);
+        let finalBonus = 0;
+
+        // Perfect score bonus
+        if (correctAnswersCount === quizSlidesCount && quizSlidesCount > 0) {
+            finalBonus += 200;
+            // Confetti for perfect score
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+        }
+
+        addXp(100 + finalBonus);
         completeNode(lessonId);
     };
 
@@ -249,6 +293,13 @@ export default function LessonContainer({
                     )}
                 </div>
             </div>
+            {/* Mascot Toast for Streaks */}
+            <MascotToast
+                isVisible={toast.isVisible}
+                message={toast.message}
+                pose={toast.pose}
+                onClose={() => setToast(prev => ({ ...prev, isVisible: false }))}
+            />
         </div>
     );
 }
