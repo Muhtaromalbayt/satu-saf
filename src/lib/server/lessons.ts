@@ -145,15 +145,24 @@ export async function getLessonSlides(lessonId: string): Promise<Slide[]> {
 
     // Fallback to mock data if DB is empty or lesson not found
     if (!lesson) {
+        let mockSlides: Slide[] = [];
         if (LESSON_CONTENT[lessonId]) {
-            return LESSON_CONTENT[lessonId];
+            mockSlides = [...LESSON_CONTENT[lessonId]];
+        } else if (LESSON_CONTENT[`${searchId}-${targetSegment}`]) {
+            mockSlides = [...LESSON_CONTENT[`${searchId}-${targetSegment}`]];
         }
-        // If searching by baseId, look for mock content
-        if (LESSON_CONTENT[`${searchId}-${targetSegment}`]) {
-            return LESSON_CONTENT[`${searchId}-${targetSegment}`];
+
+        if (mockSlides.length > 0) {
+            // Append final submit if not already present
+            if (!mockSlides.find(s => s.type === 'final_submit')) {
+                mockSlides.push({
+                    id: `${lessonId}-final`,
+                    type: 'final_submit',
+                    content: { lessonId }
+                });
+            }
+            return mockSlides;
         }
-        // If it's a 5-part lesson in mock data (some are structured as LESSON_CONTENT["ch-1-pretest"])
-        // and others might be in a different format. But for now, we follow LESSON_CONTENT keys.
         return [];
     }
 
@@ -221,52 +230,54 @@ export async function getLessonSlides(lessonId: string): Promise<Slide[]> {
         });
 
         // Filter slides based on target segment if specified
+        let filteredSlides = slides;
         if (targetSegment) {
             if (targetSegment === 'pretest') {
-                return slides.filter(s => s.id.includes('-pre-') || s.id.includes('-pretest'));
+                filteredSlides = slides.filter(s => s.id.includes('-pre-') || s.id.includes('-pretest'));
             } else if (targetSegment === 'material') {
-                return slides.filter(s => s.id.includes('-mat-') || s.id.includes('-material'));
+                filteredSlides = slides.filter(s => s.id.includes('-mat-') || s.id.includes('-material'));
             } else if (targetSegment === 'quiz') {
-                return slides.filter(s => s.id.includes('-quiz-'));
+                filteredSlides = slides.filter(s => s.id.includes('-quiz-'));
             } else if (targetSegment === 'amalan') {
-                return slides.filter(s => s.id.includes('-amalan'));
+                filteredSlides = slides.filter(s => s.id.includes('-amalan'));
             } else if (targetSegment === 'tadarus') {
-                return slides.filter(s => s.id.includes('-tarteel') || s.id.includes('-tadarus'));
+                filteredSlides = slides.filter(s => s.id.includes('-tarteel') || s.id.includes('-tadarus'));
+            }
+
+            // Always ensure the final submit slide is at the end of the filtered segment
+            const finalSlide = slides.find(s => s.type === 'final_submit');
+            if (finalSlide && !filteredSlides.find(s => s.id === finalSlide.id)) {
+                filteredSlides.push(finalSlide);
             }
         }
 
-        return slides;
+        return filteredSlides;
     }
 
     // Format based on type (Story slides, Quiz questions, etc.)
+    let slides: Slide[] = [];
     if (lesson.type === 'story') {
-        const slides = content.slides || [];
-        return slides.map((s: any, idx: number) => ({
+        const storySlides = content.slides || [];
+        slides = storySlides.map((s: any, idx: number) => ({
             id: `${lesson.id}-s-${idx}`,
             type: 'story',
             content: s
         }));
-    }
-
-    if (lesson.type === 'quiz') {
+    } else if (lesson.type === 'quiz') {
         const questions = content.questions || [];
-        return questions.map((q: any, idx: number) => ({
+        slides = questions.map((q: any, idx: number) => ({
             id: `${lesson.id}-q-${idx}`,
             type: 'quiz',
             content: q
         }));
-    }
-
-    if (lesson.type === 'recite') {
-        return [{
+    } else if (lesson.type === 'recite') {
+        slides = [{
             id: `${lesson.id}-r`,
             type: 'recite',
             content: content
         }];
-    }
-
-    if (lesson.type === 'action') {
-        return [{
+    } else if (lesson.type === 'action') {
+        slides = [{
             id: `${lesson.id}-a`,
             type: 'action',
             content: {
@@ -277,5 +288,13 @@ export async function getLessonSlides(lessonId: string): Promise<Slide[]> {
         }];
     }
 
-    return [];
+    if (slides.length > 0) {
+        slides.push({
+            id: `${lesson.id}-final`,
+            type: 'final_submit',
+            content: { lessonId: lesson.id }
+        });
+    }
+
+    return slides;
 }
