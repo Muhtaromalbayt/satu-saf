@@ -21,29 +21,30 @@ interface PairMatchingSlideProps {
 export default function PairMatchingSlide({ data, onComplete }: PairMatchingSlideProps) {
     // We need to shuffle the right side to make it a puzzle
     // But keep track of their original pair IDs
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const [timeLeft, setTimeLeft] = useState(45);
+    const [leftItems, setLeftItems] = useState<Pair[]>([]);
     const [rightItems, setRightItems] = useState<Pair[]>([]);
+    const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
     const [selectedRight, setSelectedRight] = useState<string | null>(null);
-    const [isMismatch, setIsMismatch] = useState(false);
-    const [isComplete, setIsComplete] = useState(false);
-
-    const currentPair = data.pairs[currentIndex];
+    const [matchedIds, setMatchedIds] = useState<string[]>([]);
+    const [errorPair, setErrorPair] = useState<string | null>(null);
+    const [timeLeft, setTimeLeft] = useState(45);
+    const [isFinished, setIsFinished] = useState(false);
 
     useEffect(() => {
-        // Shuffle right items once at the start
-        const shuffled = [...data.pairs].sort(() => Math.random() - 0.5);
-        setRightItems(shuffled);
+        // Initialize and shuffle
+        setLeftItems(data.pairs);
+        const shuffledRight = [...data.pairs].sort(() => Math.random() - 0.5);
+        setRightItems(shuffledRight);
     }, [data.pairs]);
 
     useEffect(() => {
-        if (isComplete || isMismatch) return;
+        if (isFinished) return;
 
         const timer = setInterval(() => {
             setTimeLeft((prev) => {
                 if (prev <= 1) {
                     clearInterval(timer);
-                    handleFail();
+                    handleEnd(false);
                     return 0;
                 }
                 return prev - 1;
@@ -51,58 +52,74 @@ export default function PairMatchingSlide({ data, onComplete }: PairMatchingSlid
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [currentIndex, isComplete, isMismatch]);
+    }, [isFinished]);
 
-    const handleFail = () => {
-        setIsMismatch(true);
+    const handleEnd = (success: boolean) => {
+        setIsFinished(true);
         setTimeout(() => {
-            onComplete(false); // Move next with failure
-        }, 1500);
+            onComplete(success);
+        }, 1000);
+    };
+
+    const handleLeftClick = (id: string) => {
+        if (matchedIds.includes(id) || isFinished) return;
+        setSelectedLeft(id);
+        setErrorPair(null);
+
+        if (selectedRight) {
+            checkMatch(id, selectedRight);
+        }
     };
 
     const handleRightClick = (id: string) => {
-        if (isComplete || isMismatch || selectedRight) return;
-
+        if (matchedIds.includes(id) || isFinished) return;
         setSelectedRight(id);
+        setErrorPair(null);
 
-        if (id === currentPair.id) {
-            // Correct match
-            setTimeout(() => {
-                if (currentIndex < data.pairs.length - 1) {
-                    setCurrentIndex(prev => prev + 1);
-                    setTimeLeft(45);
-                    setSelectedRight(null);
-                } else {
-                    setIsComplete(true);
-                    onComplete(true);
-                }
-            }, 600);
+        if (selectedLeft) {
+            checkMatch(selectedLeft, id);
+        }
+    };
+
+    const checkMatch = (leftId: string, rightId: string) => {
+        if (leftId === rightId) {
+            // Match found!
+            const newMatched = [...matchedIds, leftId];
+            setMatchedIds(newMatched);
+            setSelectedLeft(null);
+            setSelectedRight(null);
+
+            if (newMatched.length === data.pairs.length) {
+                handleEnd(true);
+            }
         } else {
-            // Wrong match
-            setIsMismatch(true);
+            // Mismatch
+            setErrorPair(`${leftId}-${rightId}`);
             setTimeout(() => {
-                onComplete(false);
-            }, 1000);
+                setSelectedLeft(null);
+                setSelectedRight(null);
+                setErrorPair(null);
+            }, 500);
         }
     };
 
     return (
-        <div className="w-full max-w-2xl mx-auto p-4 flex flex-col items-center space-y-8">
+        <div className="w-full max-w-3xl mx-auto p-4 flex flex-col items-center space-y-8">
             <div className="text-center space-y-2">
                 <h2 className="text-3xl font-black text-slate-800 tracking-tight leading-tight">
                     {data.title}
                 </h2>
                 <div className="flex items-center justify-center gap-4">
-                    <div className="bg-slate-100 px-4 py-1.5 rounded-full border-2 border-slate-200">
-                        <span className="font-black text-slate-500 text-sm uppercase tracking-widest">
-                            Item {currentIndex + 1} / {data.pairs.length}
+                    <div className="bg-slate-100/50 px-4 py-1.5 rounded-full border-2 border-slate-100 backdrop-blur-sm">
+                        <span className="font-black text-slate-500 text-xs uppercase tracking-[0.2em]">
+                            PASANGAN: {matchedIds.length} / {data.pairs.length}
                         </span>
                     </div>
                 </div>
             </div>
 
-            {/* Timer Progress Bar */}
-            <div className="w-full max-w-sm h-3 bg-slate-100 rounded-full overflow-hidden border-2 border-white shadow-inner relative">
+            {/* Global Timer Bar */}
+            <div className="w-full max-w-md h-4 bg-slate-100 rounded-full overflow-hidden border-2 border-white shadow-inner relative">
                 <motion.div
                     initial={false}
                     animate={{ width: `${(timeLeft / 45) * 100}%` }}
@@ -111,58 +128,82 @@ export default function PairMatchingSlide({ data, onComplete }: PairMatchingSlid
                         timeLeft > 15 ? "bg-emerald-500" : timeLeft > 5 ? "bg-amber-500" : "bg-red-500"
                     )}
                 />
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-[10px] font-black text-slate-600 drop-shadow-sm">
+                        {timeLeft} DETIK TERSISA
+                    </span>
+                </div>
             </div>
 
-            <div className="flex flex-col md:flex-row justify-between gap-8 w-full items-start">
-                {/* Left Side: The Target Item */}
-                <div className="w-full md:w-1/3 flex flex-col gap-4">
-                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest text-center">Cari Pasangan:</p>
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={currentPair.id}
-                            initial={{ opacity: 0, scale: 0.8, x: -20 }}
-                            animate={{ opacity: 1, scale: 1, x: 0 }}
-                            exit={{ opacity: 0, scale: 0.8, x: 20 }}
-                            className="p-8 rounded-[2rem] border-4 border-emerald-500 bg-emerald-50 text-emerald-700 shadow-xl shadow-emerald-100 flex items-center justify-center text-center min-h-[160px]"
-                        >
-                            <span className="text-2xl font-black uppercase tracking-tight leading-tight">
-                                {currentPair.left}
-                            </span>
-                        </motion.div>
-                    </AnimatePresence>
-                </div>
-
-                {/* Right Side: Options */}
-                <div className="w-full md:w-2/3 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {rightItems.map((item) => {
-                        const isSelected = selectedRight === item.id;
-                        const isCorrect = isSelected && item.id === currentPair.id;
-                        const isWrong = isSelected && item.id !== currentPair.id;
+            <div className="grid grid-cols-2 gap-4 md:gap-8 w-full">
+                {/* Left Column */}
+                <div className="flex flex-col gap-3">
+                    {leftItems.map((item) => {
+                        const isMatched = matchedIds.includes(item.id);
+                        const isSelected = selectedLeft === item.id;
+                        const isError = errorPair?.split('-')[0] === item.id;
 
                         return (
                             <motion.button
-                                key={item.id}
-                                whileHover={!selectedRight ? { scale: 1.02 } : {}}
-                                whileTap={!selectedRight ? { scale: 0.98 } : {}}
-                                onClick={() => handleRightClick(item.id)}
-                                disabled={!!selectedRight || isMismatch || isComplete}
+                                key={`left-${item.id}`}
+                                whileHover={!isMatched && !isFinished ? { scale: 1.02, x: 5 } : {}}
+                                whileTap={!isMatched && !isFinished ? { scale: 0.98 } : {}}
+                                onClick={() => handleLeftClick(item.id)}
+                                disabled={isMatched || isFinished}
+                                animate={isError ? { x: [-5, 5, -5, 5, 0] } : {}}
                                 className={cn(
-                                    "p-6 rounded-[1.8rem] border-4 font-black transition-all flex items-center justify-center text-center shadow-lg min-h-[100px]",
-                                    isCorrect ? "bg-emerald-500 border-emerald-400 text-white" :
-                                        isWrong || (isMismatch && item.id === selectedRight) ? "bg-red-500 border-red-400 text-white" :
-                                            "bg-white border-slate-100 text-slate-600 hover:border-emerald-200"
+                                    "p-4 md:p-6 rounded-[1.5rem] border-4 font-black transition-all flex items-center justify-center text-center shadow-lg min-h-[80px]",
+                                    isMatched
+                                        ? "bg-emerald-50 border-emerald-100 text-emerald-200 shadow-none opacity-40 scale-95"
+                                        : isSelected
+                                            ? "bg-emerald-50 border-emerald-500 text-emerald-700 shadow-xl shadow-emerald-100"
+                                            : isError
+                                                ? "bg-red-50 border-red-500 text-red-700 shadow-red-100"
+                                                : "bg-white border-slate-100 text-slate-600 hover:border-emerald-200"
                                 )}
                             >
-                                <span className="text-base leading-tight uppercase tracking-wide">{item.right}</span>
+                                <span className="text-sm md:text-base leading-tight uppercase tracking-wide">{item.left}</span>
+                            </motion.button>
+                        );
+                    })}
+                </div>
+
+                {/* Right Column */}
+                <div className="flex flex-col gap-3">
+                    {rightItems.map((item) => {
+                        const isMatched = matchedIds.includes(item.id);
+                        const isSelected = selectedRight === item.id;
+                        const isError = errorPair?.split('-')[1] === item.id;
+
+                        return (
+                            <motion.button
+                                key={`right-${item.id}`}
+                                whileHover={!isMatched && !isFinished ? { scale: 1.02, x: -5 } : {}}
+                                whileTap={!isMatched && !isFinished ? { scale: 0.98 } : {}}
+                                onClick={() => handleRightClick(item.id)}
+                                disabled={isMatched || isFinished}
+                                animate={isError ? { x: [-5, 5, -5, 5, 0] } : {}}
+                                className={cn(
+                                    "p-4 md:p-6 rounded-[1.5rem] border-4 font-black transition-all flex items-center justify-center text-center shadow-lg min-h-[80px]",
+                                    isMatched
+                                        ? "bg-emerald-500 border-emerald-400 text-white shadow-none opacity-30 scale-95"
+                                        : isSelected
+                                            ? "bg-emerald-50 border-emerald-500 text-emerald-700 shadow-xl shadow-emerald-100"
+                                            : isError
+                                                ? "bg-red-50 border-red-500 text-red-700 shadow-red-100"
+                                                : "bg-white border-slate-100 text-slate-600 hover:border-emerald-200"
+                                )}
+                            >
+                                <span className="text-sm md:text-base leading-tight uppercase tracking-wide">{item.right}</span>
                             </motion.button>
                         );
                     })}
                 </div>
             </div>
 
-            <div className="pt-4">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">
-                    Fokus pada Kecepatan & Ketepatan!
+            <div className="pt-4 text-center">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] animate-pulse">
+                    Jodohkan Secepat Mungkin!
                 </p>
             </div>
         </div>

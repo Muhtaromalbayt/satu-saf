@@ -211,7 +211,7 @@ export default function LessonContainer({
                         {currentSlide.type === 'recite' && <ReciteSlide data={currentSlide.content} onComplete={() => handleNext()} />}
                         {currentSlide.type === 'action' && <ActionSlide data={currentSlide.content} onComplete={() => handleNext()} />}
                         {currentSlide.type === 'checklist' && <ChecklistSlide data={currentSlide.content} onComplete={() => handleNext()} />}
-                        {currentSlide.type === 'pair_matching' && <PairMatchingSlide data={currentSlide.content} onComplete={() => handleNext()} />}
+                        {currentSlide.type === 'pair_matching' && <PairMatchingSlide data={currentSlide.content} onComplete={handleQuizAnswer} />}
                         {currentSlide.type === 'sentence_arrange' && <SentenceArrangeSlide data={currentSlide.content} onComplete={() => handleNext()} />}
                         {currentSlide.type === 'material' && <MaterialSlide data={currentSlide.content} onComplete={handleNext} />}
                         {currentSlide.type === 'amalan' && <AmalanSlide data={currentSlide.content} onComplete={() => handleNext()} />}
