@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Home, Trophy, User, BookOpen, ShieldCheck, Map as MapIcon } from "lucide-react";
+import { Home, Trophy, User, BookOpen, ShieldCheck, Map as MapIcon, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { motion } from "framer-motion";
@@ -17,13 +17,21 @@ export default function BottomNav() {
         setMounted(true);
     }, []);
 
-    const links = [
+    let links = [
         { href: "/", label: "Home", icon: Home },
         { href: "/map", label: "Peta", icon: MapIcon },
-        { href: "/tadarus", label: "Tadarus", icon: BookOpen },
+        { href: "/habits", label: "Kebaikan", icon: Heart },
         { href: "/leaderboard", label: "Ranking", icon: Trophy },
         { href: "/profile", label: "Profil", icon: User },
     ];
+
+    if (mounted && user?.role === 'parent') {
+        links = [
+            { href: "/", label: "Home", icon: Home },
+            { href: "/parent", label: "Monitor", icon: ShieldCheck },
+            { href: "/profile", label: "Profil", icon: User },
+        ];
+    }
 
     if (mounted && user?.role === 'admin') {
         links.push({ href: "/admin", label: "Admin", icon: ShieldCheck });

@@ -16,9 +16,11 @@ export default function ProfileRegistration() {
 
     const [formData, setFormData] = useState({
         role: 'student',
-        name: user?.user_metadata?.full_name || '',
-        kelas: '',
-        gender: 'Laki-laki'
+        name: user?.name || '',
+        grade: '',
+        gender: 'Laki-laki',
+        mosque: '',
+        parentEmail: ''
     });
 
     const handleNextStep = () => setStep(step + 1);
@@ -130,12 +132,41 @@ export default function ProfileRegistration() {
                                     </label>
                                     <input
                                         type="text"
-                                        value={formData.kelas}
-                                        onChange={(e) => setFormData({ ...formData, kelas: e.target.value })}
+                                        value={formData.grade}
+                                        onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
                                         placeholder="Contoh: 7-A / SD Kelas 4"
                                         className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-primary outline-none text-slate-800 font-bold"
                                     />
                                 </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-sm font-black text-slate-700 uppercase tracking-widest flex items-center gap-2">
+                                        🏡 Asal Masjid
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formData.mosque}
+                                        onChange={(e) => setFormData({ ...formData, mosque: e.target.value })}
+                                        placeholder="Ketik nama masjidmu..."
+                                        className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-primary outline-none text-slate-800 font-bold"
+                                    />
+                                </div>
+
+                                {formData.role === 'student' && (
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-black text-slate-700 uppercase tracking-widest flex items-center gap-2">
+                                            📧 Email Orang Tua
+                                        </label>
+                                        <input
+                                            type="email"
+                                            value={formData.parentEmail}
+                                            onChange={(e) => setFormData({ ...formData, parentEmail: e.target.value })}
+                                            placeholder="email@orangtua.com (Opsional)"
+                                            className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-primary outline-none text-slate-800 font-bold"
+                                        />
+                                        <p className="text-xs text-slate-400 font-medium">Link akunmu agar orang tua bisa memantau progressmu.</p>
+                                    </div>
+                                )}
 
                                 <div className="space-y-2">
                                     <label className="text-sm font-black text-slate-700 uppercase tracking-widest">Jenis Kelamin</label>
@@ -181,7 +212,11 @@ export default function ProfileRegistration() {
                                 <p className="text-xs font-black text-slate-400 uppercase">Ringkasan Profil</p>
                                 <p className="font-bold text-slate-700"><span className="text-slate-400">Nama:</span> {formData.name}</p>
                                 <p className="font-bold text-slate-700"><span className="text-slate-400">Role:</span> {formData.role === 'student' ? 'SANTRI' : 'ORANG TUA'}</p>
-                                <p className="font-bold text-slate-700"><span className="text-slate-400">Kelas:</span> {formData.kelas}</p>
+                                <p className="font-bold text-slate-700"><span className="text-slate-400">Kelas:</span> {formData.grade}</p>
+                                <p className="font-bold text-slate-700"><span className="text-slate-400">Masjid:</span> {formData.mosque}</p>
+                                {formData.role === 'student' && formData.parentEmail && (
+                                    <p className="font-bold text-slate-700"><span className="text-slate-400">Ortu:</span> {formData.parentEmail}</p>
+                                )}
                             </div>
 
                             <Button

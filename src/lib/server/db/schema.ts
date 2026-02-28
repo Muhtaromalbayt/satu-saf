@@ -15,6 +15,8 @@ export const user = sqliteTable("user", {
     gender: text("gender"), // 'Laki-laki', 'Perempuan'
     grade: text("grade"), // 'Kelas' (for Santri)
     mosque: text("mosque"), // 'Asal Masjid'
+    parentId: text("parent_id")
+        .references(() => user.id, { onDelete: "set null" }), // Link Santri to Parent
     createdAt: integer("created_at", { mode: "timestamp" })
         .default(sql`(current_timestamp)`)
         .notNull(),
@@ -109,9 +111,12 @@ export const userAmalan = sqliteTable("user_amalan", {
     userId: text("user_id")
         .notNull()
         .references(() => user.id, { onDelete: "cascade" }),
-    chapterId: text("chapter_id").notNull(),
+    chapterId: text("chapter_id"), // Optional if not tied to a chapter
+    aspect: text("aspect").notNull(), // 'allah', 'parents', 'environment', 'self'
     deedName: text("deed_name").notNull(),
     status: text("status").notNull(), // e.g., 'done', 'not_done'
+    verifiedByParent: integer("verified_by_parent", { mode: "boolean" }).default(false),
+    parentNote: text("parent_note"),
     timestamp: text("timestamp")
         .notNull()
         .default(sql`CURRENT_TIMESTAMP`),
