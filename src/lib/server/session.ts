@@ -1,20 +1,18 @@
-import crypto from "node:crypto";
-/**
- * Simple manual session manager using random tokens stored in D1.
- * Replaces BetterAuth for the passwordless Sheets-based login.
- */
-
 import { getDb } from "@/lib/server/db";
 import { session, user } from "@/lib/server/db/schema";
 import { eq, lt } from "drizzle-orm";
 import { cookies } from "next/headers";
-
-const SESSION_COOKIE = "saf_session";
-const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+import { SESSION_COOKIE, SESSION_DURATION_MS } from "./session-constants";
 
 function generateToken(): string {
     const arr = new Uint8Array(32);
-    crypto.getRandomValues(arr);
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+        crypto.getRandomValues(arr);
+    } else {
+        // Fallback for older Node environments if global crypto is missing
+        const nodeCrypto = require('node:crypto');
+        nodeCrypto.getRandomValues(arr);
+    }
     return Array.from(arr).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 

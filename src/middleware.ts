@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { SESSION_COOKIE } from '@/lib/server/session'
+import { SESSION_COOKIE } from '@/lib/server/session-constants'
 
 const PROTECTED_ROUTES = ['/map', '/mentor', '/admin', '/leaderboard', '/habits', '/profile', '/tadarus', '/parent']
 const AUTH_ROUTES = ['/login']

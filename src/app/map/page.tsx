@@ -39,7 +39,17 @@ export default function MapPage() {
     const [activeDay, setActiveDay] = useState(1); // Current day in the journey (from settings)
     const [selectedDay, setSelectedDay] = useState<number | null>(null); // Day selected to show aspects
     const [logs, setLogs] = useState<AmalanLog[]>([]);
-    const [tasks, setTasks] = useState<Task[]>([]);
+    const [tasks, setTasks] = useState<Task[]>(() =>
+        MONITORING_ASPECTS.flatMap((aspect: any) =>
+            aspect.tasks.map((taskLabel: string, index: number) => ({
+                id: Math.random(),
+                aspectId: aspect.id,
+                label: taskLabel,
+                isActive: true,
+                displayOrder: index
+            }))
+        )
+    );
     const [loading, setLoading] = useState(true);
     const [selectedAspectId, setSelectedAspectId] = useState<MonitoringAspectId | null>(null);
 
@@ -50,9 +60,13 @@ export default function MapPage() {
     useEffect(() => {
         const init = async () => {
             setLoading(true);
-            await Promise.all([fetchLogs(), fetchTasks(), fetchCurrentDay()]);
-            setLoading(false);
-            // Optionally auto-start BGM on first interaction
+            try {
+                await Promise.all([fetchLogs(), fetchTasks(), fetchCurrentDay()]);
+            } catch (err) {
+                console.error("Initialization error:", err);
+            } finally {
+                setLoading(false);
+            }
         };
         init();
     }, []);
@@ -60,6 +74,7 @@ export default function MapPage() {
     const fetchCurrentDay = async () => {
         try {
             const res = await fetch("/api/settings");
+            if (!res.ok) return;
             const data = await res.json();
             if (data.currentDay) {
                 setActiveDay(data.currentDay);
@@ -73,12 +88,15 @@ export default function MapPage() {
         try {
             const res = await fetch("/api/tasks");
             if (!res.ok) throw new Error("Failed to fetch tasks");
-            const text = await res.text();
-            if (!text) return;
-            const data = JSON.parse(text);
-            setTasks(data.tasks || []);
+            const data = await res.json();
+            const fetchedTasks = data.tasks || [];
+
+            if (fetchedTasks.length > 0) {
+                setTasks(fetchedTasks);
+            }
+            // If empty, we keep the initial fallback state
         } catch (err) {
-            console.error(err);
+            console.error("fetchTasks error, sticking with fallback:", err);
         }
     };
 

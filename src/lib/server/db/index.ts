@@ -1,5 +1,3 @@
-import fs from 'fs';
-import path from 'path';
 import { drizzle as drizzleLibSql } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 import * as schema from "./schema";
@@ -11,15 +9,32 @@ export function getDb(databaseUrl?: string) {
 
     let url = databaseUrl || process.env.DATABASE_URL;
 
+    // In Edge runtime, we MUST have a DATABASE_URL (usually Turso or similar)
+    // Local file-based SQLite won't work on Edge.
+    const isEdge = process.env.NEXT_RUNTIME === 'edge';
+
     if (!url) {
-        // Fallback for local development if local.db exists
-        const localPath = path.resolve(process.cwd(), 'local.db');
-        if (fs.existsSync(localPath)) {
-            console.warn("⚠️ DATABASE_URL is not set. Falling back to file:local.db for development.");
-            url = 'file:local.db';
-        } else {
+        if (isEdge) {
+            throw new Error("DATABASE_URL is required in Edge runtime.");
+        }
+
+        // Fallback for local development ONLY in Node.js runtime
+        try {
+            // Using dynamic require to avoid bundling 'fs' and 'path' in Edge/Browser
+            const fs = require('fs');
+            const path = require('path');
+            const localPath = path.resolve(process.cwd(), 'local.db');
+
+            if (fs.existsSync(localPath)) {
+                console.warn("⚠️ DATABASE_URL is not set. Falling back to file:local.db for development.");
+                url = 'file:local.db';
+            }
+        } catch (e) {
+            // fs/path not available, move on
+        }
+
+        if (!url) {
             // Avoid crashing ONLY during the build phase. 
-            // At runtime, we WANT it to throw if the DB is missing so we can see the error.
             const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build' || process.env.CI;
 
             if (isBuildPhase) {
@@ -32,7 +47,10 @@ export function getDb(databaseUrl?: string) {
         }
     }
 
-    const client = createClient({ url });
+    const client = createClient({
+        url,
+        authToken: process.env.DATABASE_AUTH_TOKEN
+    });
     dbInstance = drizzleLibSql(client, { schema });
     return dbInstance;
 }

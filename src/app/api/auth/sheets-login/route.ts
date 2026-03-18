@@ -1,10 +1,10 @@
-import crypto from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { findParticipant, findParticipantByName, findMentorByKelompok } from "@/lib/server/sheets";
 import { getDb } from "@/lib/server/db";
 import { user, session } from "@/lib/server/db/schema";
 import { eq, and } from "drizzle-orm";
-import { createSession, deleteUserSessions, SESSION_COOKIE } from "@/lib/server/session";
+import { createSession, deleteUserSessions } from "@/lib/server/session";
+import { SESSION_COOKIE } from "@/lib/server/session-constants";
 
 /**
  * POST /api/auth/sheets-login

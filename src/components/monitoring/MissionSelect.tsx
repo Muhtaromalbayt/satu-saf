@@ -86,11 +86,20 @@ export default function MissionSelect({ isOpen, onClose, onSelectAspect, day, pr
                     <div className="grid grid-cols-1 gap-6">
                         {MONITORING_ASPECTS.map((aspect, idx) => {
                             const aspectTasks = tasks.filter(t => t.aspectId === aspect.id && t.isActive);
-                            if (aspectTasks.length === 0) return null;
+
+                            // If no tasks found for this aspect, try to use hardcoded tasks from MONITORING_ASPECTS constant as a last resort
+                            const tasksToShow = aspectTasks.length > 0 ? aspectTasks : (aspect as any).tasks?.map((label: string, i: number) => ({
+                                id: `fallback-${aspect.id}-${i}`,
+                                aspectId: aspect.id,
+                                label,
+                                isActive: true
+                            })) || [];
+
+                            if (tasksToShow.length === 0) return null;
 
                             const aspectLogs = logs.filter(l => l.aspect === aspect.id);
                             const doneCount = aspectLogs.filter(l => l.status === "verified").length;
-                            const aspectProgress = (doneCount / aspectTasks.length) * 100;
+                            const aspectProgress = tasksToShow.length > 0 ? (doneCount / tasksToShow.length) * 100 : 0;
 
                             const Icon = ({
                                 ibadah: Heart,

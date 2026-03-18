@@ -138,12 +138,35 @@ export default function AdminTasksPage() {
             <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
                 <div className="p-4 bg-slate-50/50 border-b border-slate-100 flex justify-between items-center">
                     <span className="text-xs font-black text-slate-400 uppercase tracking-wider"> Daftar Tugas ({filteredTasks.length}) </span>
-                    <button
-                        onClick={handleAddTask}
-                        className="flex items-center gap-1.5 bg-primary text-white px-3 py-1.5 rounded-xl text-xs font-bold hover:opacity-90 transition-all"
-                    >
-                        <Plus className="h-3.5 w-3.5" /> Tambah Task
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={async () => {
+                                if (!confirm("Seed default tasks from constants?")) return;
+                                setSaving(true);
+                                try {
+                                    const res = await fetch("/api/admin/tasks/seed", { method: "POST" });
+                                    if (res.ok) {
+                                        alert("Default tasks seeded!");
+                                        await fetchTasks();
+                                    }
+                                } catch (err) {
+                                    console.error(err);
+                                } finally {
+                                    setSaving(false);
+                                }
+                            }}
+                            disabled={saving}
+                            className="flex items-center gap-1.5 bg-amber-100 text-amber-700 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-amber-200 transition-all border border-amber-200"
+                        >
+                            <Save className="h-3.5 w-3.5" /> Seed Defaults
+                        </button>
+                        <button
+                            onClick={handleAddTask}
+                            className="flex items-center gap-1.5 bg-primary text-white px-3 py-1.5 rounded-xl text-xs font-bold hover:opacity-90 transition-all"
+                        >
+                            <Plus className="h-3.5 w-3.5" /> Tambah Task
+                        </button>
+                    </div>
                 </div>
 
                 <div className="divide-y divide-slate-50">
