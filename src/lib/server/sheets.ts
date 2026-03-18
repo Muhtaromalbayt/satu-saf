@@ -9,13 +9,14 @@ import { getDb } from "./db";
 import { user as userTable } from "./db/schema";
 
 const SHEET_ID = "1RmQaicVsMyie50lHpQPb68pVVmrYBr9jlJuJ5-0T2TY";
-const SHEET_RANGE = "Sheet1!A:D"; // adjust if needed
+const SHEET_RANGE = "Sheet1!A:V"; // Increased range to capture columns O, P (15, 16) and U (21)
 
 export interface Participant {
     id: string;
     nama: string;
     kelompok: string;
     role: string; // 'santri' | 'mentor' | 'admin'
+    score?: number;
 }
 
 // Cache to avoid hammering Sheets API
@@ -49,34 +50,115 @@ export async function fetchParticipants(): Promise<Participant[]> {
             if (res.ok) {
                 const json = await res.json();
                 const rows: string[][] = json.values || [];
-                const [_header, ...dataRows] = rows;
 
-                sheetParticipants = dataRows.map((row) => ({
-                    id: row[0] || "",
-                    nama: row[1] || "",
-                    kelompok: row[2] || "",
-                    role: row[3] || "santri",
-                })).filter(p => p.nama && p.kelompok);
+                // From our analysis:
+                // Column 15 (Index 14): Nama
+                // Column 16 (Index 15): Kelompok
+                // Column 21 (Index 20): Total Skor (e.g., "98,75")
+
+                sheetParticipants = rows.map((row, index) => {
+                    const nama = row[14];
+                    const kelompok = row[15];
+                    const scoreStr = row[20] || "0";
+
+                    if (!nama || !kelompok || nama === "Nama") return null;
+
+                    return {
+                        id: `sheet-${index}`, // Synthetic ID based on row
+                        nama: nama.trim(),
+                        kelompok: kelompok.trim(),
+                        role: "santri",
+                        score: parseFloat(scoreStr.replace(',', '.')) || 0
+                    };
+                }).filter((p): p is Participant => p !== null);
             }
         } catch (err) {
-            console.error("[sheets] Error fetching from Google Sheets:", err);
+            console.error("[sheets] Error fetching from Google Sheets API:", err);
         }
     }
 
-    // Merge and ensure uniqueness (priority to Sheets if ID matches, or just general merge)
+    // Fallback if API key missing or failed
+    if (sheetParticipants.length === 0) {
+        try {
+            const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+            const res = await fetch(csvUrl);
+            if (res.ok) {
+                const csvData = await res.text();
+                // Improved CSV parse that handles empty fields correctly
+                const rows = csvData.split('\n').map(line => {
+                    const row: string[] = [];
+                    let cur = "";
+                    let inQuotes = false;
+                    for (let i = 0; i < line.length; i++) {
+                        const char = line[i];
+                        if (char === '"') inQuotes = !inQuotes;
+                        else if (char === ',' && !inQuotes) {
+                            row.push(cur);
+                            cur = "";
+                        } else {
+                            cur += char;
+                        }
+                    }
+                    row.push(cur);
+                    return row;
+                });
+
+                sheetParticipants = mapRowsToParticipants(rows);
+            }
+        } catch (err) {
+            console.error("[sheets] Error fetching from Google Sheets CSV fallback:", err);
+        }
+    }
+
+    // Merge and ensure uniqueness (priority to Sheets for data like scores)
     const combined = [...dbParticipants];
     sheetParticipants.forEach(sp => {
-        const exists = combined.find(cp =>
+        const existingIdx = combined.findIndex(cp =>
             cp.nama.toLowerCase() === sp.nama.toLowerCase() &&
             cp.kelompok.toLowerCase() === sp.kelompok.toLowerCase()
         );
-        if (!exists) {
+        if (existingIdx > -1) {
+            // Update existing DB entry with Sheet-specific data
+            combined[existingIdx].score = sp.score;
+            combined[existingIdx].id = sp.id;
+        } else {
             combined.push(sp);
         }
     });
 
     cache = { participants: combined, fetchedAt: Date.now() };
     return combined;
+}
+
+/** Helper to map raw rows to Participant objects based on discovered layout */
+function mapRowsToParticipants(rows: string[][]): Participant[] {
+    return rows.map((row, index) => {
+        // Based on analysis:
+        // Index 0: Nama
+        // Index 1: Kelompok
+        // Index 6: Total Skor (e.g., "98,75")
+
+        let nameIdx = 0;
+        let kelompokIdx = 1;
+        let scoreIdx = 6;
+
+        // Skip header
+        if (index === 0) return null;
+
+        const nama = row[nameIdx];
+        const kelompok = row[kelompokIdx];
+        const scoreStr = row[scoreIdx] || "0";
+
+        if (!nama || !kelompok || nama === "Nama" || nama.trim() === "") return null;
+
+        return {
+            id: `sheet-${index}`,
+            nama: nama.trim().replace(/^"|"$/g, ''),
+            kelompok: kelompok.trim().replace(/^"|"$/g, ''),
+            role: "santri",
+            score: parseFloat(scoreStr.replace(/"/g, '').replace(',', '.')) || 0
+        };
+    }).filter((p): p is Participant => p !== null);
 }
 
 export async function findParticipant(nama: string, kelompok: string): Promise<Participant | null> {
