@@ -6,15 +6,16 @@ import { NextResponse } from "next/server";
 
 export async function PATCH(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id: idStr } = await params;
+        const id = parseInt(idStr);
+
         const session = await getAdminSession();
         if (!session) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
-
-        const id = parseInt(params.id);
         const data = await req.json();
         const { left, right, category } = data;
 
@@ -36,15 +37,16 @@ export async function PATCH(
 
 export async function DELETE(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id: idStr } = await params;
+        const id = parseInt(idStr);
+
         const session = await getAdminSession();
         if (!session) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
-
-        const id = parseInt(params.id);
         const db = getDb();
         await db.delete(matchingPool).where(eq(matchingPool.id, id));
 

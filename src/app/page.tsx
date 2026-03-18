@@ -58,7 +58,7 @@ export default function LandingPage() {
             transition={{ delay: 0.1 }}
             className="text-slate-500 text-sm md:text-lg lg:text-xl max-w-2xl mx-auto mb-6 md:mb-10 leading-relaxed px-2"
           >
-            Rasakan pengalaman ajaib Pesantren Ramadhan Masjid Nurul Falah dengan sistem belajar berbasis game yang seru dan interaktif!
+            Satu Saf hadir kembali! Pantau monitoring harianmu selama 14 hari penuh kebaikan dan kumpulkan poin untuk menjadi santri terbaik.
           </motion.p>
 
           {!user && (
@@ -69,13 +69,8 @@ export default function LandingPage() {
               className="flex flex-col sm:flex-row items-center justify-center gap-3"
             >
               <Link href="/login" className="w-full sm:w-auto">
-                <Button size="lg" className="w-full sm:w-56 h-14 rounded-2xl text-base font-black shadow-lg shadow-primary/20 transition-transform active:scale-95 uppercase tracking-wider">
-                  Mulai Petualangan
-                </Button>
-              </Link>
-              <Link href="/register" className="w-full sm:w-auto">
-                <Button size="lg" variant="outline" className="w-full sm:w-56 h-14 rounded-2xl text-base font-bold border-2 transition-transform active:scale-95 uppercase tracking-wider bg-white">
-                  Daftar Akun
+                <Button size="lg" className="w-full sm:w-64 h-14 rounded-2xl text-base font-black shadow-lg shadow-primary/20 transition-transform active:scale-95 uppercase tracking-wider">
+                  Mulai Monitoring
                 </Button>
               </Link>
             </motion.div>

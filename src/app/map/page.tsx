@@ -1,216 +1,396 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import PathCanvas from "@/components/map/PathCanvas";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Lock, Zap } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useGamification } from "@/context/GamificationContext";
-import StreakPopup from "@/components/gamification/StreakPopup";
 import { motion, AnimatePresence } from "framer-motion";
-import ChapterFinishModal from "@/components/map/ChapterFinishModal";
-import { CheckCircle2, Clock } from "lucide-react";
-import { Chapter } from "@/lib/types";
+import {
+    Heart, User, Globe, Star, BookOpen,
+    Loader2, Trophy, ChevronRight, LayoutGrid, Target,
+    Cloud, Trees, Mountain, Wind, Lock,
+    Anchor, Compass, Skull, Palmtree, Ship, Map as MapIcon, Gem
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { MONITORING_ASPECTS, MonitoringAspectId } from "@/lib/constants/monitoring";
+import TaskMission from "@/components/monitoring/TaskMission";
+import MissionSelect from "@/components/monitoring/MissionSelect";
+import { sounds } from "@/lib/utils/sounds";
+
+interface AmalanLog {
+    id: number;
+    aspect: string;
+    deedName: string;
+    status: string;
+    day: number;
+    evidenceUrl?: string;
+    reflection?: string;
+    capturedAt?: string;
+}
+
+interface Task {
+    id: number;
+    aspectId: string;
+    label: string;
+    isActive: boolean;
+    displayOrder: number;
+}
+
+const TOTAL_DAYS = 14;
 
 export default function MapPage() {
-    const { hearts, xp, streak, completedNodes, chapterStatus, submitChapter } = useGamification();
-    const [chapters, setChapters] = useState<Chapter[] | null>(null);
-    const [activeChapterIndex, setActiveChapterIndex] = useState(0);
-    const [showStreak, setShowStreak] = useState(false);
-    const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false);
+    const [activeDay, setActiveDay] = useState(1); // Current day in the journey (from settings)
+    const [selectedDay, setSelectedDay] = useState<number | null>(null); // Day selected to show aspects
+    const [logs, setLogs] = useState<AmalanLog[]>([]);
+    const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedAspectId, setSelectedAspectId] = useState<MonitoringAspectId | null>(null);
+
+    // Immersive State
+    const [missionSelectOpen, setMissionSelectOpen] = useState(false);
+    const [currentDayProgress, setCurrentDayProgress] = useState(0);
 
     useEffect(() => {
-        const fetchChapters = async () => {
-            try {
-                const res = await fetch("/api/chapters");
-                const data = await res.json();
-                setChapters(Array.isArray(data) ? data : []);
-            } catch (error) {
-                console.error("Failed to fetch chapters:", error);
-            } finally {
-                setLoading(false);
-            }
+        const init = async () => {
+            setLoading(true);
+            await Promise.all([fetchLogs(), fetchTasks(), fetchCurrentDay()]);
+            setLoading(false);
+            // Optionally auto-start BGM on first interaction
         };
-        fetchChapters();
+        init();
     }, []);
 
-    useEffect(() => {
-        const hasSeenStreak = sessionStorage.getItem('hasSeenStreak');
-        if (!hasSeenStreak && streak > 0) {
-            setShowStreak(true);
-            sessionStorage.setItem('hasSeenStreak', 'true');
+    const fetchCurrentDay = async () => {
+        try {
+            const res = await fetch("/api/settings");
+            const data = await res.json();
+            if (data.currentDay) {
+                setActiveDay(data.currentDay);
+            }
+        } catch (err) {
+            console.error(err);
         }
-    }, [streak]);
+    };
+
+    const fetchTasks = async () => {
+        try {
+            const res = await fetch("/api/tasks");
+            if (!res.ok) throw new Error("Failed to fetch tasks");
+            const text = await res.text();
+            if (!text) return;
+            const data = JSON.parse(text);
+            setTasks(data.tasks || []);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const fetchLogs = async () => {
+        try {
+            const res = await fetch("/api/habits/log?all=true");
+            if (!res.ok) throw new Error("Failed to fetch logs");
+            const text = await res.text();
+            if (!text) return;
+            const data = JSON.parse(text);
+            setLogs(data.logs || []);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const getDayProgress = (day: number) => {
+        const activeTasks = tasks.filter(t => t.isActive);
+        if (activeTasks.length === 0) return 0;
+
+        const doneCount = logs.filter(l => l.day === day && l.status === "verified").length;
+        return (doneCount / activeTasks.length) * 100;
+    };
+
+    const handleSaveTask = async (taskName: string, data: { status: string, evidenceUrl?: string, reflection?: string, capturedAt?: string }) => {
+        if (!selectedAspectId || !selectedDay) return;
+
+        // Optimistic update
+        setLogs(prev => {
+            const filtered = prev.filter(l => !(l.day === selectedDay && l.aspect === selectedAspectId && l.deedName === taskName));
+            return [...filtered, {
+                id: Math.random(),
+                day: selectedDay,
+                aspect: selectedAspectId,
+                deedName: taskName,
+                status: data.status,
+                evidenceUrl: data.evidenceUrl,
+                reflection: data.reflection,
+                capturedAt: data.capturedAt
+            }];
+        });
+
+        try {
+            const res = await fetch("/api/habits/log", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    day: selectedDay,
+                    aspect: selectedAspectId,
+                    deedName: taskName,
+                    status: data.status,
+                    evidenceUrl: data.evidenceUrl,
+                    reflection: data.reflection,
+                    capturedAt: data.capturedAt
+                }),
+            });
+            if (!res.ok) throw new Error("Save failed");
+        } catch (err) {
+            console.error(err);
+            fetchLogs(); // Revert on error
+        }
+    };
+
+    const handleNodeClick = (day: number) => {
+        if (day > activeDay) {
+            // Locked sound?
+            return;
+        }
+
+        sounds?.play("open");
+        setSelectedDay(day);
+        setCurrentDayProgress(getDayProgress(day));
+        setMissionSelectOpen(true);
+    };
 
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50">
-                <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                <Loader2 className="h-10 w-10 animate-spin text-emerald-500" />
             </div>
         );
     }
 
-    if (!chapters || chapters.length === 0) {
-        return (
-            <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-slate-50">
-                <h1 className="text-2xl font-black text-slate-800 mb-2">Belum ada materi pelajaran</h1>
-                <p className="text-slate-500 mb-6">Hubungi admin untuk menambahkan materi baru.</p>
-                <Button onClick={() => window.location.reload()}>Coba Lagi</Button>
-            </div>
-        );
-    }
-
-    const activeChapter = chapters[activeChapterIndex] || chapters[0];
-
-    const isChapterUnlocked = (index: number) => {
-        if (index === 0) return true;
-        const prevChapter = chapters[index - 1];
-        return chapterStatus[prevChapter.id] === 'approved' || chapterStatus[prevChapter.id] === 'submitted';
-    };
-
-    const handleNext = () => {
-        if (activeChapterIndex < chapters.length - 1) {
-            setActiveChapterIndex(prev => prev + 1);
-        }
-    };
-
-    const handlePrev = () => {
-        if (activeChapterIndex > 0) {
-            setActiveChapterIndex(prev => prev - 1);
-        }
-    };
-
-    const currentStatus = chapterStatus[activeChapter.id] || 'pending';
-    const isActuallyUnlocked = isChapterUnlocked(activeChapterIndex);
-    const isCurrentChapterLocked = !isActuallyUnlocked;
-
-    const allNodesCompleted = activeChapter.nodes.every(node => completedNodes.includes(node.id));
-    const canSubmit = allNodesCompleted && currentStatus === 'pending';
-    const isSubmitted = currentStatus === 'submitted';
-    const isApproved = currentStatus === 'approved';
+    const totalActiveTasksCount = tasks.filter((t: Task) => t.isActive).length;
+    const overallProgress = totalActiveTasksCount > 0
+        ? (logs.filter(l => l.status === "verified").length / (TOTAL_DAYS * totalActiveTasksCount)) * 100
+        : 0;
 
     return (
-        <div className="flex flex-col items-center min-h-screen bg-slate-50 pb-28 relative overflow-hidden">
-            {/* Parallax Background Glow */}
-            <div className="fixed inset-0 bg-[radial-gradient(circle_at_top_right,rgba(45,106,79,0.05),transparent)] pointer-events-none" />
+        <div className="min-h-screen bg-[#F4EBD0] pb-32 font-sans selection:bg-amber-100 selection:text-amber-900 relative">
+            {/* Texture Overlay */}
+            <div className="fixed inset-0 opacity-10 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/parchment.png')]" />
 
-            {/* Chapter Header / Pagination — replaces duplicate header */}
-            <div className="z-40 w-full p-3">
-                <div className="flex items-center justify-between max-w-lg mx-auto">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handlePrev}
-                        disabled={activeChapterIndex === 0}
-                        className="h-9 w-9"
-                    >
-                        <ChevronLeft className="h-5 w-5" />
-                    </Button>
-
-                    <div className="flex flex-col items-center">
-                        <h2 className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">
-                            Chapter {activeChapterIndex + 1}
-                        </h2>
-                        <h1 className="text-base font-bold text-primary truncate max-w-[220px]">
-                            {activeChapter.title.split(":")[1] || activeChapter.title}
-                        </h1>
+            {/* Header */}
+            <div className="sticky top-0 z-30 bg-emerald-900 p-5 pb-10 text-center rounded-b-[2.5rem] shadow-xl relative overflow-hidden border-b-4 border-emerald-950/30">
+                <motion.div
+                    initial={{ scale: 0, rotate: -12 }}
+                    animate={{ scale: 1, rotate: 12 }}
+                    className="absolute -top-2 -right-2 text-white/10"
+                >
+                    <MapIcon className="h-32 w-32" />
+                </motion.div>
+                <div className="relative z-10 flex flex-col items-center">
+                    <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 mb-3">
+                        <Trophy className="h-3 w-3 text-amber-400" />
+                        <span className="text-[10px] font-black text-white uppercase tracking-widest">{Math.round(overallProgress)}% Selesai</span>
                     </div>
-
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleNext}
-                        disabled={activeChapterIndex >= chapters.length - 1}
-                        className="h-9 w-9"
-                    >
-                        <ChevronRight className="h-5 w-5" />
-                    </Button>
-                </div>
-
-                {/* XP inline badge */}
-                <div className="flex justify-center mt-1">
-                    <div className="flex items-center gap-1.5 bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
-                        <Zap className="h-3.5 w-3.5 text-primary fill-primary" />
-                        <span className="font-black text-primary text-xs tracking-tight">{xp} XP</span>
-                    </div>
+                    <h1 className="text-2xl font-black text-white uppercase tracking-tighter leading-none font-serif">
+                        Peta Karunia
+                    </h1>
+                    <p className="text-emerald-100/60 text-[10px] font-bold uppercase tracking-widest mt-2">
+                        Mencari Harta Taqwa
+                    </p>
                 </div>
             </div>
 
-            {/* Description */}
-            <div className="w-full max-w-lg px-5 py-2 text-center">
-                <p className="text-muted-foreground text-sm">{activeChapter.description}</p>
-            </div>
+            {/* Interactive Journey Map */}
+            <div className="relative mt-12 px-4 max-w-md mx-auto min-h-[1500px]">
+                {/* Background Decorations */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                    {/* Pirate Themed Decorations */}
+                    <div className="absolute top-20 -left-10 opacity-10 rotate-12"><Anchor className="h-24 w-24 text-emerald-900" /></div>
+                    <div className="absolute top-80 -right-5 opacity-10 -rotate-12"><Compass className="h-20 w-20 text-emerald-900" /></div>
+                    <div className="absolute top-[400px] left-4 opacity-5"><Skull className="h-16 w-16 text-emerald-900" /></div>
+                    <div className="absolute top-[700px] right-2 opacity-15"><Palmtree className="h-20 w-20 text-emerald-900" /></div>
+                    <div className="absolute top-[1000px] left-10 opacity-5"><Ship className="h-20 w-20 text-emerald-900" /></div>
+                    <div className="absolute top-[1300px] right-8 opacity-15"><MapIcon className="h-16 w-16 text-emerald-900" /></div>
+                </div>
 
-            {/* Content */}
-            <div className="w-full relative min-h-[500px] max-w-lg">
-                {isCurrentChapterLocked ? (
-                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/50 backdrop-blur-sm p-6 text-center animate-in fade-in zoom-in duration-300">
-                        <div className="mb-4 p-5 bg-slate-100 rounded-full">
-                            <Lock className="h-10 w-10 text-slate-400" />
-                        </div>
-                        <h3 className="text-lg font-bold text-slate-600 mb-1.5">Chapter Terkunci</h3>
-                        <p className="text-muted-foreground text-sm">Selesaikan dan dapatkan *approval* Chapter {activeChapterIndex} untuk membuka bab ini.</p>
-                    </div>
-                ) : isSubmitted ? (
-                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-900/10 backdrop-blur-[2px] p-6 text-center">
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            className="bg-white p-6 rounded-2xl shadow-xl border border-slate-200"
-                        >
-                            <div className="inline-flex p-3 bg-orange-100 rounded-full mb-3">
-                                <Clock className="h-7 w-7 text-orange-600 animate-pulse" />
-                            </div>
-                            <h3 className="text-lg font-bold text-slate-800 mb-1.5">Menunggu Persetujuan</h3>
-                            <p className="text-slate-500 text-xs">Progresmu sedang ditinjau oleh Mentor. Sabar ya!</p>
-                        </motion.div>
-                    </div>
-                ) : isApproved ? (
-                    <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 bg-green-500 text-white px-3 py-1.5 rounded-full font-bold text-[10px] shadow-lg">
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                        APPROVED
-                    </div>
-                ) : null}
+                {/* The Path SVG - Treasure Trail Style */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none" viewBox="0 0 100 2000">
+                    <motion.path
+                        d={Array.from({ length: 14 }).reduce((acc: string, _, i) => {
+                            const day = i + 1;
+                            const y = i * 140 + 60;
+                            const x = 50 + (day % 2 === 0 ? 25 : -25);
+                            return i === 0 ? `M ${x} ${y}` : `${acc} L ${x} ${y}`;
+                        }, "")}
+                        fill="none"
+                        stroke="#A5B49D"
+                        strokeWidth="1"
+                        strokeDasharray="3 3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        initial={{ pathLength: 0, opacity: 0 }}
+                        animate={{ pathLength: 1, opacity: 0.3 }}
+                        transition={{ duration: 2, ease: "easeInOut" }}
+                    />
+                    <motion.path
+                        d={Array.from({ length: 14 }).reduce((acc: string, _, i) => {
+                            const day = i + 1;
+                            const y = i * 140 + 60;
+                            const x = 50 + (day % 2 === 0 ? 25 : -25);
+                            return i === 0 ? `M ${x} ${y}` : `${acc} L ${x} ${y}`;
+                        }, "")}
+                        fill="none"
+                        stroke="#059669"
+                        strokeWidth="1.5"
+                        strokeDasharray="3 3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: activeDay / 14 }}
+                        transition={{ duration: 2, ease: "easeInOut" }}
+                    />
+                </svg>
 
-                <div className={cn("transition-opacity duration-500", (isCurrentChapterLocked || isSubmitted) ? "opacity-20 blur-sm pointer-events-none" : "opacity-100")}>
-                    <PathCanvas chapters={[activeChapter]} />
+                {/* Nodes */}
+                <div className="relative flex flex-col gap-10 py-10">
+                    {Array.from({ length: 14 }, (_, i) => i + 1).map((day) => {
+                        const isLocked = day > activeDay;
+                        const progress = getDayProgress(day);
+                        const isEven = day % 2 === 0;
+                        const isCurrent = day === activeDay;
+
+                        return (
+                            <motion.div
+                                key={day}
+                                initial={{ opacity: 0, scale: 0.5, y: 20 }}
+                                whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ type: "spring", damping: 15 }}
+                                className={cn(
+                                    "relative w-full flex items-center mb-10",
+                                    isEven ? "justify-[75%]" : "justify-[25%]",
+                                    "justify-center" // Fallback
+                                )}
+                                style={{
+                                    paddingLeft: isEven ? "50%" : "0%",
+                                    paddingRight: isEven ? "0%" : "50%",
+                                    transform: `translateX(${isEven ? "25%" : "-25"}%)`
+                                }}
+                            >
+                                <button
+                                    onClick={() => handleNodeClick(day)}
+                                    className={cn(
+                                        "group relative flex flex-col items-center transition-all",
+                                        isLocked ? "cursor-not-allowed" : "hover:scale-110 active:scale-95"
+                                    )}
+                                >
+                                    {isCurrent && (
+                                        <div className="absolute -top-14 bg-amber-500 text-white text-[11px] font-black px-5 py-2.5 rounded-2xl animate-bounce shadow-xl shadow-amber-500/30 z-20 border-2 border-white uppercase tracking-widest leading-none">
+                                            Misi Aktif
+                                            <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-amber-500 rotate-45 border-r-2 border-b-2 border-white" />
+                                        </div>
+                                    )}
+
+                                    <div className={cn(
+                                        "h-24 w-24 rounded-[2.5rem] flex items-center justify-center relative transition-all shadow-[0_15px_40px_rgba(0,0,0,0.15)] border-b-[8px] border-x-4 border-t-2 overflow-hidden",
+                                        isLocked
+                                            ? "bg-slate-200/50 border-slate-300/50"
+                                            : isCurrent
+                                                ? "bg-amber-400 border-amber-600 ring-[12px] ring-amber-400/20"
+                                                : "bg-emerald-600 border-emerald-800 shadow-emerald-900/10"
+                                    )}>
+                                        {/* Node Icon Based on Day */}
+                                        <div className="flex flex-col items-center relative z-10">
+                                            {!isLocked ? (
+                                                day === 14 ? (
+                                                    <Gem className="h-12 w-12 text-white animate-pulse" />
+                                                ) : (
+                                                    <div className="flex flex-col items-center">
+                                                        <span className="text-3xl font-black text-white leading-none">{day}</span>
+                                                        <div className="mt-1">
+                                                            {day % 4 === 0 ? <Anchor className="h-4 w-4 text-white/50" /> :
+                                                                day % 4 === 1 ? <Compass className="h-4 w-4 text-white/50" /> :
+                                                                    day % 4 === 2 ? <Skull className="h-4 w-4 text-white/50" /> :
+                                                                        <Ship className="h-4 w-4 text-white/50" />}
+                                                        </div>
+                                                    </div>
+                                                )
+                                            ) : (
+                                                <Lock className="h-8 w-8 text-[#5D4037]/40" />
+                                            )}
+                                        </div>
+
+                                        {/* Decorative Background for Node */}
+                                        {!isLocked && (
+                                            <div className="absolute top-0 right-0 p-1 opacity-[0.03] rotate-12">
+                                                <Target className="h-16 w-16 text-current" />
+                                            </div>
+                                        )}
+
+                                        {/* Completed Stamp */}
+                                        {progress === 100 && !isLocked && (
+                                            <motion.div
+                                                initial={{ scale: 0, rotate: -45 }}
+                                                animate={{ scale: 1, rotate: -12 }}
+                                                className="absolute inset-0 flex items-center justify-center z-20"
+                                            >
+                                                <div className="bg-emerald-500/10 border-2 border-emerald-500/20 text-emerald-500 font-black text-[10px] px-2 py-0.5 rounded-md uppercase tracking-tighter opacity-70">
+                                                    Verified
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </div>
+
+                                    <div className="mt-4 text-center">
+                                        <span className={cn(
+                                            "block font-black text-[12px] uppercase tracking-tighter leading-tight",
+                                            isLocked ? "text-slate-400" : "text-slate-800"
+                                        )}>
+                                            {day === 1 ? "Awal Hijrah" : `Hari Ke-${day}`}
+                                        </span>
+                                        <div className={cn(
+                                            "text-[9px] font-black uppercase tracking-widest mt-1 px-3 py-1 rounded-full inline-block shadow-sm border",
+                                            isLocked
+                                                ? "bg-slate-100 text-slate-400 border-slate-200"
+                                                : isCurrent
+                                                    ? "bg-amber-50 text-amber-500 border-amber-200"
+                                                    : "bg-emerald-50 text-emerald-500 border-emerald-200"
+                                        )}>
+                                            {isLocked ? "Terkunci" : progress === 100 ? "Selesai! ✨" : `${Math.round(progress)}% Selesai`}
+                                        </div>
+                                    </div>
+                                </button>
+                            </motion.div>
+                        );
+                    })}
                 </div>
             </div>
 
-            {/* Finish Chapter Button */}
-            <AnimatePresence>
-                {canSubmit && (
-                    <motion.div
-                        initial={{ y: 100, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: 100, opacity: 0 }}
-                        className="fixed bottom-28 inset-x-4 z-50 flex justify-center"
-                    >
-                        <Button
-                            onClick={() => setIsCompletionModalOpen(true)}
-                            className="w-full max-w-sm py-6 bg-green-600 hover:bg-green-700 text-white font-black text-lg rounded-2xl shadow-[0_6px_0_rgb(21,128,61)] transition-all active:translate-y-1 active:shadow-none uppercase tracking-wider flex items-center justify-center gap-2"
-                        >
-                            <CheckCircle2 className="h-5 w-5" />
-                            SELESAIKAN CHAPTER
-                        </Button>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            <ChapterFinishModal
-                isOpen={isCompletionModalOpen}
-                chapterTitle={activeChapter.title}
-                onClose={() => setIsCompletionModalOpen(false)}
-                onSubmit={() => {
-                    submitChapter(activeChapter.id);
-                    setIsCompletionModalOpen(false);
+            {/* Immersive Mission Select */}
+            <MissionSelect
+                isOpen={missionSelectOpen}
+                onClose={() => {
+                    setMissionSelectOpen(false);
+                    sounds?.play("close");
                 }}
+                onSelectAspect={(aspectId) => {
+                    setSelectedAspectId(aspectId as MonitoringAspectId);
+                    sounds?.play("select");
+                }}
+                day={selectedDay || 0}
+                progress={currentDayProgress}
+                logs={logs.filter(l => l.day === selectedDay)}
+                tasks={tasks}
             />
 
-            {showStreak && (
-                <StreakPopup streak={streak} onClose={() => setShowStreak(false)} />
-            )}
+            {/* Immersive Task Mission */}
+            <TaskMission
+                isOpen={!!selectedAspectId}
+                onClose={() => {
+                    setSelectedAspectId(null);
+                    sounds?.play("close");
+                }}
+                day={selectedDay || activeDay}
+                aspectId={selectedAspectId || ""}
+                tasks={tasks.filter(t => t.aspectId === selectedAspectId && t.isActive)}
+                logs={logs.filter(l => l.day === (selectedDay || activeDay) && l.aspect === selectedAspectId)}
+                onSave={handleSaveTask}
+            />
         </div>
     );
 }

@@ -26,11 +26,23 @@ export default function LessonEditor({ params }: { params: Promise<{ id: string 
                 .then(data => {
                     const lesson = data.find((l: any) => l.id === id);
                     if (lesson) {
+                        let parsedContent = lesson.content;
+                        if (typeof lesson.content === 'string' && lesson.content.trim() !== "") {
+                            try {
+                                parsedContent = JSON.parse(lesson.content);
+                            } catch (e) {
+                                console.error("Error parsing lesson content:", e);
+                                parsedContent = { slides: [] };
+                            }
+                        } else if (typeof lesson.content === 'string') {
+                            parsedContent = { slides: [] };
+                        }
+
                         setForm({
                             chapter: lesson.chapter,
                             type: lesson.type,
                             title: lesson.title,
-                            content: typeof lesson.content === 'string' ? JSON.parse(lesson.content) : lesson.content
+                            content: parsedContent
                         });
                     }
                     setLoading(false);

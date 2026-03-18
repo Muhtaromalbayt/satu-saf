@@ -1,26 +1,18 @@
-import { auth } from "./auth";
-import { headers } from "next/headers";
+import { getCurrentUser } from "@/lib/server/session";
 
 /**
  * Checks if the current session belongs to an admin user.
- * Returns the session if admin, otherwise null.
+ * Returns the user if admin, otherwise null.
  */
 export async function getAdminSession() {
-    const session = await auth.api.getSession({
-        headers: await headers(),
-    });
+    const user = await getCurrentUser();
 
-    if (!session || !session.user) {
+    if (!user) {
         return null;
     }
 
-    // Role can be part of user object if correctly mapped in BetterAuth
-    // Or we can check directly from our DB if needed.
-    // For now, we assume the user object has the role property.
-    const user = session.user as any;
-
     if (user.role === 'admin') {
-        return session;
+        return { user };
     }
 
     return null;

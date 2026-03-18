@@ -1,19 +1,16 @@
 import { NextResponse } from 'next/server';
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { getCurrentUser } from "@/lib/server/session";
 
 export async function POST(req: Request) {
     try {
-        const session = await auth.api.getSession({
-            headers: await headers(),
-        });
+        const user = await getCurrentUser();
 
-        if (!session?.user) {
+        if (!user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
         const { requestId, status } = await req.json();
-        console.log("Mentor approval by:", session.user.id, { requestId, status });
+        console.log("Mentor approval by:", user.id, { requestId, status });
 
         return NextResponse.json({ success: true, message: "Approval processed" });
     } catch (error) {

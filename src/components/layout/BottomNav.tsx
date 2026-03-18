@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Home, Trophy, User, BookOpen, ShieldCheck, Map as MapIcon, Heart } from "lucide-react";
+import { Home, Trophy, User, MessageCircle, ShieldCheck, Map as MapIcon, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { motion } from "framer-motion";
@@ -20,17 +20,34 @@ export default function BottomNav() {
     let links = [
         { href: "/", label: "Home", icon: Home },
         { href: "/map", label: "Peta", icon: MapIcon },
-        { href: "/habits", label: "Kebaikan", icon: Heart },
+        { href: "/habits", label: "Laporan", icon: MessageCircle },
         { href: "/leaderboard", label: "Ranking", icon: Trophy },
         { href: "/profile", label: "Profil", icon: User },
     ];
 
-    if (mounted && user?.role === 'parent') {
-        links = [
-            { href: "/", label: "Home", icon: Home },
-            { href: "/parent", label: "Monitor", icon: ShieldCheck },
-            { href: "/profile", label: "Profil", icon: User },
-        ];
+    if (mounted) {
+        if (user?.role === 'parent') {
+            links = [
+                { href: "/", label: "Home", icon: Home },
+                { href: "/habits", label: "Laporan", icon: MessageCircle },
+                { href: "/leaderboard", label: "Ranking", icon: Trophy },
+                { href: "/profile", label: "Profil", icon: User },
+            ];
+        } else if (user?.role === 'mentor') {
+            links = [
+                { href: "/", label: "Home", icon: Home },
+                { href: "/mentor", label: "Verifikator", icon: ShieldCheck },
+                { href: "/leaderboard", label: "Ranking", icon: Trophy },
+                { href: "/profile", label: "Profil", icon: User },
+            ];
+        } else if (user?.role === 'santri') {
+            links = [
+                { href: "/", label: "Home", icon: Home },
+                { href: "/map", label: "Peta", icon: MapIcon },
+                { href: "/leaderboard", label: "Ranking", icon: Trophy },
+                { href: "/profile", label: "Profil", icon: User },
+            ];
+        }
     }
 
     if (mounted && user?.role === 'admin') {

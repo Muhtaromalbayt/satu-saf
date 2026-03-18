@@ -86,11 +86,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <h2 className="text-slate-800 font-black text-lg">Control Center</h2>
                     <div className="flex items-center gap-3">
                         <div className="text-right hidden sm:block">
-                            <p className="text-sm font-black text-slate-800">{user.name}</p>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase">{user.role}</p>
+                            <p className="text-sm font-black text-slate-800">{user?.name || "Admin"}</p>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase">{user?.role || "Admin"}</p>
                         </div>
                         <div className="h-10 w-10 bg-slate-100 rounded-full border-2 border-slate-50 flex items-center justify-center font-black text-primary">
-                            {user.name.charAt(0)}
+                            {(user?.name || "A").charAt(0)}
                         </div>
                     </div>
                 </header>

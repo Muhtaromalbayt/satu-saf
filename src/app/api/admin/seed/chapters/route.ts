@@ -69,7 +69,7 @@ export async function GET() {
         for (const data of chapterData) {
             await db.insert(lessons).values({
                 ...data,
-                createdAt: Math.floor(Date.now() / 1000)
+                createdAt: new Date().toISOString()
             });
         }
 

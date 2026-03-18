@@ -6,6 +6,7 @@ import { sqliteTable, text, integer, real, uniqueIndex } from "drizzle-orm/sqlit
 export const user = sqliteTable("user", {
     id: text("id").primaryKey(),
     name: text("name").notNull(),
+    email: text("email"), // Addition for compatibility
     kelompok: text("kelompok").notNull(), // e.g., "Kelompok A", "Kelompok B"
     sheetRowId: text("sheet_row_id"), // Row ID from Google Sheets for sync
     role: text("role").default("santri"), // 'santri', 'mentor', 'admin'
@@ -139,5 +140,71 @@ export const matchingPool = sqliteTable("matching_pool", {
     category: text("category"),
     createdAt: integer("created_at", { mode: "timestamp" })
         .default(sql`(current_timestamp)`)
+        .notNull(),
+});
+
+// ===== Account Table (Legacy/Auth compatibility) =====
+
+export const account = sqliteTable("account", {
+    id: text("id").primaryKey(),
+    accountId: text("account_id").notNull(),
+    providerId: text("provider_id").notNull(),
+    userId: text("user_id")
+        .notNull()
+        .references(() => user.id, { onDelete: "cascade" }),
+    accessToken: text("access_token"),
+    refreshToken: text("refresh_token"),
+    idToken: text("id_token"),
+    accessTokenExpiresAt: integer("access_token_expires_at"),
+    refreshTokenExpiresAt: integer("refresh_token_expires_at"),
+    scope: text("scope"),
+    password: text("password"),
+    createdAt: integer("created_at", { mode: "timestamp" })
+        .default(sql`(current_timestamp)`)
+        .notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+});
+
+// ===== Verification Table (Legacy/Auth compatibility) =====
+
+export const verification = sqliteTable("verification", {
+    id: text("id").primaryKey(),
+    identifier: text("identifier").notNull(),
+    value: text("value").notNull(),
+    expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
+    createdAt: integer("created_at", { mode: "timestamp" })
+        .default(sql`(current_timestamp)`)
+        .notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" })
+        .default(sql`(current_timestamp)`)
+        .notNull(),
+});
+
+// ===== Lessons Table =====
+
+export const lessons = sqliteTable("lessons", {
+    id: text("id").primaryKey(),
+    chapter: integer("chapter").notNull(),
+    type: text("type").notNull(),
+    title: text("title"),
+    content: text("content"),
+    createdAt: text("created_at")
+        .default(sql`CURRENT_TIMESTAMP`)
+        .notNull(),
+});
+
+// ===== Progress Table =====
+
+export const progress = sqliteTable("progress", {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    userId: text("user_id")
+        .notNull()
+        .references(() => user.id, { onDelete: "cascade" }),
+    lessonId: text("lesson_id")
+        .notNull()
+        .references(() => lessons.id, { onDelete: "cascade" }),
+    isVerified: integer("is_verified", { mode: "boolean" }).default(false),
+    createdAt: text("created_at")
+        .default(sql`CURRENT_TIMESTAMP`)
         .notNull(),
 });

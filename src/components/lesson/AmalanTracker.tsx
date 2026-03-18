@@ -70,7 +70,7 @@ export default function AmalanTracker({ items, onComplete }: AmalanTrackerProps)
     // Load from localStorage
     useEffect(() => {
         const saved = localStorage.getItem("satusaf-amalan-progress");
-        if (saved) {
+        if (saved && saved.trim() !== "") {
             try {
                 const parsed = JSON.parse(saved);
                 setChecked(parsed.checked || {});

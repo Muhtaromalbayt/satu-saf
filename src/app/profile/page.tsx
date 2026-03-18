@@ -1,6 +1,6 @@
 "use client";
 
-import { User, Award, Zap, Flame, Heart, LogOut, ChevronRight, Star } from "lucide-react";
+import { User, Award, Zap, Flame, Heart, LogOut, ChevronRight, Star, Shield, Users } from "lucide-react";
 import { useGamification } from "@/context/GamificationContext";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { motion } from "framer-motion";
@@ -11,6 +11,32 @@ export default function ProfilePage() {
 
     const level = Math.floor(xp / 100) + 1;
     const xpProgress = xp % 100;
+
+    // Role-specific identity builder
+    const getRoleLabel = () => {
+        if (!user) return 'Santri';
+        switch (user.role) {
+            case 'parent':
+                return `Wali dari Ananda ${user.name?.replace('Wali ', '') || ''}`;
+            case 'mentor':
+                return `Mentor Kelompok ${user.kelompok || ''}`;
+            case 'admin':
+                return 'Administrator';
+            default:
+                return `Santri • ${user.kelompok || ''}`;
+        }
+    };
+
+    const getRoleBadge = () => {
+        switch (user?.role) {
+            case 'parent': return { label: 'Orang Tua', color: 'bg-blue-500' };
+            case 'mentor': return { label: 'Mentor', color: 'bg-amber-500' };
+            case 'admin': return { label: 'Admin', color: 'bg-red-500' };
+            default: return { label: 'Santri', color: 'bg-emerald-500' };
+        }
+    };
+
+    const roleBadge = getRoleBadge();
 
     return (
         <div className="flex flex-col min-h-screen bg-slate-50 pb-28">
@@ -37,13 +63,23 @@ export default function ProfilePage() {
                     >
                         {user?.name || 'Santri'}
                     </motion.h1>
+                    <motion.div
+                        initial={{ y: 10, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.12 }}
+                        className="mt-1.5 flex items-center gap-2"
+                    >
+                        <span className={`text-[9px] font-black text-white uppercase tracking-widest px-2.5 py-0.5 rounded-full ${roleBadge.color}`}>
+                            {roleBadge.label}
+                        </span>
+                    </motion.div>
                     <motion.p
                         initial={{ y: 10, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.15 }}
-                        className="text-white/70 text-xs font-bold uppercase tracking-widest mt-0.5"
+                        className="text-white/70 text-xs font-bold tracking-wide mt-1"
                     >
-                        {user?.role || 'Santri'} • Level {level}
+                        {getRoleLabel()}
                     </motion.p>
                 </div>
             </div>
@@ -149,12 +185,6 @@ export default function ProfilePage() {
                 </button>
             </div>
 
-            {/* Email info */}
-            {user?.email && (
-                <div className="px-4 mt-6 text-center">
-                    <p className="text-[10px] text-slate-400 font-medium">{user.email}</p>
-                </div>
-            )}
         </div>
     );
 }

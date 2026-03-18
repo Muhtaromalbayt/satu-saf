@@ -1,172 +1,353 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter } from "next/navigation";
+import { ChevronDown, LogIn, Loader2, Users } from "lucide-react";
+import { cn } from "@/lib/utils";
 import Mascot from "@/components/gamification/Mascot";
-import { Button } from "@/components/ui/button";
-import { LogIn, UserPlus, ArrowLeft } from "lucide-react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { Suspense, useState } from "react";
-import Link from "next/link";
-import { authClient } from "@/lib/auth-client";
+
+interface Participant {
+    nama: string;
+    kelompok: string;
+    role: string;
+}
 
 function LoginForm() {
-    const searchParams = useSearchParams();
     const router = useRouter();
-    const role = searchParams.get("role") || "santri";
-    const mode = searchParams.get("mode");
-    const [loading, setLoading] = useState(false);
+    const [participants, setParticipants] = useState<Participant[]>([]);
+    const [loadingData, setLoadingData] = useState(true);
+    const [selectedNama, setSelectedNama] = useState("");
+    const [selectedKelompok, setSelectedKelompok] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
-    const [isRegister, setIsRegister] = useState(mode === "register");
 
-    const handleEmailLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    const [isMentorMode, setIsMentorMode] = useState(false);
+    const [isParentMode, setIsParentMode] = useState(false);
+    const [password, setPassword] = useState("");
+
+    const [loginStep, setLoginStep] = useState<"choice" | "pin" | "setup">("choice");
+    const [pin, setPin] = useState("");
+    const [confirmPin, setConfirmPin] = useState("");
+
+    useEffect(() => {
+        fetch("/api/sheets/participants")
+            .then(r => r.json())
+            .then(data => {
+                setParticipants(data.participants || []);
+            })
+            .catch(() => setError("Gagal memuat daftar peserta. Coba muat ulang."))
+            .finally(() => setLoadingData(false));
+    }, []);
+
+    // Unique kelompok options
+    const kelompokOptions = [...new Set(participants.map(p => p.kelompok))].sort();
+
+    // Nama options filtered by kelompok (or all if Parent Mode)
+    const namaOptions = participants
+        .filter(p => isParentMode || !selectedKelompok || p.kelompok === selectedKelompok)
+        .filter(p => p.role === "santri") // Only santri in standard list
+        .map(p => p.nama)
+        .sort();
+
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
         setError("");
 
-        const formData = new FormData(e.currentTarget);
-        const email = formData.get("email") as string;
-        const password = formData.get("password") as string;
+        let loginKelompok = selectedKelompok;
 
+        // If Parent Mode, find the kelompok of the selected student
+        if (isParentMode) {
+            const student = participants.find(p => p.nama === selectedNama);
+            if (!student) {
+                setError("Data Ananda tidak ditemukan.");
+                return;
+            }
+            loginKelompok = student.kelompok;
+        }
+
+        if (!isParentMode && !loginKelompok) {
+            setError("Pilih Kelompok terlebih dahulu.");
+            return;
+        }
+
+        if (!selectedNama && !isMentorMode) {
+            setError("Pilih Nama kamu.");
+            return;
+        }
+
+        if (isMentorMode && !password) {
+            setError("Masukkan password mentor.");
+            return;
+        }
+
+        if (loginStep === "setup" && pin !== confirmPin) {
+            setError("Konfirmasi PIN tidak cocok.");
+            return;
+        }
+
+        setIsLoading(true);
         try {
-            if (isRegister) {
-                const name = formData.get("name") as string;
-                const { error: signUpError } = await authClient.signUp.email({
-                    email,
-                    password,
-                    name,
-                    role: role,
-                } as any);
-                if (signUpError) {
-                    console.error("Registration Error:", signUpError);
-                    setError(signUpError.message || JSON.stringify(signUpError) || "Registrasi gagal");
-                    setLoading(false);
-                    return;
+            const res = await fetch("/api/auth/sheets-login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    nama: isMentorMode ? "" : selectedNama,
+                    kelompok: loginKelompok,
+                    password: isMentorMode ? password : "",
+                    role: isParentMode ? 'parent' : (isMentorMode ? 'mentor' : 'santri'),
+                    pin: loginStep === "pin" ? pin : "",
+                    newPin: loginStep === "setup" ? pin : ""
+                }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                if (data.error === "PIN_REQUIRED") {
+                    setLoginStep("pin");
+                } else if (data.error === "SETUP_PIN_REQUIRED") {
+                    setLoginStep("setup");
+                } else {
+                    setError(data.message || data.error || "Login gagal. Coba lagi.");
                 }
-            } else {
-                const { error: signInError } = await authClient.signIn.email({
-                    email,
-                    password,
-                });
-                if (signInError) {
-                    setError(signInError.message || "Login gagal");
-                    setLoading(false);
-                    return;
-                }
+                return;
             }
 
-            if (role === 'mentor') {
-                router.push("/mentor");
-            } else if (role === 'parent') {
-                router.push("/parent");
-            } else if (role === 'admin') {
-                router.push("/admin");
-            } else {
-                router.push("/map");
-            }
-        } catch (err: unknown) {
-            const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan";
-            setError(errorMessage);
-            setLoading(false);
+            const role = data.user?.role || "santri";
+            if (role === "mentor") router.push("/mentor");
+            else if (role === "admin") router.push("/admin");
+            else if (role === "parent") router.push("/habits");
+            else router.push("/map");
+
+        } catch {
+            setError("Terjadi kesalahan jaringan. Coba lagi.");
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const roleLabel = role === 'mentor' ? 'Mentor' : role === 'parent' ? 'Orang Tua' : role === 'admin' ? 'Administrator' : 'Santri';
-    const roleColor = role === 'mentor'
-        ? 'bg-slate-800 text-white'
-        : role === 'admin'
-            ? 'bg-red-600 text-white'
-            : 'bg-blue-50 text-blue-600';
-
     return (
-        <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-5"
+        <motion.form
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            onSubmit={handleLogin}
+            className="space-y-4"
         >
-            <div className="text-center">
-                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${roleColor}`}>
-                    {isRegister ? `Daftar` : `Masuk`} sebagai {roleLabel}
-                </span>
-            </div>
-
-            <form onSubmit={handleEmailLogin} className="space-y-3.5">
-                {isRegister && (
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Lengkap</label>
-                        <input
-                            name="name"
-                            type="text"
-                            placeholder="Nama kamu"
-                            required
-                            className="w-full p-3.5 rounded-xl border-2 border-slate-100 focus:border-primary outline-none text-slate-700 font-bold transition-all text-sm"
-                        />
-                    </div>
-                )}
-                <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email</label>
-                    <input
-                        name="email"
-                        type="email"
-                        placeholder="nama@email.com"
-                        required
-                        className="w-full p-3.5 rounded-xl border-2 border-slate-100 focus:border-primary outline-none text-slate-700 font-bold transition-all text-sm"
-                    />
-                </div>
-                <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Password</label>
-                    <input
-                        name="password"
-                        type="password"
-                        placeholder="••••••••"
-                        required
-                        minLength={8}
-                        className="w-full p-3.5 rounded-xl border-2 border-slate-100 focus:border-primary outline-none text-slate-700 font-bold transition-all text-sm"
-                    />
-                </div>
-
-                {error && (
-                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs font-medium text-center break-words">
-                        {error}
-                    </div>
-                )}
-
-                <Button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full py-5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold text-base transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2"
-                >
-                    {isRegister ? (
-                        <><UserPlus className="h-5 w-5" /> {loading ? "MEMPROSES..." : "DAFTAR AKUN"}</>
-                    ) : (
-                        <><LogIn className="h-5 w-5" /> {loading ? "MOHON TUNGGU..." : "MASUK"}</>
-                    )}
-                </Button>
-            </form>
-
-            <button
-                onClick={() => { setIsRegister(!isRegister); setError(""); }}
-                className="w-full text-center text-sm font-bold text-primary hover:underline"
-            >
-                {isRegister ? "Sudah punya akun? Masuk di sini" : "Belum punya akun? Daftar di sini"}
-            </button>
-
-            <Link href="/" className="flex items-center justify-center gap-2 text-slate-400 hover:text-slate-600 font-bold text-sm transition-colors pt-1">
-                <ArrowLeft className="h-4 w-4" /> UBAH PERAN
-            </Link>
-
-            <p className="text-center text-[11px] text-slate-400">
-                Dengan mendaftar, kamu menyetujui <br />
-                <span className="font-bold text-slate-500 cursor-pointer hover:underline">Ketentuan Layanan</span> dan <span className="font-bold text-slate-500 cursor-pointer hover:underline">Kebijakan Privasi</span> kami.
-            </p>
-
-            {!isRegister && role !== 'admin' && (
-                <div className="pt-3 border-t border-slate-100 flex justify-center">
-                    <Link href="/login?role=admin" className="text-[10px] font-bold text-slate-300 hover:text-slate-500 transition-colors uppercase tracking-widest">
-                        Masuk sebagai Admin
-                    </Link>
+            {loginStep === "choice" && (
+                <div className="flex bg-slate-100 p-1 rounded-2xl mb-4">
+                    <button
+                        type="button"
+                        onClick={() => { setIsMentorMode(false); setIsParentMode(false); setError(""); }}
+                        className={cn(
+                            "flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                            (!isMentorMode && !isParentMode) ? "bg-white shadow-sm text-primary" : "text-slate-400"
+                        )}
+                    >
+                        Santri
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => { setIsMentorMode(true); setIsParentMode(false); setError(""); }}
+                        className={cn(
+                            "flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                            isMentorMode ? "bg-white shadow-sm text-primary" : "text-slate-400"
+                        )}
+                    >
+                        Mentor
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => { setIsParentMode(true); setIsMentorMode(false); setError(""); }}
+                        className={cn(
+                            "flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                            isParentMode ? "bg-white shadow-sm text-primary" : "text-slate-400"
+                        )}
+                    >
+                        Wali
+                    </button>
                 </div>
             )}
-        </motion.div>
+
+            {loadingData ? (
+                <div className="flex flex-col items-center gap-3 py-8 text-slate-400">
+                    <Loader2 className="h-7 w-7 animate-spin text-primary" />
+                    <p className="text-sm font-medium">Memuat data...</p>
+                </div>
+            ) : (
+                <>
+                    {loginStep === "choice" && (
+                        <>
+                            {/* Kelompok Dropdown */}
+                            {!isParentMode && (
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                                        Kelompok
+                                    </label>
+                                    <div className="relative">
+                                        <select
+                                            value={selectedKelompok}
+                                            onChange={e => {
+                                                setSelectedKelompok(e.target.value);
+                                                setSelectedNama("");
+                                            }}
+                                            className="w-full appearance-none p-4 rounded-2xl border-2 border-slate-100 focus:border-primary outline-none text-slate-700 font-bold transition-all text-sm bg-white"
+                                            required
+                                        >
+                                            <option value="">— Pilih Kelompok —</option>
+                                            {kelompokOptions.map(k => (
+                                                <option key={k} value={k}>{k}</option>
+                                            ))}
+                                        </select>
+                                        <ChevronDown className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                    </div>
+                                </div>
+                            )}
+
+                            {!isMentorMode ? (
+                                /* Nama Dropdown (Santri Mode) */
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                                        Nama Santri
+                                    </label>
+                                    <div className="relative">
+                                        <select
+                                            value={selectedNama}
+                                            onChange={e => setSelectedNama(e.target.value)}
+                                            className="w-full appearance-none p-4 rounded-2xl border-2 border-slate-100 focus:border-primary outline-none text-slate-700 font-bold transition-all text-sm bg-white disabled:opacity-50"
+                                            disabled={!isParentMode && !selectedKelompok}
+                                            required
+                                        >
+                                            <option value="">{isParentMode ? "— Pilih Nama Ananda —" : "— Pilih Nama —"}</option>
+                                            {namaOptions.map(n => (
+                                                <option key={n} value={n}>{n}</option>
+                                            ))}
+                                        </select>
+                                        <ChevronDown className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                    </div>
+                                </div>
+                            ) : (
+                                /* Password Input (Mentor Mode) */
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                                        Password Mentor
+                                    </label>
+                                    <input
+                                        type="password"
+                                        value={password}
+                                        onChange={e => setPassword(e.target.value)}
+                                        placeholder="Masukkan password..."
+                                        className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-primary outline-none text-slate-700 font-bold transition-all text-sm bg-white"
+                                        required
+                                    />
+                                </div>
+                            )}
+                        </>
+                    )}
+
+                    {loginStep === "pin" && (
+                        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                            <div className="text-center bg-primary/5 p-4 rounded-2xl border border-primary/10 mb-2">
+                                <p className="text-xs font-bold text-slate-600">Halo, <span className="text-primary">{selectedNama}</span>!</p>
+                                <p className="text-[10px] text-slate-400 uppercase tracking-widest mt-1">Masukkan PIN 4-angka kamu</p>
+                            </div>
+                            <div className="space-y-1.5 text-center">
+                                <input
+                                    type="password"
+                                    inputMode="numeric"
+                                    maxLength={4}
+                                    value={pin}
+                                    onChange={e => setPin(e.target.value.replace(/\D/g, ""))}
+                                    placeholder="••••"
+                                    className="w-full text-center text-4xl tracking-[2rem] p-4 rounded-2xl border-2 border-slate-100 focus:border-primary outline-none text-slate-700 font-black transition-all bg-white"
+                                    autoFocus
+                                    required
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => { setLoginStep("choice"); setPin(""); setError(""); }}
+                                className="text-[10px] font-black text-slate-400 block mx-auto uppercase tracking-widest hover:text-primary transition-colors"
+                            >
+                                Bukan kamu? Ganti Nama
+                            </button>
+                        </div>
+                    )}
+
+                    {loginStep === "setup" && (
+                        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                            <div className="text-center bg-amber-50 p-4 rounded-2xl border border-amber-100 mb-2">
+                                <p className="text-xs font-bold text-amber-700">Akun baru atau PIN belum diset.</p>
+                                <p className="text-[10px] text-amber-600 uppercase tracking-widest mt-1">Buat PIN 4-angka untuk keamanan</p>
+                            </div>
+                            <div className="space-y-1.5 italic">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 text-center block">
+                                    Pilih PIN Baru
+                                </label>
+                                <input
+                                    type="password"
+                                    inputMode="numeric"
+                                    maxLength={4}
+                                    value={pin}
+                                    onChange={e => setPin(e.target.value.replace(/\D/g, ""))}
+                                    placeholder="••••"
+                                    className="w-full text-center text-4xl tracking-[2rem] p-4 rounded-2xl border-2 border-slate-100 focus:border-primary outline-none text-slate-700 font-black transition-all bg-white"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 text-center block">
+                                    Konfirmasi PIN
+                                </label>
+                                <input
+                                    type="password"
+                                    inputMode="numeric"
+                                    maxLength={4}
+                                    value={confirmPin}
+                                    onChange={e => setConfirmPin(e.target.value.replace(/\D/g, ""))}
+                                    placeholder="••••"
+                                    className="w-full text-center text-4xl tracking-[2rem] p-4 rounded-2xl border-2 border-slate-100 focus:border-primary outline-none text-slate-700 font-black transition-all bg-white"
+                                    required
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => { setLoginStep("choice"); setPin(""); setConfirmPin(""); setError(""); }}
+                                className="text-[10px] font-black text-slate-400 block mx-auto uppercase tracking-widest hover:text-primary transition-colors"
+                            >
+                                Kembali ke Pilihan Nama
+                            </button>
+                        </div>
+                    )}
+                </>
+            )}
+
+            <AnimatePresence>
+                {error && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-600 text-[11px] font-bold text-center"
+                    >
+                        {error}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <button
+                type="submit"
+                disabled={isLoading || loadingData || (!isParentMode && !selectedKelompok) || (!isMentorMode && !selectedNama)}
+                className="w-full py-4.5 bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-black text-base transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2 mt-4"
+            >
+                {isLoading ? (
+                    <><Loader2 className="h-5 w-5 animate-spin" /> MEMPROSES...</>
+                ) : (
+                    <><LogIn className="h-5 w-5" /> MASUK</>
+                )}
+            </button>
+        </motion.form>
     );
 }
 
@@ -176,31 +357,36 @@ export default function LoginPage() {
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100"
+                className="w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100"
             >
-                {/* Header Decoration */}
+                {/* Header */}
                 <div className="bg-primary/5 p-6 flex flex-col items-center border-b border-slate-50">
                     <Mascot pose="success" className="mb-3 scale-90" />
                     <h1 className="text-3xl font-black text-slate-800 tracking-tight">SATU SAF</h1>
-                    <p className="text-slate-500 font-medium text-sm whitespace-nowrap">Platform Belajar PAI Masa Kini</p>
+                    <p className="text-slate-500 font-medium text-sm">Monitoring 14 Hari Pesantren Kilat</p>
                 </div>
 
                 <div className="p-6 space-y-5">
-                    <div className="space-y-1 text-center">
+                    <div className="text-center space-y-1">
+                        <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full">
+                            <Users className="h-3.5 w-3.5" />
+                            <span className="text-[10px] font-black uppercase tracking-widest">Pilih Identitasmu</span>
+                        </div>
                         <h2 className="text-xl font-bold text-slate-800">Selamat Datang!</h2>
+                        <p className="text-slate-400 text-xs">Pilih kelompok dan nama kamu untuk masuk</p>
                     </div>
 
-                    <Suspense fallback={<div className="h-60 animate-pulse bg-slate-50 rounded-2xl" />}>
+                    <Suspense fallback={<div className="h-40 animate-pulse bg-slate-50 rounded-2xl" />}>
                         <LoginForm />
                     </Suspense>
                 </div>
             </motion.div>
 
             <p className="mt-6 text-center text-[10px] text-slate-400">
-                Masalah login? Hubungi Superadmin Tutorial.
+                Masalah login? Hubungi panitia atau admin.
             </p>
 
-            {/* Decorative BG mascot */}
+            {/* Decorative Mascots */}
             <div className="fixed bottom-10 left-10 opacity-10 hidden lg:block pointer-events-none">
                 <Mascot pose="thinking" className="scale-150 rotate-12" />
             </div>

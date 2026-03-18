@@ -1,66 +1,206 @@
 "use client";
 
-import { useState } from "react";
-import { Check, X, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
+import { Check, X, User, Clock, Camera, MessageSquare, Loader2, Search, Filter, Trophy } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
+import { sounds } from "@/lib/utils/sounds";
+
+interface PendingItem {
+    id: number;
+    studentName: string;
+    aspect: string;
+    deedName: string;
+    day: number;
+    status: string;
+    evidenceUrl?: string;
+    reflection?: string;
+    capturedAt?: string;
+    timestamp: string;
+}
 
 export default function MentorDashboard() {
-    const [pendingApprovals, setPendingApprovals] = useState([
-        { id: 1, student: "Ahmad", action: "Membersihkan Halaman", proof: "Image", status: "pending" },
-        { id: 2, student: "Fatima", action: "Membaca Al-Mulk", proof: "Audio", status: "pending" },
-    ]);
+    const [items, setItems] = useState<PendingItem[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [processing, setProcessing] = useState<number | null>(null);
 
-    const handleApprove = (id: number) => {
-        setPendingApprovals(prev => prev.filter(item => item.id !== id));
-        // Verify Logic here
+    useEffect(() => {
+        fetchPending();
+    }, []);
+
+    const fetchPending = async () => {
+        try {
+            const res = await fetch("/api/mentor/pending");
+            const data = await res.json();
+            setItems(data.items || []);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
     };
 
+    const handleVerify = async (id: number, status: 'verified' | 'not_done') => {
+        setProcessing(id);
+        if (status === 'verified') sounds?.play("success");
+        else sounds?.play("close");
+
+        try {
+            const res = await fetch("/api/mentor/verify", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id, status }),
+            });
+            if (res.ok) {
+                // Optimistic removal
+                setItems(prev => prev.filter(item => item.id !== id));
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setProcessing(null);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+                <Loader2 className="h-10 w-10 animate-spin text-emerald-500" />
+            </div>
+        );
+    }
+
     return (
-        <div className="p-6 pb-24">
-            <h1 className="text-2xl font-bold text-primary mb-6">Mentor Dashboard</h1>
-
-            <div className="space-y-4">
-                <h2 className="text-lg font-semibold text-muted-foreground uppercase tracking-widest">
-                    Menunggu Persetujuan
-                </h2>
-
-                {pendingApprovals.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-8">Semua tugas sudah diperiksa! 🎉</p>
-                ) : (
-                    pendingApprovals.map((item) => (
-                        <div key={item.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center text-primary">
-                                    <User className="h-5 w-5" />
-                                </div>
-                                <div>
-                                    <p className="font-bold text-slate-800">{item.student}</p>
-                                    <p className="text-sm text-muted-foreground">{item.action}</p>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-2">
-                                <Button size="icon" variant="danger" onClick={() => handleApprove(item.id)}>
-                                    <X className="h-5 w-5" />
-                                </Button>
-                                <Button size="icon" variant="default" className="bg-green-500 hover:bg-green-600 border-green-700" onClick={() => handleApprove(item.id)}>
-                                    <Check className="h-5 w-5" />
-                                </Button>
-                            </div>
-                        </div>
-                    ))
-                )}
-            </div>
-
-            <div className="mt-8">
-                <h2 className="text-lg font-semibold text-muted-foreground uppercase tracking-widest mb-4">
-                    Progress Santri
-                </h2>
-                {/* Placeholder for student list */}
-                <div className="p-4 bg-muted/20 rounded-xl text-center text-muted-foreground text-sm">
-                    Daftar santri akan muncul di sini.
+        <div className="min-h-screen bg-slate-50 pb-24 font-sans">
+            {/* Immersive Header */}
+            <header className="bg-white border-b border-slate-100 p-8 pb-10 rounded-b-[3rem] shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-8 opacity-5">
+                    <ShieldCheck className="h-32 w-32" />
                 </div>
-            </div>
+                <div className="relative z-10">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="h-12 w-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+                            <Trophy className="h-6 w-6" />
+                        </div>
+                        <h1 className="text-3xl font-black text-slate-800 tracking-tight uppercase leading-none">Review Center</h1>
+                    </div>
+                    <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] flex items-center gap-2">
+                        <span className="h-2 w-2 bg-amber-500 rounded-full animate-pulse" />
+                        {items.length} Amalan Menunggu Verifikasi
+                    </p>
+                </div>
+            </header>
+
+            <main className="max-w-xl mx-auto p-6 space-y-6 -mt-6">
+                <AnimatePresence mode="popLayout">
+                    {items.length === 0 ? (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="bg-white p-12 rounded-[2.5rem] shadow-xl border border-slate-100 text-center space-y-4"
+                        >
+                            <div className="h-20 w-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto">
+                                <Check className="h-10 w-10 text-emerald-500" />
+                            </div>
+                            <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">Semua Beres!</h2>
+                            <p className="text-slate-400 font-medium text-sm">Tidak ada lagi amalan yang perlu diverifikasi hari ini. Kerja bagus mentor!</p>
+                        </motion.div>
+                    ) : (
+                        items.map((item) => (
+                            <motion.div
+                                key={item.id}
+                                layout
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden flex flex-col group"
+                            >
+                                {/* Student Info Section */}
+                                <div className="p-6 flex items-center justify-between border-b border-slate-50">
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-14 w-14 bg-slate-50 border-2 border-slate-100 rounded-2xl flex items-center justify-center group-hover:bg-emerald-50 transition-colors">
+                                            <User className="h-7 w-7 text-slate-300 group-hover:text-emerald-500" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-black text-slate-800 text-lg leading-tight">{item.studentName}</h3>
+                                            <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded-full">Hari Ke-{item.day}</span>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">ASPEK</span>
+                                        <span className="text-xs font-black text-slate-700 uppercase tracking-tight">{item.aspect.replace('_', ' ')}</span>
+                                    </div>
+                                </div>
+
+                                {/* Task Detail Section */}
+                                <div className="p-6 space-y-6">
+                                    <div className="bg-slate-50/50 p-5 rounded-3xl border border-slate-100">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-2">
+                                            <Filter className="h-3 w-3" /> Nama Amalan
+                                        </label>
+                                        <p className="font-black text-slate-800 text-base">{item.deedName}</p>
+                                    </div>
+
+                                    {item.evidenceUrl && (
+                                        <div className="space-y-3">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                                <Camera className="h-3 w-3" /> Bukti Foto (Live)
+                                            </label>
+                                            <div className="relative rounded-[2rem] overflow-hidden border-4 border-slate-50 shadow-lg">
+                                                <img src={item.evidenceUrl} alt="Bukti" className="w-full aspect-[4/3] object-cover" />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex flex-col justify-end p-5">
+                                                    <div className="flex items-center gap-2 text-white text-[10px] font-black uppercase tracking-widest">
+                                                        <Clock className="h-4 w-4 text-emerald-400" />
+                                                        {item.capturedAt ? new Date(item.capturedAt).toLocaleString("id-ID") : "No Timestamp"}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {item.reflection && (
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                                <MessageSquare className="h-3 w-3" /> Catatan Santri
+                                            </label>
+                                            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 italic font-medium text-slate-600 text-sm">
+                                                "{item.reflection}"
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="p-6 pt-0 flex gap-4">
+                                    <button
+                                        disabled={processing === item.id}
+                                        onClick={() => handleVerify(item.id, 'not_done')}
+                                        className="flex-1 py-5 rounded-2xl border-2 border-rose-100 text-rose-500 font-black uppercase tracking-widest text-[10px] hover:bg-rose-50 transition-all active:scale-95 disabled:opacity-50"
+                                    >
+                                        Tolak
+                                    </button>
+                                    <button
+                                        disabled={processing === item.id}
+                                        onClick={() => handleVerify(item.id, 'verified')}
+                                        className="flex-[2] py-5 rounded-2xl bg-emerald-500 text-white font-black uppercase tracking-widest text-[10px] shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3"
+                                    >
+                                        {processing === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                                        Verifikasi Amalan
+                                    </button>
+                                </div>
+                            </motion.div>
+                        ))
+                    )}
+                </AnimatePresence>
+            </main>
         </div>
+    );
+}
+
+function ShieldCheck({ className }: { className?: string }) {
+    return (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
     );
 }

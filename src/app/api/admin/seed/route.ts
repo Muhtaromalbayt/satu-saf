@@ -1,6 +1,4 @@
-import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
-
 export const dynamic = 'force-dynamic';
 import { getDb } from "@/lib/server/db";
 import { user } from "@/lib/server/db/schema";
@@ -19,28 +17,23 @@ export async function GET() {
         await db.delete(user).where(eq(user.email, email));
         console.log("Deleted existing admin user (if any).");
 
-        // Try to sign up
-        const signUpRes = await auth.api.signUpEmail({
-            body: {
-                email,
-                password,
-                name,
-                role: "admin",
-                gender: "Laki-laki",
-                grade: "Admin",
-                mosque: "Al-Azhar",
-            },
-            asResponse: true
+        // Create new admin user
+        const adminId = "admin-1";
+        const result = await db.insert(user).values({
+            id: adminId,
+            email,
+            name,
+            role: "admin",
+            kelompok: "Admin",
+            pin: "1234", // Default PIN
+        }).returning();
+
+        console.log("Admin user created:", result[0]);
+        return NextResponse.json({
+            success: true,
+            user: result[0],
+            message: "Admin created successfully with PIN: 1234"
         });
-
-        if (signUpRes.ok) {
-            const userData = await signUpRes.json();
-            console.log("User created:", userData);
-            return NextResponse.json({ success: true, user: userData, message: "Admin created successfully with password: " + password });
-        }
-
-        const signUpError = await signUpRes.json();
-        return NextResponse.json({ success: false, error: signUpError }, { status: 500 });
     } catch (error: any) {
         console.error("Seed Error:", error);
         return NextResponse.json({ success: false, error: error.message || "Failed to create admin" }, { status: 500 });

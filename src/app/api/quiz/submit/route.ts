@@ -1,20 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { getCurrentUser } from "@/lib/server/session";
 
 export async function POST(req: NextRequest) {
     try {
-        const session = await auth.api.getSession({
-            headers: await headers(),
-        });
+        const user = await getCurrentUser();
 
-        if (!session?.user) {
+        if (!user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
         const { lessonId, result } = await req.json();
 
-        // TODO: Implement real XP/heart logic with Drizzle when ready
         if (result.isCorrect) {
             return NextResponse.json({ message: "Correct! XP Added.", correct: true });
         } else {

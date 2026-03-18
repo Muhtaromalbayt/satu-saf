@@ -1,18 +1,13 @@
-import { auth } from "@/lib/auth";
-import { getDb } from "@/lib/server/db";
+import { getCurrentUser } from "@/lib/server/session";
+import { NextResponse } from "next/server";
 
 export const dynamic = 'force-dynamic';
-import { progress } from "@/lib/server/db/schema";
-import { headers } from "next/headers";
-import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
     try {
-        const session = await auth.api.getSession({
-            headers: await headers(),
-        });
+        const user = await getCurrentUser();
 
-        if (!session?.user) {
+        if (!user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
@@ -22,18 +17,9 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Lesson ID is required" }, { status: 400 });
         }
 
-        const db = getDb();
-
-        // Check if progress already exists
-        // (Optional: depending on whether we want to allow re-submission)
-
-        await db.insert(progress).values({
-            userId: session.user.id,
-            lessonId: lessonId,
-            isVerified: true, // Auto-verify for now or set to false if mentor needs to check
-        });
-
-        return NextResponse.json({ success: true });
+        // Progress tracking is now done via daily_monitoring table
+        // This endpoint is kept for backwards compatibility
+        return NextResponse.json({ success: true, note: "Progress tracked via daily_monitoring" });
     } catch (error) {
         console.error("Chapter submission error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

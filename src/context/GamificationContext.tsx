@@ -40,9 +40,20 @@ export function GamificationProvider({ children }: { children: React.ReactNode }
         if (savedHearts) setHearts(parseInt(savedHearts));
         if (savedXp) setXp(parseInt(savedXp));
         if (savedStreak) setStreak(parseInt(savedStreak));
-        if (savedNodes) setCompletedNodes(JSON.parse(savedNodes));
-        if (savedChapterStatus) setChapterStatus(JSON.parse(savedChapterStatus));
         if (savedTadarus) setTadarusCount(parseInt(savedTadarus));
+
+        try {
+            if (savedNodes) {
+                const parsed = JSON.parse(savedNodes);
+                if (Array.isArray(parsed)) setCompletedNodes(parsed);
+            }
+            if (savedChapterStatus) {
+                const parsed = JSON.parse(savedChapterStatus);
+                if (typeof parsed === 'object' && parsed !== null) setChapterStatus(parsed);
+            }
+        } catch (e) {
+            console.error("Gamification state parse error:", e);
+        }
     }, []);
 
     // Save to local storage on change

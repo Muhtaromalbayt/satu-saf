@@ -1,49 +1,34 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { getCurrentUser } from "@/lib/server/session";
 import { getDb } from "@/lib/server/db";
+import { user } from "@/lib/server/db/schema";
+import { eq } from "drizzle-orm";
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
     try {
-        const session = await auth.api.getSession({
-            headers: await headers(),
-        });
+        const currentUser = await getCurrentUser();
 
-        if (!session?.user) {
+        if (!currentUser) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
         const data = await req.json();
-        const { role, name, grade, gender, mosque, parentEmail } = data;
+        const { role, name, kelompok } = data;
 
         const db = getDb();
-        const { user } = await import("@/lib/server/db/schema");
-        const { eq } = await import("drizzle-orm");
-
-        // If parentEmail is provided, find the parent user
-        let parentId = null;
-        if (parentEmail && role === 'student') {
-            const parentUser = await db.select().from(user).where(eq(user.email, parentEmail)).get();
-            if (parentUser && parentUser.role === 'parent') {
-                parentId = parentUser.id;
-            }
-        }
 
         await db.update(user)
             .set({
-                role: role || 'santri',
-                name,
-                grade,
-                gender,
-                mosque,
-                parentId: parentId || undefined,
+                role: role || currentUser.role,
+                name: name || currentUser.name,
+                kelompok: kelompok || currentUser.kelompok,
                 updatedAt: new Date()
             })
-            .where(eq(user.id, session.user.id));
+            .where(eq(user.id, currentUser.id));
 
-        return NextResponse.json({ success: true, parentFound: !!parentId });
+        return NextResponse.json({ success: true });
     } catch (error) {
         console.error("Profile update error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

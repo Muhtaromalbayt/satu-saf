@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { getCurrentUser } from "@/lib/server/session";
 import { getDb } from "@/lib/server/db";
 import { userAmalan } from "@/lib/server/db/schema";
 import { eq, and, sql } from "drizzle-orm";
@@ -9,15 +8,13 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
     try {
-        const session = await auth.api.getSession({
-            headers: await headers(),
-        });
+        const user = await getCurrentUser();
 
-        if (!session?.user) {
+        if (!user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { aspect, deedName, status, chapterId } = await req.json();
+        const { aspect, deedName, status, day, evidenceUrl, reflection, capturedAt } = await req.json();
 
         if (!aspect || !deedName || !status) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -25,18 +22,20 @@ export async function POST(req: Request) {
 
         const db = getDb();
 
-        // We might want to prevent duplicate logs for the same day/habit
-        // But for simplicity, we'll just insert for now, or update if it exists for today
-        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+        // If 'day' is provided, we match by user+aspect+deed+day
+        // Otherwise we fallback to today's date
+        const today = new Date().toISOString().split('T')[0];
 
         const existing = await db.select()
             .from(userAmalan)
             .where(
                 and(
-                    eq(userAmalan.userId, session.user.id),
+                    eq(userAmalan.userId, user.id),
                     eq(userAmalan.aspect, aspect),
                     eq(userAmalan.deedName, deedName),
-                    sql`date(${userAmalan.timestamp}) = ${today}`
+                    day
+                        ? eq(userAmalan.day, day)
+                        : sql`date(${userAmalan.timestamp}) = ${today}`
                 )
             )
             .get();
@@ -45,22 +44,24 @@ export async function POST(req: Request) {
             await db.update(userAmalan)
                 .set({
                     status,
-                    chapterId: chapterId || null,
-                    timestamp: sql`CURRENT_TIMESTAMP`,
-                    verifiedByParent: false // Reset verification if updated
+                    day: day || existing.day,
+                    evidenceUrl: evidenceUrl !== undefined ? evidenceUrl : existing.evidenceUrl,
+                    reflection: reflection !== undefined ? reflection : existing.reflection,
+                    capturedAt: capturedAt !== undefined ? capturedAt : existing.capturedAt
                 })
                 .where(eq(userAmalan.id, existing.id));
-
             return NextResponse.json({ success: true, action: 'updated', id: existing.id });
         } else {
             const result = await db.insert(userAmalan).values({
-                userId: session.user.id,
+                userId: user.id,
                 aspect,
                 deedName,
                 status,
-                chapterId: chapterId || null,
+                day: day || null,
+                evidenceUrl: evidenceUrl || null,
+                reflection: reflection || null,
+                capturedAt: capturedAt || null,
             }).returning({ id: userAmalan.id });
-
             return NextResponse.json({ success: true, action: 'inserted', id: result[0].id });
         }
     } catch (error) {
@@ -71,37 +72,37 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
     try {
-        const session = await auth.api.getSession({
-            headers: await headers(),
-        });
+        const user = await getCurrentUser();
 
-        if (!session?.user) {
+        if (!user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
         const { searchParams } = new URL(req.url);
+        const getAll = searchParams.get('all') === 'true';
         const date = searchParams.get('date') || new Date().toISOString().split('T')[0];
-        const targetUserId = searchParams.get('userId') || session.user.id;
+        const dayParam = searchParams.get('day');
+        const day = dayParam ? parseInt(dayParam) : null;
 
         const db = getDb();
-        const { user } = await import("@/lib/server/db/schema");
 
-        // Security check: if targetUserId != current userId, must be the parent
-        if (targetUserId !== session.user.id) {
-            const targetUser = await db.select().from(user).where(eq(user.id, targetUserId)).get();
-            if (!targetUser || targetUser.parentId !== session.user.id) {
-                return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-            }
+        let logs: any[] = [];
+        if (getAll) {
+            logs = await db.select()
+                .from(userAmalan)
+                .where(eq(userAmalan.userId, user.id));
+        } else {
+            logs = await db.select()
+                .from(userAmalan)
+                .where(
+                    and(
+                        eq(userAmalan.userId, user.id),
+                        day
+                            ? eq(userAmalan.day, day)
+                            : sql`date(${userAmalan.timestamp}) = ${date}`
+                    )
+                );
         }
-
-        const logs = await db.select()
-            .from(userAmalan)
-            .where(
-                and(
-                    eq(userAmalan.userId, targetUserId),
-                    sql`date(${userAmalan.timestamp}) = ${date}`
-                )
-            );
 
         return NextResponse.json({ logs });
     } catch (error) {
