@@ -51,11 +51,6 @@ export async function fetchParticipants(): Promise<Participant[]> {
                 const json = await res.json();
                 const rows: string[][] = json.values || [];
 
-                // From our analysis:
-                // Column 15 (Index 14): Nama
-                // Column 16 (Index 15): Kelompok
-                // Column 21 (Index 20): Total Skor (e.g., "98,75")
-
                 sheetParticipants = rows.map((row, index) => {
                     const nama = row[14];
                     const kelompok = row[15];
@@ -64,7 +59,7 @@ export async function fetchParticipants(): Promise<Participant[]> {
                     if (!nama || !kelompok || nama === "Nama") return null;
 
                     return {
-                        id: `sheet-${index}`, // Synthetic ID based on row
+                        id: `sheet-${index}`,
                         nama: nama.trim(),
                         kelompok: kelompok.trim(),
                         role: "santri",
@@ -77,14 +72,12 @@ export async function fetchParticipants(): Promise<Participant[]> {
         }
     }
 
-    // Fallback if API key missing or failed
     if (sheetParticipants.length === 0) {
         try {
             const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
             const res = await fetch(csvUrl);
             if (res.ok) {
                 const csvData = await res.text();
-                // Improved CSV parse that handles empty fields correctly
                 const rows = csvData.split('\n').map(line => {
                     const row: string[] = [];
                     let cur = "";
@@ -102,7 +95,6 @@ export async function fetchParticipants(): Promise<Participant[]> {
                     row.push(cur);
                     return row;
                 });
-
                 sheetParticipants = mapRowsToParticipants(rows);
             }
         } catch (err) {
@@ -110,7 +102,6 @@ export async function fetchParticipants(): Promise<Participant[]> {
         }
     }
 
-    // Merge and ensure uniqueness (priority to Sheets for data like scores)
     const combined = [...dbParticipants];
     sheetParticipants.forEach(sp => {
         const existingIdx = combined.findIndex(cp =>
@@ -118,9 +109,7 @@ export async function fetchParticipants(): Promise<Participant[]> {
             cp.kelompok.toLowerCase() === sp.kelompok.toLowerCase()
         );
         if (existingIdx > -1) {
-            // Update existing DB entry with Sheet-specific data
             combined[existingIdx].score = sp.score;
-            combined[existingIdx].id = sp.id;
         } else {
             combined.push(sp);
         }
@@ -130,27 +119,13 @@ export async function fetchParticipants(): Promise<Participant[]> {
     return combined;
 }
 
-/** Helper to map raw rows to Participant objects based on discovered layout */
 function mapRowsToParticipants(rows: string[][]): Participant[] {
     return rows.map((row, index) => {
-        // Based on analysis:
-        // Index 0: Nama
-        // Index 1: Kelompok
-        // Index 6: Total Skor (e.g., "98,75")
-
-        let nameIdx = 0;
-        let kelompokIdx = 1;
-        let scoreIdx = 6;
-
-        // Skip header
         if (index === 0) return null;
-
-        const nama = row[nameIdx];
-        const kelompok = row[kelompokIdx];
-        const scoreStr = row[scoreIdx] || "0";
-
+        const nama = row[0];
+        const kelompok = row[1];
+        const scoreStr = row[6] || "0";
         if (!nama || !kelompok || nama === "Nama" || nama.trim() === "") return null;
-
         return {
             id: `sheet-${index}`,
             nama: nama.trim().replace(/^"|"$/g, ''),
@@ -163,33 +138,24 @@ function mapRowsToParticipants(rows: string[][]): Participant[] {
 
 export async function findParticipant(nama: string, kelompok: string): Promise<Participant | null> {
     const participants = await fetchParticipants();
-    return (
-        participants.find(
-            (p) =>
-                p.nama.trim().toLowerCase() === nama.trim().toLowerCase() &&
-                p.kelompok.trim().toLowerCase() === kelompok.trim().toLowerCase()
-        ) || null
-    );
+    return participants.find(p =>
+        p.nama.trim().toLowerCase() === nama.trim().toLowerCase() &&
+        p.kelompok.trim().toLowerCase() === kelompok.trim().toLowerCase()
+    ) || null;
 }
 
 export async function findParticipantByName(nama: string): Promise<Participant | null> {
     const participants = await fetchParticipants();
-    return (
-        participants.find(
-            (p) =>
-                p.nama.trim().toLowerCase() === nama.trim().toLowerCase() &&
-                p.role === "santri"
-        ) || null
-    );
+    return participants.find(p =>
+        p.nama.trim().toLowerCase() === nama.trim().toLowerCase() &&
+        p.role === "santri"
+    ) || null;
 }
 
 export async function findMentorByKelompok(kelompok: string): Promise<Participant | null> {
     const participants = await fetchParticipants();
-    return (
-        participants.find(
-            (p) =>
-                p.role === "mentor" &&
-                p.kelompok.trim().toLowerCase() === kelompok.trim().toLowerCase()
-        ) || null
-    );
+    return participants.find(p =>
+        p.role === "mentor" &&
+        p.kelompok.trim().toLowerCase() === kelompok.trim().toLowerCase()
+    ) || null;
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/server/db";
 import { user, scores, userAmalan, monitoringTasks } from "@/lib/server/db/schema";
 import { eq, count, sql, and } from "drizzle-orm";
+import { fetchParticipants } from "@/lib/server/sheets";
 
 /**
  * GET /api/leaderboard
@@ -10,11 +11,9 @@ import { eq, count, sql, and } from "drizzle-orm";
 export async function GET(_req: NextRequest) {
     const db = getDb();
 
-    // Get all santri
-    const santriList = await db
-        .select()
-        .from(user)
-        .where(eq(user.role, "santri"));
+    // Get all santri from both DB and Spreadsheet
+    const participants = await fetchParticipants();
+    const santriList = participants.filter(p => p.role === "santri");
 
     if (santriList.length === 0) {
         return NextResponse.json({ leaderboard: [] });
@@ -28,7 +27,7 @@ export async function GET(_req: NextRequest) {
 
     const activeTasksCount = (activeTasksCountResult as any)?.count || 0;
 
-    // Get all scores
+    // Get all local scores
     const allScores = await db.select().from(scores);
 
     // Get monitoring done counts per user from userAmalan
@@ -52,12 +51,16 @@ export async function GET(_req: NextRequest) {
 
         // Weighted score calculation
         // 1. Monitoring 50%
-        const monitoringScore = (doneCount / TOTAL_MONITORING) * 50;
+        const monitoringScore = TOTAL_MONITORING > 0 ? (doneCount / TOTAL_MONITORING) * 50 : 0;
 
         // 2. Hafalan 15% (Maksimal 100)
-        const hafalanAvg = sc && sc.hafalanCount && sc.hafalanCount > 0
-            ? (sc.hafalanTotal ?? 0) / sc.hafalanCount
-            : 0;
+        // Prefer Spreadsheet score if available, fallback to local DB average
+        const hafalanAvg = s.score !== undefined && s.score > 0
+            ? s.score
+            : (sc && sc.hafalanCount && sc.hafalanCount > 0
+                ? (sc.hafalanTotal ?? 0) / sc.hafalanCount
+                : 0);
+
         const hafalanScore = (hafalanAvg / 100) * 15;
 
         // 3. Tes Tulis 15% (Maksimal 100)
@@ -72,7 +75,7 @@ export async function GET(_req: NextRequest) {
 
         return {
             id: s.id,
-            name: s.name,
+            name: s.nama,
             kelompok: s.kelompok,
             totalScore,
             monitoringDone: doneCount,
