@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 /**
  * Simple manual session manager using random tokens stored in D1.
  * Replaces BetterAuth for the passwordless Sheets-based login.
