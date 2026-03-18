@@ -1,0 +1,10 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Stylized Path representing the 'S' and Journey -->
+  <path d="M120 400C120 400 160 460 256 460C352 460 400 400 400 320C400 240 320 210 256 210C192 210 120 180 120 120C120 60 192 40 256 40C320 40 400 80 400 80" stroke="#10B981" stroke-width="60" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Crescent Moon at the top right -->
+  <path d="M420 120C420 164.183 384.183 200 340 200C320 200 300 190 285 175C310 170 330 145 330 115C330 85 310 60 285 55C305 45 330 40 355 40C360 40 365 40.5 370 41C355 50 345 65 345 85C345 115 365 135 395 135H410C415 135 420 130 420 120Z" fill="#FBBF24"/>
+  
+  <!-- Decorative Star/Dot -->
+  <circle cx="256" cy="210" r="20" fill="#10B981"/>
+</svg>
