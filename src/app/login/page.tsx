@@ -101,7 +101,15 @@ function LoginForm() {
                 }),
             });
 
-            const data = await res.json();
+            // Check if response is JSON
+            const contentType = res.headers.get("content-type");
+            let data;
+            if (contentType && contentType.includes("application/json")) {
+                data = await res.json();
+            } else {
+                const text = await res.text();
+                throw new Error(text.slice(0, 100) || res.statusText);
+            }
 
             if (!res.ok) {
                 if (data.error === "PIN_REQUIRED") {
@@ -109,7 +117,7 @@ function LoginForm() {
                 } else if (data.error === "SETUP_PIN_REQUIRED") {
                     setLoginStep("setup");
                 } else {
-                    setError(data.message || data.error || "Login gagal. Coba lagi.");
+                    setError(data.message || data.error || `HTTP Error ${res.status}`);
                 }
                 return;
             }
@@ -120,8 +128,9 @@ function LoginForm() {
             else if (role === "parent") router.push("/habits");
             else router.push("/map");
 
-        } catch {
-            setError("Terjadi kesalahan jaringan. Coba lagi.");
+        } catch (err: any) {
+            console.error("Login Error:", err);
+            setError(`Kesalahan Jaringan: ${err.message || "Gagal menghubungi server"}`);
         } finally {
             setIsLoading(false);
         }
