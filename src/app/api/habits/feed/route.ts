@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
             .innerJoin(user, eq(userAmalan.userId, user.id))
             .where(
                 and(
-                    sql`${userAmalan.status} IN ('verified', 'done')`,
+                    sql`${userAmalan.status} IN ('pending', 'verified', 'done')`,
                     targetUserId ? eq(userAmalan.userId, targetUserId) : undefined,
                     kelompok ? eq(user.kelompok, kelompok) : undefined
                 )
@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
             // Get all unique days with verified logs for this user, ordered desc
             const userLogs = await db.select({ day: userAmalan.day })
                 .from(userAmalan)
-                .where(and(eq(userAmalan.userId, uid), sql`${userAmalan.status} IN ('verified', 'done')`))
+                .where(and(eq(userAmalan.userId, uid), sql`${userAmalan.status} IN ('pending', 'verified', 'done')`))
                 .orderBy(desc(userAmalan.day));
 
             const uniqueDays = [...new Set(userLogs.map(l => l.day))].filter(d => d !== null) as number[];
