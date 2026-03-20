@@ -103,6 +103,21 @@ export async function fetchParticipants(): Promise<Participant[]> {
     }
 
     const combined = [...dbParticipants];
+
+    // Hardcode Demo User for tutorial purposes (ensures visibility on Vercel/Production)
+    const demoUser: Participant = {
+        id: "demo_santri",
+        nama: "Santri Demo",
+        kelompok: "Demo",
+        role: "santri",
+        score: 0
+    };
+
+    // Add demo user if not already in combined list
+    if (!combined.some(p => p.id === demoUser.id)) {
+        combined.push(demoUser);
+    }
+
     sheetParticipants.forEach(sp => {
         const existingIdx = combined.findIndex(cp =>
             cp.nama.toLowerCase() === sp.nama.toLowerCase() &&
