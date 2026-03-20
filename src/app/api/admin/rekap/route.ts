@@ -64,9 +64,12 @@ export async function GET(req: NextRequest) {
 
         return NextResponse.json(rekap);
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Rekap GET error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({
+            error: "Internal Server Error",
+            message: error.message
+        }, { status: 500 });
     }
 }
 

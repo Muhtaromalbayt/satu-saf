@@ -38,7 +38,10 @@ export default function AdminImportPage() {
             if (res.ok) {
                 setResult({ success: true, message: data.message, details: data.details });
             } else {
-                setResult({ success: false, message: data.error || "Gagal mengimpor data." });
+                setResult({
+                    success: false,
+                    message: data.message ? `${data.error}: ${data.message}` : (data.error || "Gagal mengimpor data.")
+                });
             }
         } catch (err) {
             setResult({ success: false, message: "Terjadi kesalahan jaringan." });

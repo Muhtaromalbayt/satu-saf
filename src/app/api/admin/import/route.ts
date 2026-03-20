@@ -110,9 +110,13 @@ export async function POST(req: NextRequest) {
             }
         });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Import CSV error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({
+            error: "Internal Server Error",
+            message: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        }, { status: 500 });
     }
 }
 

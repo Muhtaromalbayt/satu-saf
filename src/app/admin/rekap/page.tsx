@@ -48,9 +48,14 @@ export default function RekapNilaiPage() {
         setLoading(true);
         try {
             const res = await fetch("/api/admin/rekap");
-            const json = await res.json();
+            const data = await res.json();
             if (res.ok) {
-                setData(json);
+                setData(data);
+            } else {
+                setToast({
+                    type: 'error',
+                    message: data.message ? `${data.error}: ${data.message}` : (data.error || "Gagal memuat data.")
+                });
             }
         } catch (err) {
             console.error("Fetch rekap error:", err);
@@ -115,7 +120,7 @@ export default function RekapNilaiPage() {
                     </Link>
                     <Button
                         onClick={fetchData}
-                        variant="soft"
+                        variant="outline"
                         disabled={loading}
                         className="h-12 w-12 rounded-2xl p-0 flex items-center justify-center border-2 border-slate-100 bg-white hover:bg-slate-50"
                     >
@@ -237,7 +242,7 @@ export default function RekapNilaiPage() {
                                                 ) : (
                                                     <Button
                                                         onClick={() => handleEdit(santri)}
-                                                        variant="soft"
+                                                        variant="outline"
                                                         className="h-10 px-4 rounded-xl bg-slate-50 hover:bg-primary/5 hover:text-primary transition-all font-black text-[11px] uppercase tracking-widest text-slate-400 border-2 border-transparent group-hover:border-primary/10"
                                                     >
                                                         <Edit2 className="h-4 w-4 mr-2" /> Edit
