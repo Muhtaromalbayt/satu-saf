@@ -35,6 +35,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     const navItems = [
         { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+        { href: "/admin/rekap", label: "Rekap Nilai", icon: BookOpen },
         { href: "/admin/lessons", label: "Materi & Quiz", icon: BookOpen },
         { href: "/admin/users", label: "Santri & Mentor", icon: Users },
         { href: "/admin/import", label: "Import Nilai", icon: ShieldAlert },

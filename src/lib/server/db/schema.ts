@@ -62,10 +62,14 @@ export const scores = sqliteTable("scores", {
         .notNull()
         .references(() => user.id, { onDelete: "cascade" })
         .unique(), // one score row per user
-    hafalanTotal: real("hafalan_total").default(0), // accumulated setoran nilai
-    hafalanCount: integer("hafalan_count").default(0), // jumlah setoran
-    tesTulis: real("tes_tulis").default(0), // nilai tes tulis (0-100)
-    tahajudCount: integer("tahajud_count").default(0), // jumlah hari tahajud
+    hafalan: real("hafalan").default(0), // from CSV
+    ujianTulis: real("ujian_tulis").default(0), // from CSV
+    qiyamullail: real("qiyamullail").default(0), // from CSV
+    monitoring: real("monitoring").default(0), // calculated from daily_monitoring
+    hafalanTotal: real("hafalan_total").default(0), // legacy/accumulated
+    hafalanCount: integer("hafalan_count").default(0), // legacy
+    tesTulis: real("tes_tulis").default(0), // legacy
+    tahajudCount: integer("tahajud_count").default(0), // legacy
     updatedAt: integer("updated_at", { mode: "timestamp" })
         .default(sql`(current_timestamp)`)
         .$onUpdate(() => new Date())

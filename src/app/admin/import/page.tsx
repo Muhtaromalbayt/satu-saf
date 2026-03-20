@@ -93,8 +93,10 @@ export default function AdminImportPage() {
                     <AlertCircle className="h-6 w-6 text-blue-500 shrink-0" />
                     <div className="text-sm text-blue-800/80 font-medium leading-relaxed">
                         <p className="font-black text-blue-900 uppercase tracking-widest text-[10px] mb-1">Format Kolom CSV:</p>
-                        <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-700 font-bold">Nama, Kelompok, Total Skor</code>
-                        <p className="mt-2 italic opacity-70 text-[11px]">Pastikan nama santri sesuai dengan yang terdaftar di sistem agar data dapat disinkronkan.</p>
+                        <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-700 font-bold">Nama, Kelompok, Hafalan, Ujian Tulis, Qiyamullail</code>
+                        <p className="mt-2 text-[11px]">
+                            <span className="font-bold">Penting:</span> File harus memiliki 2 baris header sesuai format standar penilaian.
+                        </p>
                     </div>
                 </div>
 

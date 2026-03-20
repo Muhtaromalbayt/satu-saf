@@ -25,23 +25,29 @@ export async function POST(req: NextRequest) {
         let addedCount = 0;
         let updatedCount = 0;
 
-        // Skip header (lines[0])
-        for (let i = 1; i < lines.length; i++) {
+        // Skip top 2 header rows
+        for (let i = 2; i < lines.length; i++) {
             const row = parseCsvLine(lines[i]);
             if (row.length < 2) continue;
 
             const name = row[0].trim();
             const kelompok = row[1].trim();
-            let totalSkorStr = row[6] || "0";
 
-            // Handle "98,75" or #DIV/0! or empty
-            if (totalSkorStr.includes('#DIV/0!') || totalSkorStr.trim() === '') {
-                totalSkorStr = "0";
-            }
-            totalSkorStr = totalSkorStr.replace(/"/g, '').replace(',', '.');
-            const score = parseFloat(totalSkorStr) || 0;
+            // Map specifically:
+            // row[2] = Hafalan
+            // row[3] = Ujian Tulis
+            // row[4] = Qiyamullail
 
-            if (!name || name === 'Nama') continue;
+            const parseVal = (val: string) => {
+                if (!val || val.includes('#DIV/0!') || val.trim() === '') return 0;
+                return parseFloat(val.replace(/"/g, '').replace(',', '.')) || 0;
+            };
+
+            const hafalan = parseVal(row[2]);
+            const ujianTulis = parseVal(row[3]);
+            const qiyamullail = parseVal(row[4]);
+
+            if (!name || name === 'Nama' || name === '') continue;
 
             processedCount++;
 
@@ -77,7 +83,9 @@ export async function POST(req: NextRequest) {
             if (existingScore) {
                 await db.update(scoresTable)
                     .set({
-                        hafalanTotal: score, // Assuming Total Skor maps to hafalanTotal for now
+                        hafalan,
+                        ujianTulis,
+                        qiyamullail,
                         updatedAt: new Date()
                     })
                     .where(eq(scoresTable.userId, userId!));
@@ -85,10 +93,9 @@ export async function POST(req: NextRequest) {
             } else {
                 await db.insert(scoresTable).values({
                     userId: userId!,
-                    hafalanTotal: score,
-                    hafalanCount: 1,
-                    tesTulis: 0,
-                    tahajudCount: 0
+                    hafalan,
+                    ujianTulis,
+                    qiyamullail
                 });
                 updatedCount++;
             }
