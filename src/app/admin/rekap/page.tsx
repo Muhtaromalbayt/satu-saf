@@ -119,6 +119,30 @@ export default function RekapNilaiPage() {
                         </Button>
                     </Link>
                     <Button
+                        onClick={async () => {
+                            if (!confirm("Sinkronkan semua nilai ini ke Leaderboard?")) return;
+                            setSaving(true);
+                            try {
+                                const res = await fetch("/api/admin/rekap/sync", { method: "POST" });
+                                if (res.ok) {
+                                    setToast({ type: 'success', message: "Leaderboard berhasil disinkronkan!" });
+                                } else {
+                                    setToast({ type: 'error', message: "Gagal sinkronisasi leaderboard." });
+                                }
+                            } catch (err) {
+                                setToast({ type: 'error', message: "Kesalahan jaringan." });
+                            } finally {
+                                setSaving(false);
+                                setTimeout(() => setToast(null), 3000);
+                            }
+                        }}
+                        disabled={saving}
+                        className="rounded-2xl font-black bg-slate-900 text-white hover:bg-slate-800 h-12 px-6 shadow-xl shadow-slate-900/10 active:scale-95 transition-all"
+                    >
+                        {saving ? <RefreshCw className="mr-2 h-5 w-5 animate-spin" /> : <Trophy className="mr-2 h-5 w-5 text-amber-400" />}
+                        Sync Leaderboard
+                    </Button>
+                    <Button
                         onClick={fetchData}
                         variant="outline"
                         disabled={loading}

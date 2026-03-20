@@ -49,29 +49,9 @@ export async function GET(_req: NextRequest) {
         const sc = scoresMap[s.id];
         const doneCount = monitoringMap[s.id] ?? 0;
 
-        // Weighted score calculation
-        // 1. Monitoring 50%
-        const monitoringScore = TOTAL_MONITORING > 0 ? (doneCount / TOTAL_MONITORING) * 50 : 0;
-
-        // 2. Hafalan 15% (Maksimal 100)
-        // Prefer Spreadsheet score if available, fallback to local DB average
-        const hafalanAvg = s.score !== undefined && s.score > 0
-            ? s.score
-            : (sc && sc.hafalanCount && sc.hafalanCount > 0
-                ? (sc.hafalanTotal ?? 0) / sc.hafalanCount
-                : 0);
-
-        const hafalanScore = (hafalanAvg / 100) * 15;
-
-        // 3. Tes Tulis 15% (Maksimal 100)
-        const tesTulisScore = ((sc?.tesTulis ?? 0) / 100) * 15;
-
-        // 4. Qiyamullail 20% (Maksimal 90)
-        // Mapping 14 days of Tahajud to a score of 90
-        const qiyamullailPoints = (Math.min(sc?.tahajudCount ?? 0, 14) / 14) * 90;
-        const qiyamullailScore = (qiyamullailPoints / 90) * 20;
-
-        const totalScore = Math.round(monitoringScore + hafalanScore + tesTulisScore + qiyamullailScore);
+        // Use pre-calculated totalScore if available (from Sync)
+        // Fallback to 0 if sync hasn't been run yet
+        const totalScore = Math.round(sc?.totalScore || 0);
 
         return {
             id: s.id,
@@ -79,9 +59,9 @@ export async function GET(_req: NextRequest) {
             kelompok: s.kelompok,
             totalScore,
             monitoringDone: doneCount,
-            hafalanAvg: Math.round(hafalanAvg),
-            tesTulis: sc?.tesTulis ?? 0,
-            tahajudCount: sc?.tahajudCount ?? 0,
+            hafalanAvg: Math.round(sc?.hafalan || 0),
+            tesTulis: sc?.ujianTulis || 0,
+            tahajudCount: sc?.qiyamullail || 0,
         };
     });
 

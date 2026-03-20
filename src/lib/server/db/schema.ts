@@ -66,6 +66,7 @@ export const scores = sqliteTable("scores", {
     ujianTulis: real("ujian_tulis").default(0), // from CSV
     qiyamullail: real("qiyamullail").default(0), // from CSV
     monitoring: real("monitoring").default(0), // calculated from daily_monitoring
+    totalScore: real("total_score").default(0), // synced total for leaderboard
     hafalanTotal: real("hafalan_total").default(0), // legacy/accumulated
     hafalanCount: integer("hafalan_count").default(0), // legacy
     tesTulis: real("tes_tulis").default(0), // legacy
