@@ -141,19 +141,18 @@ export default function AdminTasksPage() {
                 })}
             </div>
 
-            {/* Tasks List */}
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-                <div className="p-4 bg-slate-50/50 border-b border-slate-100 flex justify-between items-center">
-                    <span className="text-xs font-black text-slate-400 uppercase tracking-wider"> Daftar Tugas ({filteredTasks.length}) </span>
+            {/* Tasks List Card */}
+            <div className="bg-white rounded-[2.5rem] shadow-sm border-2 border-slate-100 overflow-hidden">
+                <div className="p-6 bg-slate-50/50 border-b-2 border-slate-100 flex justify-between items-center sm:flex-row flex-col gap-4">
+                    <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest"> Daftar Tugas ({filteredTasks.length}) </span>
                     <div className="flex items-center gap-2">
                         <button
                             onClick={async () => {
-                                if (!confirm("Seed default tasks from constants?")) return;
+                                if (!confirm("Ingin menyinkronkan tugas dari Peta? Ini akan menambahkan daftar tugas default jika belum ada.")) return;
                                 setSaving(true);
                                 try {
                                     const res = await fetch("/api/admin/tasks/seed", { method: "POST" });
                                     if (res.ok) {
-                                        alert("Default tasks seeded!");
                                         await fetchTasks();
                                     }
                                 } catch (err) {
@@ -163,60 +162,82 @@ export default function AdminTasksPage() {
                                 }
                             }}
                             disabled={saving}
-                            className="flex items-center gap-1.5 bg-amber-100 text-amber-700 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-amber-200 transition-all border border-amber-200"
+                            className="flex items-center gap-1.5 bg-amber-50 text-amber-600 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-100 transition-all border-2 border-amber-100 outline-none"
                         >
-                            <Save className="h-3.5 w-3.5" /> Seed Defaults
+                            <Save className="h-3.5 w-3.5" /> Sinkron Peta
                         </button>
                         <button
                             onClick={handleAddTask}
-                            className="flex items-center gap-1.5 bg-primary text-white px-3 py-1.5 rounded-xl text-xs font-bold hover:opacity-90 transition-all"
+                            className="flex items-center gap-1.5 bg-primary text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all border-b-4 border-primary/50 shadow-lg shadow-primary/20 outline-none"
                         >
                             <Plus className="h-3.5 w-3.5" /> Tambah Task
                         </button>
                     </div>
                 </div>
 
-                <div className="divide-y divide-slate-50">
+                <div className="min-h-[400px] flex flex-col">
                     {loading ? (
-                        <div className="p-20 flex justify-center">
-                            <Loader2 className="h-8 w-8 animate-spin text-primary/30" />
+                        <div className="flex-1 flex flex-col items-center justify-center gap-3">
+                            <Loader2 className="h-10 w-10 animate-spin text-primary/20" />
+                            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Memuat database...</p>
                         </div>
                     ) : filteredTasks.length === 0 ? (
-                        <div className="p-20 text-center">
-                            <LayoutGrid className="h-10 w-10 text-slate-200 mx-auto mb-3" />
-                            <p className="text-slate-400 text-sm font-medium">Belum ada tugas.</p>
+                        <div className="flex-1 flex flex-col items-center justify-center text-center px-8 py-20">
+                            <div className="h-24 w-24 bg-slate-50 rounded-[2rem] flex items-center justify-center mb-6 border-2 border-slate-100/50">
+                                <LayoutGrid className="h-10 w-10 text-slate-200" />
+                            </div>
+                            <h3 className="text-slate-800 font-black text-xl mb-2">Database Kosong</h3>
+                            <p className="text-slate-400 text-sm font-medium mb-8 max-w-xs">Tugas untuk aspek ini belum tersimpan di database. Klik tombol di bawah untuk mengambil dari peta.</p>
+                            <button
+                                onClick={async () => {
+                                    setSaving(true);
+                                    try {
+                                        const res = await fetch("/api/admin/tasks/seed", { method: "POST" });
+                                        if (res.ok) await fetchTasks();
+                                    } catch (err) { console.error(err); } finally { setSaving(false); }
+                                }}
+                                className="bg-emerald-500 text-white px-8 py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-xl shadow-emerald-500/20 border-b-4 border-emerald-700 outline-none active:translate-y-1 active:border-b-0"
+                            >
+                                Ambil Tugas dari Peta Sekarang
+                            </button>
                         </div>
                     ) : (
-                        filteredTasks.map((task) => (
-                            <div key={task.id} className="p-4 flex items-center gap-4 animate-in slide-in-from-left duration-300">
-                                <GripVertical className="h-4 w-4 text-slate-200 cursor-grab" />
-                                <input
-                                    type="text"
-                                    value={task.label}
-                                    onChange={(e) => {
-                                        setTasks(tasks.map(t => t.id === task.id ? { ...t, label: e.target.value } : t));
-                                    }}
-                                    className="flex-1 bg-transparent border-none focus:ring-0 font-bold text-slate-700 placeholder:text-slate-300"
-                                    placeholder="Nama Tugas..."
-                                />
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => handleSaveTask(task)}
-                                        disabled={saving}
-                                        className="h-9 w-9 flex items-center justify-center rounded-xl bg-green-50 text-green-600 hover:bg-green-100 transition-colors"
-                                    >
-                                        <Save className="h-4 w-4" />
-                                    </button>
-                                    <button
-                                        onClick={() => handleDeleteTask(task.id)}
-                                        disabled={saving}
-                                        className="h-9 w-9 flex items-center justify-center rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors"
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </button>
+                        <div className="divide-y-2 divide-slate-50">
+                            {filteredTasks.map((task) => (
+                                <div key={task.id} className="p-5 flex items-center gap-4 hover:bg-slate-50/30 transition-colors group">
+                                    <div className="h-8 w-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-300 group-hover:text-slate-400 group-hover:bg-slate-200 transition-colors">
+                                        <GripVertical className="h-4 w-4" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={task.label}
+                                        onChange={(e) => {
+                                            setTasks(tasks.map(t => t.id === task.id ? { ...t, label: e.target.value } : t));
+                                        }}
+                                        className="flex-1 bg-transparent border-none focus:ring-0 font-black text-slate-700 placeholder:text-slate-200 text-lg outline-none"
+                                        placeholder="Nama Tugas..."
+                                    />
+                                    <div className="flex items-center gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onClick={() => handleSaveTask(task)}
+                                            disabled={saving}
+                                            title="Simpan Perubahan"
+                                            className="h-11 w-11 flex items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all border-2 border-emerald-100 active:scale-95 shadow-sm shadow-emerald-500/10"
+                                        >
+                                            <Save className="h-5 w-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteTask(task.id)}
+                                            disabled={saving}
+                                            title="Hapus Tugas"
+                                            className="h-11 w-11 flex items-center justify-center rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all border-2 border-rose-100 active:scale-95 shadow-sm shadow-rose-500/10"
+                                        >
+                                            <Trash2 className="h-5 w-5" />
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        ))
+                            ))}
+                        </div>
                     )}
                 </div>
             </div>
