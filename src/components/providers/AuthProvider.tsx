@@ -14,6 +14,7 @@ type AuthContextType = {
     user: User | null;
     loading: boolean;
     signOut: () => Promise<void>;
+    refresh: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,21 +23,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
+    const refresh = async () => {
+        try {
+            const res = await fetch('/api/user/me');
+            const data = await res.json();
+            setUser(data.user || null);
+        } catch (err) {
+            setUser(null);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        fetch('/api/user/me')
-            .then(r => r.json())
-            .then(data => setUser(data.user || null))
-            .catch(() => setUser(null))
-            .finally(() => setLoading(false));
+        refresh();
     }, []);
 
     const signOut = async () => {
         await fetch('/api/auth/sheets-login', { method: 'DELETE' });
+        setUser(null);
         window.location.href = '/login';
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, signOut }}>
+        <AuthContext.Provider value={{ user, loading, signOut, refresh }}>
             {children}
         </AuthContext.Provider>
     );

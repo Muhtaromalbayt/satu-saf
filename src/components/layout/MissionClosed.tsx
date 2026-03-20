@@ -4,7 +4,15 @@ import { Lock, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/providers/AuthProvider";
 
-export default function MissionClosed() {
+interface MissionClosedProps {
+    title?: string;
+    message?: string;
+}
+
+export default function MissionClosed({
+    title = "Akses Ditutup",
+    message = "Maaf, akses pengerjaan misi sementara ditutup oleh Admin. Silakan hubungi pembimbing atau panitia untuk informasi lebih lanjut."
+}: MissionClosedProps) {
     const { signOut } = useAuth();
 
     return (
@@ -15,10 +23,9 @@ export default function MissionClosed() {
                 </div>
 
                 <div className="space-y-2">
-                    <h1 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Akses Ditutup</h1>
+                    <h1 className="text-2xl font-black text-slate-800 uppercase tracking-tight">{title}</h1>
                     <p className="text-slate-500 text-sm font-medium leading-relaxed">
-                        Maaf, akses pengerjaan misi sementara ditutup oleh Admin. <br />
-                        Silakan hubungi pembimbing atau panitia untuk informasi lebih lanjut.
+                        {message}
                     </p>
                 </div>
 

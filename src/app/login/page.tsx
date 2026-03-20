@@ -5,6 +5,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, LogIn, Loader2, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/components/providers/AuthProvider";
 import Mascot from "@/components/gamification/Mascot";
 
 interface Participant {
@@ -15,6 +16,7 @@ interface Participant {
 
 function LoginForm() {
     const router = useRouter();
+    const { refresh } = useAuth();
     const [participants, setParticipants] = useState<Participant[]>([]);
     const [loadingData, setLoadingData] = useState(true);
     const [selectedNama, setSelectedNama] = useState("");
@@ -121,6 +123,9 @@ function LoginForm() {
                 }
                 return;
             }
+
+            // Sync auth state before redirecting
+            await refresh();
 
             const role = data.user?.role || "santri";
             if (role === "mentor") router.push("/mentor");

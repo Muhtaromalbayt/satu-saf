@@ -15,21 +15,29 @@ export default function AppShell({ children }: AppShellProps) {
     const pathname = usePathname();
     const { user } = useAuth();
     const [missionStatus, setMissionStatus] = useState<string>("open");
+    const [missionStartDate, setMissionStartDate] = useState<string>("");
 
     useEffect(() => {
         const checkMissionStatus = async () => {
             try {
                 const res = await fetch("/api/settings");
                 const data = await res.json();
-                if (data.missionStatus) {
-                    setMissionStatus(data.missionStatus);
-                }
+                if (data.missionStatus) setMissionStatus(data.missionStatus);
+                if (data.missionStartDate) setMissionStartDate(data.missionStartDate);
             } catch (err) {
                 console.error("Failed to check mission status", err);
             }
         };
         checkMissionStatus();
     }, []);
+
+    // Date check: Is the mission supposed to start yet?
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const startDate = missionStartDate ? new Date(missionStartDate) : null;
+    if (startDate) startDate.setHours(0, 0, 0, 0);
+
+    const isBeforeStart = startDate && today < startDate;
 
     // Define patterns where we DON'T want the global Header and BottomNav
     const isLandingPage = pathname === "/";
@@ -44,9 +52,19 @@ export default function AppShell({ children }: AppShellProps) {
         return <>{children}</>;
     }
 
-    // Access control: If mission is closed and user is a student, block access
-    if (missionStatus === "closed" && user?.role === "santri") {
-        return <MissionClosed />;
+    // Access control: If mission is closed or hasn't started yet and user is a student, block access
+    if (user?.role === "santri") {
+        if (missionStatus === "closed") {
+            return <MissionClosed />;
+        }
+        if (isBeforeStart) {
+            return (
+                <MissionClosed
+                    title="Misi Belum Dimulai"
+                    message={`Sabar ya! Misi baru akan dimulai pada tanggal ${new Date(missionStartDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}. Siapkan dirimu!`}
+                />
+            );
+        }
     }
 
     return (
