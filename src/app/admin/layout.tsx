@@ -45,8 +45,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     ];
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row relative overflow-hidden">
-            {/* Mobile Overlay */}
+        <div className="min-h-screen bg-slate-50 flex flex-col relative overflow-hidden font-sans">
+            {/* Overlay Drawer */}
             <AnimatePresence>
                 {isSidebarOpen && (
                     <motion.div
@@ -54,32 +54,35 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={() => setIsSidebarOpen(false)}
-                        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[40] md:hidden"
+                        className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100]"
                     />
                 )}
             </AnimatePresence>
 
-            {/* Sidebar */}
+            {/* Sidebar Drawer */}
             <aside className={cn(
-                "fixed md:sticky top-0 left-0 h-screen w-64 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800 z-[50] transition-transform duration-300 ease-in-out shrink-0",
-                isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+                "fixed top-0 left-0 h-screen w-72 bg-slate-900 text-slate-300 flex flex-col border-r-4 border-slate-800 z-[110] transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1) shadow-2xl",
+                isSidebarOpen ? "translate-x-0" : "-translate-x-full"
             )}>
-                <div className="p-6 border-b border-slate-800 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
-                            <ShieldAlert className="h-5 w-5 text-white" />
+                <div className="p-8 border-b border-white/5 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="h-10 w-10 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
+                            <ShieldAlert className="h-6 w-6 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-white font-black text-lg leading-none">SATU SAF</h1>
-                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Admin Panel</p>
+                            <h1 className="text-white font-black text-xl leading-none tracking-tighter">SATU SAF</h1>
+                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1.5 opacity-60">Admin Systems</p>
                         </div>
                     </div>
-                    <button onClick={() => setIsSidebarOpen(false)} className="md:hidden text-slate-400 hover:text-white">
+                    <button
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="h-10 w-10 flex items-center justify-center rounded-xl hover:bg-white/5 text-slate-500 transition-colors"
+                    >
                         <CloseIcon className="h-6 w-6" />
                     </button>
                 </div>
 
-                <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+                <nav className="flex-1 p-6 space-y-3 overflow-y-auto scrollbar-hide">
                     {navItems.map((item) => {
                         const Icon = item.icon;
                         return (
@@ -87,52 +90,69 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                 key={item.href}
                                 href={item.href}
                                 onClick={() => setIsSidebarOpen(false)}
-                                className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 hover:text-white transition-colors font-bold text-sm"
+                                className="group flex items-center gap-4 px-5 py-4 rounded-[1.5rem] hover:bg-white/5 hover:text-white transition-all duration-300 font-bold text-sm relative overflow-hidden"
                             >
-                                <Icon className="h-5 w-5" />
-                                {item.label}
+                                <div className="h-2 w-1 bg-primary absolute left-0 top-1/2 -translate-y-1/2 rounded-r-full scale-0 group-hover:scale-100 transition-transform" />
+                                <Icon className="h-5 w-5 text-slate-500 group-hover:text-primary transition-colors" />
+                                <span className="tracking-tight">{item.label}</span>
                             </Link>
                         );
                     })}
                 </nav>
 
-                <div className="p-4 border-t border-slate-800">
+                <div className="p-6 border-t border-white/5">
                     <button
                         onClick={signOut}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors font-bold text-sm"
+                        className="w-full flex items-center gap-4 px-5 py-4 rounded-[1.5rem] text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-all font-black text-xs uppercase tracking-widest"
                     >
-                        <LogOut className="h-5 w-5" />
-                        Keluar
+                        <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-rose-500/10 shrink-0">
+                            <LogOut className="h-5 w-5" />
+                        </div>
+                        <span>Keluar Panel</span>
                     </button>
                 </div>
             </aside>
 
-            {/* Main Content */}
-            <main className="flex-1 flex flex-col min-w-0">
-                <header className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-4 md:px-8 sticky top-0 z-[30]">
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => setIsSidebarOpen(true)}
-                            className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-500 md:hidden hover:bg-slate-100"
-                        >
-                            <Menu className="h-6 w-6" />
-                        </button>
-                        <h2 className="text-slate-800 font-black text-lg truncate max-w-[150px] sm:max-w-none">Control Center</h2>
+            {/* Header Content */}
+            <header className="h-20 bg-white/80 backdrop-blur-xl border-b border-slate-100 flex items-center justify-between px-6 md:px-10 sticky top-0 z-[50]">
+                <div className="flex items-center gap-6">
+                    <button
+                        onClick={() => setIsSidebarOpen(true)}
+                        className="h-12 w-12 flex items-center justify-center rounded-2xl bg-slate-900 text-white hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/20 active:scale-95"
+                    >
+                        <Menu className="h-6 w-6" />
+                    </button>
+                    <div className="hidden sm:block">
+                        <h2 className="text-slate-900 font-black text-xl tracking-tight leading-none">Control Center</h2>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-1.5">Administrative Overview</p>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <div className="text-right hidden sm:block">
-                            <p className="text-sm font-black text-slate-800">{user?.name || "Admin"}</p>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase">{user?.role || "Admin"}</p>
-                        </div>
-                        <div className="h-10 w-10 bg-slate-100 rounded-full border-2 border-slate-50 flex items-center justify-center font-black text-primary">
-                            {(user?.name || "A").charAt(0)}
-                        </div>
+                </div>
+
+                <div className="flex items-center gap-4 bg-slate-50 p-1.5 pl-5 rounded-3xl border border-slate-100">
+                    <div className="text-right hidden sm:block">
+                        <p className="text-xs font-black text-slate-900 leading-none">{user?.name || "Admin"}</p>
+                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">Administrator</p>
                     </div>
-                </header>
-                <div className="p-4 md:p-8 pb-20 overflow-y-auto">
+                    <div className="h-11 w-11 bg-white rounded-2xl border-2 border-white shadow-sm flex items-center justify-center font-black text-primary text-lg">
+                        {(user?.name || "A").charAt(0)}
+                    </div>
+                </div>
+            </header>
+
+            {/* Main Content Area */}
+            <main className="flex-1 overflow-x-hidden p-6 md:p-12">
+                <div className="mx-auto max-w-7xl">
                     {children}
                 </div>
             </main>
+
+            {/* Footer / Badge */}
+            <footer className="py-8 px-10 flex justify-center opacity-30">
+                <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">
+                    <ShieldAlert className="h-3 w-3" />
+                    SATU SAF Management v2.4
+                </div>
+            </footer>
         </div>
     );
 }
