@@ -50,6 +50,11 @@ export async function GET(req: NextRequest) {
                 ? parseFloat(((verifiedCount / totalPossibleTasks) * 100).toFixed(2))
                 : 0;
 
+            const hScore = (score?.hafalan || 0) * 0.15;
+            const uScore = (score?.ujianTulis || 0) * 0.15;
+            const qScore = (score?.qiyamullail || 0) * 0.20;
+            const mScore = monitoringScore * 0.50;
+
             return {
                 id: s.id,
                 name: s.name,
@@ -58,7 +63,7 @@ export async function GET(req: NextRequest) {
                 ujianTulis: score?.ujianTulis || 0,
                 qiyamullail: score?.qiyamullail || 0,
                 monitoring: monitoringScore,
-                total: (score?.hafalan || 0) + (score?.ujianTulis || 0) + (score?.qiyamullail || 0) + monitoringScore
+                total: Math.round(hScore + uScore + qScore + mScore)
             };
         });
 

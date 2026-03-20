@@ -123,11 +123,18 @@ export async function POST(req: NextRequest) {
                 }
             }
 
-            const totalScore = (scoreEntry?.hafalan || 0) +
-                (scoreEntry?.ujianTulis || 0) +
-                (scoreEntry?.qiyamullail || 0) +
-                monitoringBase +
-                streakBonus;
+            // Weighted Score Calculation:
+            // 1. Monitoring (50%) - monitoringBase is 0-100
+            // 2. Hafalan (15%) - scoreEntry.hafalan is 0-100
+            // 3. Ujian Tulis (15%) - scoreEntry.ujianTulis is 0-100
+            // 4. Qiyamullail (20%) - scoreEntry.qiyamullail is 0-100
+
+            const hScore = (scoreEntry?.hafalan || 0) * 0.15;
+            const uScore = (scoreEntry?.ujianTulis || 0) * 0.15;
+            const qScore = (scoreEntry?.qiyamullail || 0) * 0.20;
+            const mScore = monitoringBase * 0.50;
+
+            const totalScore = Math.round(hScore + uScore + qScore + mScore + streakBonus);
 
             // Persistent update to DB
             if (scoreEntry) {
