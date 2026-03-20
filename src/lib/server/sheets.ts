@@ -21,7 +21,7 @@ export interface Participant {
 
 // Cache to avoid hammering Sheets API
 let cache: { participants: Participant[]; fetchedAt: number } | null = null;
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL_MS = 60 * 1000; // Reduced to 1 minute for faster visibility of manual additions
 
 export async function fetchParticipants(): Promise<Participant[]> {
     if (cache && Date.now() - cache.fetchedAt < CACHE_TTL_MS) {
