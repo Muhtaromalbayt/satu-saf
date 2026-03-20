@@ -211,7 +211,7 @@ function LoginForm() {
                                         >
                                             <option value="">— Pilih Kelompok —</option>
                                             {kelompokOptions.map(k => (
-                                                <option key={k} value={k}>{k}</option>
+                                                <option key={k} value={k}>Kelompok {k}</option>
                                             ))}
                                         </select>
                                         <ChevronDown className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />

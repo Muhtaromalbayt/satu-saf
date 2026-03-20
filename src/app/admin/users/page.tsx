@@ -103,6 +103,11 @@ export default function AdminUsers() {
                                         <div className="flex items-center gap-1 text-[10px] text-slate-400 font-bold uppercase border-l border-slate-200 pl-3">
                                             <Calendar className="h-3 w-3" /> {new Date(user.createdAt).toLocaleDateString()}
                                         </div>
+                                        {user.kelompok && (
+                                            <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-black uppercase border-l border-slate-200 pl-3">
+                                                Kelompok {user.kelompok}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>

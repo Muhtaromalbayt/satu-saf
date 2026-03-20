@@ -17,6 +17,7 @@ export async function GET() {
             name: userTable.name,
             email: userTable.email,
             role: userTable.role,
+            kelompok: userTable.kelompok,
             createdAt: userTable.createdAt,
         }).from(userTable).orderBy(desc(userTable.createdAt));
 

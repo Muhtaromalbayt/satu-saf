@@ -60,25 +60,29 @@ export async function GET(req: NextRequest) {
             .innerJoin(user, eq(amalanReactions.userId, user.id))
             .where(inArray(amalanReactions.amalanId, amalanIds));
 
-        // 3. Fetch Streaks for unique users in the feed
+        // 3. Fetch all verified logs for these users to calculate streaks efficiently
         const uniqueUserIds = [...new Set(rawLogs.map(l => l.userId))];
+        const userLogs = await db.select({
+            userId: userAmalan.userId,
+            day: userAmalan.day
+        })
+            .from(userAmalan)
+            .where(and(
+                inArray(userAmalan.userId, uniqueUserIds),
+                sql`${userAmalan.status} IN ('pending', 'verified', 'done')`
+            ))
+            .orderBy(userAmalan.userId, desc(userAmalan.day));
+
         const streaks: Record<string, number> = {};
-
         for (const uid of uniqueUserIds) {
-            // Get all unique days with verified logs for this user, ordered desc
-            const userLogs = await db.select({ day: userAmalan.day })
-                .from(userAmalan)
-                .where(and(eq(userAmalan.userId, uid), sql`${userAmalan.status} IN ('pending', 'verified', 'done')`))
-                .orderBy(desc(userAmalan.day));
-
-            const uniqueDays = [...new Set(userLogs.map(l => l.day))].filter(d => d !== null) as number[];
+            const days = [...new Set(
+                userLogs.filter(l => l.userId === uid).map(l => l.day)
+            )].filter(d => d !== null) as number[];
 
             let streak = 0;
-            if (uniqueDays.length > 0) {
-                // Simplified streak: consecutive 'day' numbers
-                // In a more robust system, we'd check actual dates, but here 'day' (1-14) is our primary timeline
-                let expectedDay = uniqueDays[0];
-                for (const d of uniqueDays) {
+            if (days.length > 0) {
+                let expectedDay = days[0];
+                for (const d of days) {
                     if (d === expectedDay) {
                         streak++;
                         expectedDay--;

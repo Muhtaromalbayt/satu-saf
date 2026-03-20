@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, Heart, Star, Flame, User, Loader2, RefreshCw, Send, Smile, Camera, Sparkles } from "lucide-react";
+import { MessageCircle, Heart, Star, Flame, User, Loader2, RefreshCw, Send, Smile, Camera, Sparkles, CheckCircle2 } from "lucide-react";
 import Mascot from "@/components/gamification/Mascot";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -21,10 +21,12 @@ interface FeedItem {
     deedName: string;
     message: string;
     streak: number;
+    day: number;
     timestamp: string;
     evidenceUrl?: string;
     reactions: Reaction[];
     userId: string;
+    status: string;
 }
 
 export default function LaporPakPage() {
@@ -35,9 +37,8 @@ export default function LaporPakPage() {
 
     const fetchFeed = async () => {
         try {
-            const url = user?.role === 'parent'
-                ? `/api/habits/feed?kelompok=${user.kelompok}`
-                : '/api/habits/feed';
+            // Updated to show all groups for everyone as requested
+            const url = '/api/habits/feed';
             const res = await fetch(url);
             if (!res.ok) throw new Error("Gagal mengambil data laporan");
             const data = await res.json();
@@ -127,7 +128,7 @@ export default function LaporPakPage() {
                             <Heart className="h-12 w-12 text-emerald-900" />
                         </div>
                         <p className="text-sm font-black text-slate-800">Assalamu'alaikum, Wali <span className="text-emerald-700">{user.name.replace('Wali ', '')}</span>!</p>
-                        <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest font-bold">Memantau Perkembangan {user.kelompok}</p>
+                        <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest font-bold">Memantau Perkembangan Kelompok {user.kelompok}</p>
                     </motion.div>
                 )}
 
@@ -169,9 +170,19 @@ export default function LaporPakPage() {
                                         <span className="text-[10px] font-black text-emerald-800 uppercase tracking-tighter opacity-80">
                                             Ananda {item.userName}
                                         </span>
-                                        <span className="text-[8px] bg-slate-200/50 px-1.5 py-0.5 rounded-md font-bold text-slate-500 uppercase">
-                                            {item.kelompok}
-                                        </span>
+                                        <div className="flex items-center gap-1">
+                                            <span className="text-[8px] bg-emerald-100/50 px-1.5 py-0.5 rounded-md font-bold text-emerald-700 uppercase">
+                                                Kelompok {item.kelompok}
+                                            </span>
+                                            <span className="text-[8px] bg-amber-100/50 px-1.5 py-0.5 rounded-md font-bold text-amber-700 uppercase">
+                                                Hari ke-{item.day}
+                                            </span>
+                                            {item.status === 'verified' && (
+                                                <span className="text-[8px] bg-sky-500/10 px-1.5 py-0.5 rounded-md font-black text-sky-600 uppercase flex items-center gap-1 border border-sky-200">
+                                                    <CheckCircle2 className="h-2.5 w-2.5" /> Terverifikasi
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
 
                                     {/* Bubble Chat Style */}
