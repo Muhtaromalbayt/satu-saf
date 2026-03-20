@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { MONITORING_ASPECTS, MonitoringAspectId } from "@/lib/constants/monitoring";
 import TaskMission from "@/components/monitoring/TaskMission";
 import MissionSelect from "@/components/monitoring/MissionSelect";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { sounds } from "@/lib/utils/sounds";
 
 interface AmalanLog {
@@ -36,6 +37,7 @@ interface Task {
 const TOTAL_DAYS = 14;
 
 export default function MapPage() {
+    const { user } = useAuth();
     const [activeDay, setActiveDay] = useState(1); // Current day in the journey (from settings)
     const [missionStartDate, setMissionStartDate] = useState<string>("");
     const [selectedDay, setSelectedDay] = useState<number | null>(null); // Day selected to show aspects
@@ -177,7 +179,9 @@ export default function MapPage() {
         }
 
         const isLockedByDate = openDate && today < openDate;
-        if (day > activeDay || isLockedByDate) {
+        const isDemo = user?.id === "demo_santri";
+
+        if (!isDemo && (day > activeDay || isLockedByDate)) {
             return;
         }
 
@@ -299,7 +303,8 @@ export default function MapPage() {
 
                         const isLockedByDate = openDate && today < openDate;
                         const isLockedByAdmin = day > activeDay;
-                        const isLocked = isLockedByDate || isLockedByAdmin;
+                        const isDemo = user?.id === "demo_santri";
+                        const isLocked = !isDemo && (isLockedByDate || isLockedByAdmin);
                         const isCurrent = day === activeDay && !isLockedByDate;
 
                         const dateString = openDate ? openDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : "";
