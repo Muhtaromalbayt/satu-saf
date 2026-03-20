@@ -7,13 +7,19 @@ import { getCurrentUser } from "@/lib/server/session";
 export async function GET() {
     try {
         const db = getDb();
-        const setting = await db.select()
+        const settings = await db.select()
             .from(systemSettings)
-            .where(eq(systemSettings.key, "current_journey_day"))
-            .get();
+            .all();
+
+        const config: Record<string, string> = {};
+        settings.forEach(s => {
+            config[s.key] = s.value;
+        });
 
         return NextResponse.json({
-            currentDay: setting ? parseInt(setting.value) : 1
+            currentDay: parseInt(config["current_journey_day"] || "1"),
+            missionStartDate: config["mission_start_date"] || "",
+            missionStatus: config["mission_status"] || "open" // "open" or "closed"
         });
     } catch (error) {
         console.error("Settings GET error:", error);
@@ -28,27 +34,38 @@ export async function PATCH(req: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { currentDay } = await req.json();
-        if (typeof currentDay !== "number" || currentDay < 1 || currentDay > 14) {
-            return NextResponse.json({ error: "Invalid day" }, { status: 400 });
+        const body = await req.json();
+        const db = getDb();
+
+        const updates = [];
+
+        if (body.currentDay !== undefined) {
+            updates.push({ key: "current_journey_day", value: body.currentDay.toString() });
+        }
+        if (body.missionStartDate !== undefined) {
+            updates.push({ key: "mission_start_date", value: body.missionStartDate });
+        }
+        if (body.missionStatus !== undefined) {
+            updates.push({ key: "mission_status", value: body.missionStatus });
         }
 
-        const db = getDb();
-        await db.insert(systemSettings)
-            .values({
-                key: "current_journey_day",
-                value: currentDay.toString(),
-                updatedAt: new Date().toISOString()
-            })
-            .onConflictDoUpdate({
-                target: systemSettings.key,
-                set: {
-                    value: currentDay.toString(),
+        for (const update of updates) {
+            await db.insert(systemSettings)
+                .values({
+                    key: update.key,
+                    value: update.value,
                     updatedAt: new Date().toISOString()
-                }
-            });
+                })
+                .onConflictDoUpdate({
+                    target: systemSettings.key,
+                    set: {
+                        value: update.value,
+                        updatedAt: new Date().toISOString()
+                    }
+                });
+        }
 
-        return NextResponse.json({ success: true, currentDay });
+        return NextResponse.json({ success: true });
     } catch (error) {
         console.error("Settings PATCH error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

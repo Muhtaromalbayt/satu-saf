@@ -8,13 +8,19 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
     try {
         const db = getDb();
-        const setting = await db.select()
+        const settings = await db.select()
             .from(systemSettings)
-            .where(eq(systemSettings.key, "current_journey_day"))
-            .get();
+            .all();
+
+        const config: Record<string, string> = {};
+        settings.forEach(s => {
+            config[s.key] = s.value;
+        });
 
         return NextResponse.json({
-            currentDay: setting ? parseInt(setting.value) : 1
+            currentDay: parseInt(config["current_journey_day"] || "1"),
+            missionStartDate: config["mission_start_date"] || "",
+            missionStatus: config["mission_status"] || "open"
         });
     } catch (error) {
         console.error("Settings GET error:", error);

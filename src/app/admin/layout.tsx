@@ -37,6 +37,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
         { href: "/admin/lessons", label: "Materi & Quiz", icon: BookOpen },
         { href: "/admin/users", label: "Santri & Mentor", icon: Users },
+        { href: "/admin/import", label: "Import Nilai", icon: ShieldAlert },
+        { href: "/admin/settings", label: "Settings", icon: ShieldAlert },
     ];
 
     return (

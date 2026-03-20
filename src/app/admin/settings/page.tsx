@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 
 export default function AdminSettingsPage() {
     const [currentDay, setCurrentDay] = useState(1);
+    const [missionStartDate, setMissionStartDate] = useState("");
+    const [missionStatus, setMissionStatus] = useState("open");
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -19,9 +21,9 @@ export default function AdminSettingsPage() {
         try {
             const res = await fetch("/api/admin/settings");
             const data = await res.json();
-            if (data.currentDay) {
-                setCurrentDay(data.currentDay);
-            }
+            if (data.currentDay) setCurrentDay(data.currentDay);
+            if (data.missionStartDate) setMissionStartDate(data.missionStartDate);
+            if (data.missionStatus) setMissionStatus(data.missionStatus);
         } catch (err) {
             console.error(err);
         } finally {
@@ -36,7 +38,7 @@ export default function AdminSettingsPage() {
             const res = await fetch("/api/admin/settings", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ currentDay }),
+                body: JSON.stringify({ currentDay, missionStartDate, missionStatus }),
             });
             if (res.ok) {
                 setMessage({ type: 'success', text: "Pengaturan berhasil disimpan!" });
@@ -122,8 +124,52 @@ export default function AdminSettingsPage() {
                                 ))}
                             </div>
                         </div>
+                    </section>
 
-                        <div className="mt-10 pt-8 border-t border-slate-50 flex items-center justify-between">
+                    <section className="bg-white p-6 md:p-8 rounded-[2.5rem] shadow-xl border border-slate-100 space-y-6">
+                        <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight mb-4">Akses & Jadwal</h2>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-1">Tanggal Mulai Misi</label>
+                                <input
+                                    type="date"
+                                    value={missionStartDate}
+                                    onChange={(e) => setMissionStartDate(e.target.value)}
+                                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 py-3 font-bold text-slate-700 outline-none focus:border-primary/20 transition-all"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-1">Status Akses Peserta</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        onClick={() => setMissionStatus("open")}
+                                        className={cn(
+                                            "py-3 rounded-2xl font-black uppercase tracking-widest text-xs border-2 transition-all",
+                                            missionStatus === "open"
+                                                ? "bg-emerald-500 border-emerald-500 text-white shadow-lg"
+                                                : "bg-white border-slate-100 text-slate-400 hover:border-emerald-200"
+                                        )}
+                                    >
+                                        DIBUKA
+                                    </button>
+                                    <button
+                                        onClick={() => setMissionStatus("closed")}
+                                        className={cn(
+                                            "py-3 rounded-2xl font-black uppercase tracking-widest text-xs border-2 transition-all",
+                                            missionStatus === "closed"
+                                                ? "bg-rose-500 border-rose-500 text-white shadow-lg"
+                                                : "bg-white border-slate-100 text-slate-400 hover:border-rose-200"
+                                        )}
+                                    >
+                                        DITUTUP
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 pt-8 border-t border-slate-50 flex items-center justify-between">
                             {message && (
                                 <motion.p
                                     initial={{ opacity: 0, x: -10 }}
