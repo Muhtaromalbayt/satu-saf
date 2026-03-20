@@ -37,6 +37,7 @@ const TOTAL_DAYS = 14;
 
 export default function MapPage() {
     const [activeDay, setActiveDay] = useState(1); // Current day in the journey (from settings)
+    const [missionStartDate, setMissionStartDate] = useState<string>("");
     const [selectedDay, setSelectedDay] = useState<number | null>(null); // Day selected to show aspects
     const [logs, setLogs] = useState<AmalanLog[]>([]);
     const [tasks, setTasks] = useState<Task[]>(() =>
@@ -78,6 +79,9 @@ export default function MapPage() {
             const data = await res.json();
             if (data.currentDay) {
                 setActiveDay(data.currentDay);
+            }
+            if (data.missionStartDate) {
+                setMissionStartDate(data.missionStartDate);
             }
         } catch (err) {
             console.error(err);
@@ -161,8 +165,19 @@ export default function MapPage() {
     };
 
     const handleNodeClick = (day: number) => {
-        if (day > activeDay) {
-            // Locked sound?
+        // Date-based locking logic
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const startDate = missionStartDate ? new Date(missionStartDate) : null;
+        let openDate = null;
+        if (startDate) {
+            openDate = new Date(startDate);
+            openDate.setDate(startDate.getDate() + (day - 1));
+            openDate.setHours(0, 0, 0, 0);
+        }
+
+        const isLockedByDate = openDate && today < openDate;
+        if (day > activeDay || isLockedByDate) {
             return;
         }
 
@@ -267,10 +282,27 @@ export default function MapPage() {
                 {/* Nodes */}
                 <div className="relative flex flex-col gap-10 py-10">
                     {Array.from({ length: 14 }, (_, i) => i + 1).map((day) => {
-                        const isLocked = day > activeDay;
                         const progress = getDayProgress(day);
                         const isEven = day % 2 === 0;
-                        const isCurrent = day === activeDay;
+
+                        // Date-based locking logic
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+
+                        const startDate = missionStartDate ? new Date(missionStartDate) : null;
+                        let openDate = null;
+                        if (startDate) {
+                            openDate = new Date(startDate);
+                            openDate.setDate(startDate.getDate() + (day - 1));
+                            openDate.setHours(0, 0, 0, 0);
+                        }
+
+                        const isLockedByDate = openDate && today < openDate;
+                        const isLockedByAdmin = day > activeDay;
+                        const isLocked = isLockedByDate || isLockedByAdmin;
+                        const isCurrent = day === activeDay && !isLockedByDate;
+
+                        const dateString = openDate ? openDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : "";
 
                         return (
                             <motion.div
@@ -369,7 +401,7 @@ export default function MapPage() {
                                                     ? "bg-amber-50 text-amber-500 border-amber-200"
                                                     : "bg-emerald-50 text-emerald-500 border-emerald-200"
                                         )}>
-                                            {isLocked ? "Terkunci" : progress === 100 ? "Selesai! ✨" : `${Math.round(progress)}% Selesai`}
+                                            {isLocked ? (isLockedByDate ? `Dibuka ${dateString}` : "Terkunci") : progress === 100 ? "Selesai! ✨" : `${Math.round(progress)}% Selesai`}
                                         </div>
                                     </div>
                                 </button>

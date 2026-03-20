@@ -52,19 +52,9 @@ export default function AppShell({ children }: AppShellProps) {
         return <>{children}</>;
     }
 
-    // Access control: If mission is closed or hasn't started yet and user is a student, block access
-    if (user?.role === "santri") {
-        if (missionStatus === "closed") {
-            return <MissionClosed />;
-        }
-        if (isBeforeStart) {
-            return (
-                <MissionClosed
-                    title="Misi Belum Dimulai"
-                    message={`Sabar ya! Misi baru akan dimulai pada tanggal ${new Date(missionStartDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}. Siapkan dirimu!`}
-                />
-            );
-        }
+    // Access control: If mission is explicitly closed by admin and user is a student, block access
+    if (user?.role === "santri" && missionStatus === "closed") {
+        return <MissionClosed />;
     }
 
     return (
