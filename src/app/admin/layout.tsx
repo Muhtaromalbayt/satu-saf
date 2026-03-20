@@ -4,13 +4,15 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { LayoutDashboard, BookOpen, Users, LogOut, ShieldAlert } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { LayoutDashboard, BookOpen, Users, LogOut, ShieldAlert, Menu, X as CloseIcon, LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const { user, loading, signOut } = useAuth();
     const router = useRouter();
     const [isAuthorized, setIsAuthorized] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     useEffect(() => {
         if (!loading) {
@@ -36,33 +38,55 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const navItems = [
         { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
         { href: "/admin/rekap", label: "Rekap Nilai", icon: BookOpen },
-        { href: "/admin/lessons", label: "Materi & Quiz", icon: BookOpen },
+        { href: "/admin/tasks", label: "Manajemen Tugas", icon: LayoutGrid },
         { href: "/admin/users", label: "Santri & Mentor", icon: Users },
         { href: "/admin/import", label: "Import Nilai", icon: ShieldAlert },
-        { href: "/admin/settings", label: "Settings", icon: ShieldAlert },
+        { href: "/admin/settings", label: "Pengaturan", icon: ShieldAlert },
     ];
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
+        <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row relative overflow-hidden">
+            {/* Mobile Overlay */}
+            <AnimatePresence>
+                {isSidebarOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[40] md:hidden"
+                    />
+                )}
+            </AnimatePresence>
+
             {/* Sidebar */}
-            <aside className="w-full md:w-64 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800">
-                <div className="p-6 border-b border-slate-800 flex items-center gap-3">
-                    <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
-                        <ShieldAlert className="h-5 w-5 text-white" />
+            <aside className={cn(
+                "fixed md:sticky top-0 left-0 h-screen w-64 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800 z-[50] transition-transform duration-300 ease-in-out shrink-0",
+                isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+            )}>
+                <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
+                            <ShieldAlert className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-white font-black text-lg leading-none">SATU SAF</h1>
+                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Admin Panel</p>
+                        </div>
                     </div>
-                    <div>
-                        <h1 className="text-white font-black text-lg leading-none">SATU SAF</h1>
-                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Admin Panel</p>
-                    </div>
+                    <button onClick={() => setIsSidebarOpen(false)} className="md:hidden text-slate-400 hover:text-white">
+                        <CloseIcon className="h-6 w-6" />
+                    </button>
                 </div>
 
-                <nav className="flex-1 p-4 space-y-2">
+                <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
                     {navItems.map((item) => {
                         const Icon = item.icon;
                         return (
                             <Link
                                 key={item.href}
                                 href={item.href}
+                                onClick={() => setIsSidebarOpen(false)}
                                 className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 hover:text-white transition-colors font-bold text-sm"
                             >
                                 <Icon className="h-5 w-5" />
@@ -84,9 +108,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 overflow-x-hidden">
-                <header className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-8">
-                    <h2 className="text-slate-800 font-black text-lg">Control Center</h2>
+            <main className="flex-1 flex flex-col min-w-0">
+                <header className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-4 md:px-8 sticky top-0 z-[30]">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => setIsSidebarOpen(true)}
+                            className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-500 md:hidden hover:bg-slate-100"
+                        >
+                            <Menu className="h-6 w-6" />
+                        </button>
+                        <h2 className="text-slate-800 font-black text-lg truncate max-w-[150px] sm:max-w-none">Control Center</h2>
+                    </div>
                     <div className="flex items-center gap-3">
                         <div className="text-right hidden sm:block">
                             <p className="text-sm font-black text-slate-800">{user?.name || "Admin"}</p>
@@ -97,7 +129,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         </div>
                     </div>
                 </header>
-                <div className="p-8 pb-20">
+                <div className="p-4 md:p-8 pb-20 overflow-y-auto">
                     {children}
                 </div>
             </main>

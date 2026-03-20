@@ -80,11 +80,17 @@ export default function AdminDashboard() {
                         Pintasan Cepat
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <button className="p-4 rounded-2xl border-2 border-slate-50 hover:border-primary hover:bg-primary/5 transition-all text-left group">
-                            <p className="font-bold text-slate-800">Buat Materi Baru</p>
-                            <p className="text-xs text-slate-400 group-hover:text-primary transition-colors">Tambah chapter atau quiz baru</p>
+                        <button
+                            onClick={() => window.location.href = "/admin/tasks"}
+                            className="p-4 rounded-2xl border-2 border-slate-50 hover:border-primary hover:bg-primary/5 transition-all text-left group"
+                        >
+                            <p className="font-bold text-slate-800">Manajemen Tugas</p>
+                            <p className="text-xs text-slate-400 group-hover:text-primary transition-colors">Atur daftar amalan tiap aspek</p>
                         </button>
-                        <button className="p-4 rounded-2xl border-2 border-slate-50 hover:border-primary hover:bg-primary/5 transition-all text-left group">
+                        <button
+                            onClick={() => window.location.href = "/admin/users"}
+                            className="p-4 rounded-2xl border-2 border-slate-50 hover:border-primary hover:bg-primary/5 transition-all text-left group"
+                        >
                             <p className="font-bold text-slate-800">Daftar Santri</p>
                             <p className="text-xs text-slate-400 group-hover:text-primary transition-colors">Lihat progres database santri</p>
                         </button>

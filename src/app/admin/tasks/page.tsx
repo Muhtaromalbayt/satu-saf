@@ -7,13 +7,20 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const ASPECTS = [
-    { id: "ibadah", label: "Ibadah", icon: Heart, color: "rose" },
-    { id: "orang_tua", label: "Orang Tua", icon: User, color: "amber" },
-    { id: "lingkungan", label: "Lingkungan", icon: Globe, color: "emerald" },
-    { id: "diri_sendiri", label: "Diri Sendiri", icon: Star, color: "indigo" },
-    { id: "setoran", label: "Setoran", icon: BookOpen, color: "violet" },
-];
+import { MONITORING_ASPECTS } from "@/lib/constants/monitoring";
+
+const ASPECT_ICONS: Record<string, any> = {
+    ibadah: Heart,
+    orang_tua: User,
+    lingkungan: Globe,
+    diri_sendiri: Star,
+    setoran: BookOpen,
+};
+
+const ASPECTS = MONITORING_ASPECTS.map(aspect => ({
+    ...aspect,
+    icon: ASPECT_ICONS[aspect.id] || LayoutGrid
+}));
 
 export default function AdminTasksPage() {
     const [tasks, setTasks] = useState<any[]>([]);
@@ -98,10 +105,10 @@ export default function AdminTasksPage() {
     const filteredTasks = tasks.filter(t => t.aspectId === activeAspect);
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-20 p-5">
-            <header className="mb-8">
-                <h1 className="text-2xl font-black text-slate-800">Manajemen Monitoring</h1>
-                <p className="text-slate-500 text-sm">Atur tugas amalan untuk setiap aspek kebaikan.</p>
+        <div className="space-y-8 max-w-5xl">
+            <header>
+                <h1 className="text-3xl font-black text-slate-800">Manajemen Tugas</h1>
+                <p className="text-slate-500 font-medium">Atur daftar amalan harian untuk setiap aspek kebaikan.</p>
             </header>
 
             {/* Aspect Selector */}
@@ -214,15 +221,6 @@ export default function AdminTasksPage() {
                 </div>
             </div>
 
-            <div className="mt-6 flex justify-between items-center px-2">
-                <button
-                    onClick={() => window.location.href = "/map"}
-                    className="text-slate-400 text-sm font-bold flex items-center gap-1 hover:text-slate-600 transition-colors"
-                >
-                    <ChevronLeft className="h-4 w-4" /> Kembali ke Peta
-                </button>
-                <div className="text-[10px] font-black text-slate-300 uppercase tracking-widest"> Satu SAF Dashboard v2 </div>
-            </div>
         </div>
     );
 }
