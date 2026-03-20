@@ -14,12 +14,12 @@ export async function GET(req: NextRequest) {
         const db = getDb();
         const settings = await db.select()
             .from(systemSettings)
-            .where(inArray(systemSettings.key, ["streak_config", "mission_start_date", "current_journey_day"]))
+            .where(inArray(systemSettings.key, ["streak_config", "mission_start_date", "current_journey_day", "scoring_weight"]))
             .all();
 
         const config: Record<string, any> = {};
         settings.forEach(s => {
-            if (s.key === "streak_config") {
+            if (s.key === "streak_config" || s.key === "scoring_weight") {
                 config[s.key] = JSON.parse(s.value);
             } else {
                 config[s.key] = s.value;
@@ -33,6 +33,15 @@ export async function GET(req: NextRequest) {
                 { days: 7, points: 150 },
                 { days: 14, points: 500 }
             ];
+        }
+
+        if (!config.scoring_weight) {
+            config.scoring_weight = {
+                hafalan: 15,
+                ujianTulis: 15,
+                qiyamullail: 20,
+                monitoring: 50
+            };
         }
         if (!config.current_journey_day) config.current_journey_day = "1";
 

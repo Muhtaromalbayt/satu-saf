@@ -26,28 +26,37 @@ export async function POST(req: NextRequest) {
             console.error("Migration check failed:", migError);
         }
 
-        // 1. Fetch Streak Config
+        // 1. Fetch Configs (Streak & Scoring Weight)
         let streakConfig = [
             { days: 3, points: 50 },
             { days: 7, points: 150 },
             { days: 14, points: 500 }
         ];
+        let scoringWeight = {
+            hafalan: 15,
+            ujianTulis: 15,
+            qiyamullail: 20,
+            monitoring: 50
+        };
 
         try {
-            const streakConfigSetting = await db.select()
+            const settings = await db.select()
                 .from(systemSettings)
-                .where(eq(systemSettings.key, "streak_config"))
-                .get();
+                .where(inArray(systemSettings.key, ["streak_config", "scoring_weight"]))
+                .all();
 
-            if (streakConfigSetting) {
-                console.log("Found streak config raw:", streakConfigSetting.value);
-                const parsed = JSON.parse(streakConfigSetting.value);
-                if (Array.isArray(parsed)) {
-                    streakConfig = parsed;
-                }
+            const streakSet = settings.find(s => s.key === "streak_config");
+            if (streakSet) {
+                const parsed = JSON.parse(streakSet.value);
+                if (Array.isArray(parsed)) streakConfig = parsed;
+            }
+
+            const weightSet = settings.find(s => s.key === "scoring_weight");
+            if (weightSet) {
+                scoringWeight = JSON.parse(weightSet.value);
             }
         } catch (confError) {
-            console.error("Failed to parse streak config, using defaults:", confError);
+            console.error("Failed to parse configs, using defaults:", confError);
         }
 
         // 2. Fetch all santri
@@ -123,18 +132,25 @@ export async function POST(req: NextRequest) {
                 }
             }
 
-            // Weighted Score Calculation:
-            // 1. Monitoring (50%) - monitoringBase is 0-100
-            // 2. Hafalan (15%) - scoreEntry.hafalan is 0-100
-            // 3. Ujian Tulis (15%) - scoreEntry.ujianTulis is 0-100
-            // 4. Qiyamullail (20%) - scoreEntry.qiyamullail is 0-100
-
-            const hScore = (scoreEntry?.hafalan || 0) * 0.15;
-            const uScore = (scoreEntry?.ujianTulis || 0) * 0.15;
-            const qScore = (scoreEntry?.qiyamullail || 0) * 0.20;
-            const mScore = monitoringBase * 0.50;
+            // Weighted Score Calculation (Dynamic from settings):
+            const hScore = (scoreEntry?.hafalan || 0) * (scoringWeight.hafalan / 100);
+            const uScore = (scoreEntry?.ujianTulis || 0) * (scoringWeight.ujianTulis / 100);
+            const qScore = (scoreEntry?.qiyamullail || 0) * (scoringWeight.qiyamullail / 100);
+            const mScore = monitoringBase * (scoringWeight.monitoring / 100);
 
             const totalScore = Math.round(hScore + uScore + qScore + mScore + streakBonus);
+
+            // Log calculation for first santri as sample
+            if (results.length === 0) {
+                console.log(`Sample Calculation (${s.name}):`, {
+                    h: scoreEntry?.hafalan, hW: scoringWeight.hafalan,
+                    u: scoreEntry?.ujianTulis, uW: scoringWeight.ujianTulis,
+                    q: scoreEntry?.qiyamullail, qW: scoringWeight.qiyamullail,
+                    m: monitoringBase, mW: scoringWeight.monitoring,
+                    bonus: streakBonus,
+                    total: totalScore
+                });
+            }
 
             // Persistent update to DB
             if (scoreEntry) {

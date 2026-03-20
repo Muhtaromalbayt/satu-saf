@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/server/db";
-import { user as userTable, scores as scoresTable, userAmalan } from "@/lib/server/db/schema";
+import { user as userTable, scores as scoresTable, userAmalan, systemSettings } from "@/lib/server/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { MONITORING_ASPECTS } from "@/lib/constants/monitoring";
 import { getAdminSession } from "@/lib/admin";
@@ -42,6 +42,27 @@ export async function GET(req: NextRequest) {
 
         const verifiedMap = new Map(verifiedCounts.map(vc => [vc.userId, vc.count]));
 
+        // Fetch Scoring Weights
+        let scoringWeight = {
+            hafalan: 15,
+            ujianTulis: 15,
+            qiyamullail: 20,
+            monitoring: 50
+        };
+
+        try {
+            const weightSetting = await db.select()
+                .from(systemSettings)
+                .where(eq(systemSettings.key, "scoring_weight"))
+                .get();
+
+            if (weightSetting) {
+                scoringWeight = JSON.parse(weightSetting.value);
+            }
+        } catch (wErr) {
+            console.error("Failed to fetch scoring weights in Rekap, using defaults:", wErr);
+        }
+
         // 4. Combine data
         const rekap = santris.map(s => {
             const score = scores.find(sc => sc.userId === s.id);
@@ -50,10 +71,10 @@ export async function GET(req: NextRequest) {
                 ? parseFloat(((verifiedCount / totalPossibleTasks) * 100).toFixed(2))
                 : 0;
 
-            const hScore = (score?.hafalan || 0) * 0.15;
-            const uScore = (score?.ujianTulis || 0) * 0.15;
-            const qScore = (score?.qiyamullail || 0) * 0.20;
-            const mScore = monitoringScore * 0.50;
+            const hScore = (score?.hafalan || 0) * (scoringWeight.hafalan / 100);
+            const uScore = (score?.ujianTulis || 0) * (scoringWeight.ujianTulis / 100);
+            const qScore = (score?.qiyamullail || 0) * (scoringWeight.qiyamullail / 100);
+            const mScore = monitoringScore * (scoringWeight.monitoring / 100);
 
             return {
                 id: s.id,

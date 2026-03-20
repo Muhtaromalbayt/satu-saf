@@ -27,10 +27,22 @@ export default function AdminSettingsPage() {
         streak_config: StreakRule[];
         mission_start_date: string;
         current_journey_day: string;
+        scoring_weight: {
+            hafalan: number;
+            ujianTulis: number;
+            qiyamullail: number;
+            monitoring: number;
+        };
     }>({
         streak_config: [],
         mission_start_date: "",
-        current_journey_day: "1"
+        current_journey_day: "1",
+        scoring_weight: {
+            hafalan: 15,
+            ujianTulis: 15,
+            qiyamullail: 20,
+            monitoring: 50
+        }
     });
 
     const [loading, setLoading] = useState(true);
@@ -50,7 +62,13 @@ export default function AdminSettingsPage() {
                 setSettings({
                     streak_config: data.streak_config || [],
                     mission_start_date: data.mission_start_date || "",
-                    current_journey_day: data.current_journey_day || "1"
+                    current_journey_day: data.current_journey_day || "1",
+                    scoring_weight: data.scoring_weight || {
+                        hafalan: 15,
+                        ujianTulis: 15,
+                        qiyamullail: 20,
+                        monitoring: 50
+                    }
                 });
             }
         } catch (err) {
@@ -61,6 +79,16 @@ export default function AdminSettingsPage() {
     };
 
     const handleSave = async () => {
+        // Validation: Sum of weights must be 100
+        const { scoring_weight } = settings;
+        const totalWeight = scoring_weight.hafalan + scoring_weight.ujianTulis + scoring_weight.qiyamullail + scoring_weight.monitoring;
+
+        if (totalWeight !== 100) {
+            setToast({ type: 'error', message: `Total bobot harus 100% (saat ini: ${totalWeight}%)` });
+            setTimeout(() => setToast(null), 3000);
+            return;
+        }
+
         setSaving(true);
         try {
             const res = await fetch("/api/admin/settings", {
@@ -171,6 +199,61 @@ export default function AdminSettingsPage() {
                                 </div>
                             </div>
                             <p className="text-[10px] text-slate-400 font-medium pl-2 italic">Maksimal 14 hari sesuai peta karunia.</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Scoring Weights Card */}
+                <div className="bg-white rounded-[3rem] border-2 border-slate-100 shadow-sm overflow-hidden p-10">
+                    <div className="flex items-center gap-4 mb-8">
+                        <div className="h-14 w-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
+                            <Clock className="h-8 w-8 text-emerald-500" />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-black text-slate-900">Pembobotan Nilai</h3>
+                            <p className="text-slate-400 font-bold text-sm tracking-tight">Tentukan persentase pengaruh tiap aspek terhadap nilai akhir (Total harus 100%).</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        {[
+                            { id: 'hafalan', label: 'Hafalan' },
+                            { id: 'ujianTulis', label: 'Ujian Tulis' },
+                            { id: 'qiyamullail', label: 'Qiyamullail' },
+                            { id: 'monitoring', label: 'Monitoring' }
+                        ].map((aspect) => (
+                            <div key={aspect.id} className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">{aspect.label}</label>
+                                <div className="relative">
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        value={settings.scoring_weight[aspect.id as keyof typeof settings.scoring_weight]}
+                                        onChange={(e) => setSettings({
+                                            ...settings,
+                                            scoring_weight: {
+                                                ...settings.scoring_weight,
+                                                [aspect.id]: parseInt(e.target.value) || 0
+                                            }
+                                        })}
+                                        className="w-full bg-slate-50 border-2 border-slate-100 focus:border-emerald-400 outline-none rounded-2xl px-5 py-4 font-black text-slate-700 transition-all text-center text-xl"
+                                    />
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 font-black text-slate-300">%</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="mt-8 p-4 bg-slate-50 rounded-2xl flex items-center justify-between border-2 border-slate-100">
+                        <span className="text-xs font-black text-slate-400 uppercase tracking-widest pl-2">Total Persentase</span>
+                        <div className={cn(
+                            "px-4 py-2 rounded-xl font-black text-lg shadow-sm border-2",
+                            (settings.scoring_weight.hafalan + settings.scoring_weight.ujianTulis + settings.scoring_weight.qiyamullail + settings.scoring_weight.monitoring) === 100
+                                ? "bg-emerald-500 text-white border-emerald-400"
+                                : "bg-rose-500 text-white border-rose-400"
+                        )}>
+                            {settings.scoring_weight.hafalan + settings.scoring_weight.ujianTulis + settings.scoring_weight.qiyamullail + settings.scoring_weight.monitoring}%
                         </div>
                     </div>
                 </div>
