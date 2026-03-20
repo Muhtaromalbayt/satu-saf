@@ -14,19 +14,41 @@ export async function POST(req: NextRequest) {
 
         const db = getDb();
 
-        // 1. Fetch Streak Config
-        const streakConfigSetting = await db.select()
-            .from(systemSettings)
-            .where(eq(systemSettings.key, "streak_config"))
-            .get();
+        // 1a. Ensure total_score column exists (Self-healing migration)
+        try {
+            const tableInfo = await db.all(sql`PRAGMA table_info(scores)`);
+            const hasTotalScore = tableInfo.some((col: any) => col.name === 'total_score');
+            if (!hasTotalScore) {
+                console.log("Adding missing total_score column to scores table...");
+                await db.run(sql`ALTER TABLE scores ADD COLUMN total_score REAL DEFAULT 0`);
+            }
+        } catch (migError) {
+            console.error("Migration check failed:", migError);
+        }
 
-        const streakConfig = streakConfigSetting
-            ? JSON.parse(streakConfigSetting.value)
-            : [
-                { days: 3, points: 50 },
-                { days: 7, points: 150 },
-                { days: 14, points: 500 }
-            ];
+        // 1. Fetch Streak Config
+        let streakConfig = [
+            { days: 3, points: 50 },
+            { days: 7, points: 150 },
+            { days: 14, points: 500 }
+        ];
+
+        try {
+            const streakConfigSetting = await db.select()
+                .from(systemSettings)
+                .where(eq(systemSettings.key, "streak_config"))
+                .get();
+
+            if (streakConfigSetting) {
+                console.log("Found streak config raw:", streakConfigSetting.value);
+                const parsed = JSON.parse(streakConfigSetting.value);
+                if (Array.isArray(parsed)) {
+                    streakConfig = parsed;
+                }
+            }
+        } catch (confError) {
+            console.error("Failed to parse streak config, using defaults:", confError);
+        }
 
         // 2. Fetch all santri
         const santris = await db.select().from(userTable).where(eq(userTable.role, 'santri')).all();
@@ -121,6 +143,7 @@ export async function POST(req: NextRequest) {
                     userId: s.id,
                     monitoring: monitoringBase,
                     totalScore: totalScore,
+                    updatedAt: new Date()
                 });
             }
 
@@ -135,6 +158,13 @@ export async function POST(req: NextRequest) {
 
     } catch (error: any) {
         console.error("Sync error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        // Log more details if it's a D1 error or similar
+        if (error.message) console.error("Error message:", error.message);
+        if (error.stack) console.error("Stack trace:", error.stack);
+
+        return NextResponse.json({
+            error: "Internal Server Error",
+            details: error.message
+        }, { status: 500 });
     }
 }

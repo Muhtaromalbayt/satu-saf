@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
         const { lessonId, result } = await req.json();
 
         if (result.isCorrect) {
-            return NextResponse.json({ message: "Correct! XP Added.", correct: true });
+            return NextResponse.json({ message: "Jawaban Benar! Poin Ditambahkan.", correct: true });
         } else {
             return NextResponse.json({ message: "Wrong! Heart lost.", correct: false });
         }

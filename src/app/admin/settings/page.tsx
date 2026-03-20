@@ -9,7 +9,9 @@ import {
     Info,
     CheckCircle2,
     AlertCircle,
-    RefreshCw
+    RefreshCw,
+    Calendar,
+    Clock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -21,7 +23,16 @@ interface StreakRule {
 }
 
 export default function AdminSettingsPage() {
-    const [streakRules, setStreakRules] = useState<StreakRule[]>([]);
+    const [settings, setSettings] = useState<{
+        streak_config: StreakRule[];
+        mission_start_date: string;
+        current_journey_day: string;
+    }>({
+        streak_config: [],
+        mission_start_date: "",
+        current_journey_day: "1"
+    });
+
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [toast, setToast] = useState<{ type: 'success' | 'error', message: string } | null>(null);
@@ -33,10 +44,14 @@ export default function AdminSettingsPage() {
     const fetchSettings = async () => {
         setLoading(true);
         try {
-            const res = await fetch("/api/admin/settings/streak");
+            const res = await fetch("/api/admin/settings");
             if (res.ok) {
                 const data = await res.json();
-                setStreakRules(data);
+                setSettings({
+                    streak_config: data.streak_config || [],
+                    mission_start_date: data.mission_start_date || "",
+                    current_journey_day: data.current_journey_day || "1"
+                });
             }
         } catch (err) {
             console.error("Fetch settings error:", err);
@@ -48,10 +63,10 @@ export default function AdminSettingsPage() {
     const handleSave = async () => {
         setSaving(true);
         try {
-            const res = await fetch("/api/admin/settings/streak", {
+            const res = await fetch("/api/admin/settings", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(streakRules)
+                body: JSON.stringify(settings)
             });
 
             if (res.ok) {
@@ -68,17 +83,23 @@ export default function AdminSettingsPage() {
     };
 
     const addRule = () => {
-        setStreakRules([...streakRules, { days: 0, points: 0 }]);
+        setSettings({
+            ...settings,
+            streak_config: [...settings.streak_config, { days: 0, points: 0 }]
+        });
     };
 
     const removeRule = (index: number) => {
-        setStreakRules(streakRules.filter((_, i) => i !== index));
+        setSettings({
+            ...settings,
+            streak_config: settings.streak_config.filter((_, i) => i !== index)
+        });
     };
 
     const updateRule = (index: number, field: keyof StreakRule, value: number) => {
-        const newRules = [...streakRules];
+        const newRules = [...settings.streak_config];
         newRules[index] = { ...newRules[index], [field]: value };
-        setStreakRules(newRules);
+        setSettings({ ...settings, streak_config: newRules });
     };
 
     if (loading) {
@@ -90,11 +111,11 @@ export default function AdminSettingsPage() {
     }
 
     return (
-        <div className="max-w-4xl space-y-10 group">
+        <div className="max-w-4xl space-y-10 group pb-20">
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
                     <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">Pengaturan Sistem</h1>
-                    <p className="text-slate-500 font-medium text-lg">Konfigurasi poin, streak, dan parameter gamifikasi lainnya.</p>
+                    <p className="text-slate-500 font-medium text-lg">Konfigurasi poin, streak, dan jadwal monitoring.</p>
                 </div>
                 <Button
                     onClick={handleSave}
@@ -102,11 +123,58 @@ export default function AdminSettingsPage() {
                     className="rounded-2xl font-black bg-primary hover:bg-primary-hover h-14 px-8 shadow-xl shadow-primary/20 active:scale-95 transition-all"
                 >
                     {saving ? <RefreshCw className="mr-2 h-5 w-5 animate-spin" /> : <Save className="mr-2 h-5 w-5" />}
-                    Simpan Semua Perubahan
+                    Simpan Perubahan
                 </Button>
             </header>
 
             <div className="grid grid-cols-1 gap-10">
+
+                {/* Monitoring Schedule Card */}
+                <div className="bg-white rounded-[3rem] border-2 border-slate-100 shadow-sm overflow-hidden p-10">
+                    <div className="flex items-center gap-4 mb-8">
+                        <div className="h-14 w-14 rounded-2xl bg-blue-500/10 flex items-center justify-center">
+                            <Calendar className="h-8 w-8 text-blue-500" />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-black text-slate-900">Jadwal Pelaksanaan</h3>
+                            <p className="text-slate-400 font-bold text-sm tracking-tight">Atur kapan monitoring dimulai dan hari keberapa saat ini.</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">Tanggal Mulai Monitoring</label>
+                            <div className="relative">
+                                <input
+                                    type="date"
+                                    value={settings.mission_start_date}
+                                    onChange={(e) => setSettings({ ...settings, mission_start_date: e.target.value })}
+                                    className="w-full bg-slate-50 border-2 border-slate-100 focus:border-blue-400 outline-none rounded-2xl px-5 py-4 font-black text-slate-700 transition-all"
+                                />
+                            </div>
+                            <p className="text-[10px] text-slate-400 font-medium pl-2 italic">Format: Tahun-Bulan-Hari (Y-M-D)</p>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">Hari Berjalan (Current Day)</label>
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="14"
+                                    value={settings.current_journey_day}
+                                    onChange={(e) => setSettings({ ...settings, current_journey_day: e.target.value })}
+                                    className="w-full bg-slate-50 border-2 border-slate-100 focus:border-blue-400 outline-none rounded-2xl px-5 py-4 font-black text-slate-700 transition-all font-mono text-xl"
+                                />
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 bg-white px-3 py-1 rounded-lg border border-slate-100 text-[10px] font-black text-blue-500">
+                                    DAY {settings.current_journey_day}
+                                </div>
+                            </div>
+                            <p className="text-[10px] text-slate-400 font-medium pl-2 italic">Maksimal 14 hari sesuai peta karunia.</p>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Streak Bonus Card */}
                 <div className="bg-white rounded-[3rem] border-2 border-slate-100 shadow-sm overflow-hidden p-10">
                     <div className="flex items-center gap-4 mb-8">
@@ -114,14 +182,14 @@ export default function AdminSettingsPage() {
                             <Flame className="h-8 w-8 text-orange-500" />
                         </div>
                         <div>
-                            <h3 className="text-xl font-black text-slate-900">Mekanisme Streak Poin</h3>
-                            <p className="text-slate-400 font-bold text-sm tracking-tight">Bonus XP tambahan saat santri mencapai target hari tertentu.</p>
+                            <h3 className="text-xl font-black text-slate-900">Mekanisme Poin Streak</h3>
+                            <p className="text-slate-400 font-bold text-sm tracking-tight">Bonus Poin tambahan saat santri rutin lapor secara berturut-turut.</p>
                         </div>
                     </div>
 
                     <div className="space-y-4">
                         <AnimatePresence mode="popLayout">
-                            {streakRules.sort((a, b) => a.days - b.days).map((rule, idx) => (
+                            {[...settings.streak_config].sort((a, b) => a.days - b.days).map((rule, idx) => (
                                 <motion.div
                                     key={idx}
                                     initial={{ opacity: 0, x: -20 }}
@@ -143,7 +211,7 @@ export default function AdminSettingsPage() {
                                             </div>
                                         </div>
                                         <div className="space-y-1">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">Bonus XP</label>
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">Bonus Poin</label>
                                             <div className="relative">
                                                 <input
                                                     type="number"
@@ -172,13 +240,21 @@ export default function AdminSettingsPage() {
                             <Plus className="h-4 w-4" /> Tambah Aturan Streak
                         </button>
                     </div>
+                </div>
+            </div>
 
-                    <div className="mt-10 p-6 bg-blue-50/50 rounded-3xl border-2 border-blue-100/50 flex gap-4">
-                        <Info className="h-6 w-6 text-blue-500 shrink-0" />
-                        <div className="text-xs font-bold text-blue-700/70 leading-relaxed">
-                            Poin bonus akan ditambahkan ke total nilai saat proses <span className="text-blue-800 font-black">Sync Leaderboard</span> dijalankan di halaman Rekap Nilai. Bonus hanya diambil dari aturan streak tertinggi yang tercapai.
-                        </div>
-                    </div>
+            {/* Status Info */}
+            <div className="bg-primary/5 p-8 rounded-[2.5rem] border-2 border-primary/10 flex gap-6 items-start">
+                <div className="h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center shrink-0">
+                    <Info className="h-6 w-6 text-primary" />
+                </div>
+                <div className="space-y-2">
+                    <h4 className="font-black text-slate-900 uppercase tracking-wider text-xs">Penting untuk Diperhatikan</h4>
+                    <p className="text-slate-500 font-medium text-sm leading-relaxed">
+                        Perubahan pada <span className="text-primary font-bold">Jadwal Pelaksanaan</span> akan langsung berdampak pada tampilan misi di halaman santri.
+                        Sedangkan <span className="text-orange-500 font-bold">Bonus Poin Streak</span> hanya akan diaplikasikan jika Admin menekan tombol
+                        <span className="text-slate-900 font-black"> "Sync Leaderboard"</span> di halaman Rekap Nilai.
+                    </p>
                 </div>
             </div>
 

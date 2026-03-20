@@ -1,73 +1,86 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/server/db";
 import { systemSettings } from "@/lib/server/db/schema";
-import { eq } from "drizzle-orm";
-import { getCurrentUser } from "@/lib/server/session";
+import { eq, inArray } from "drizzle-orm";
+import { getAdminSession } from "@/lib/admin";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
     try {
+        const session = await getAdminSession();
+        if (!session) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
         const db = getDb();
         const settings = await db.select()
             .from(systemSettings)
+            .where(inArray(systemSettings.key, ["streak_config", "mission_start_date", "current_journey_day"]))
             .all();
 
-        const config: Record<string, string> = {};
+        const config: Record<string, any> = {};
         settings.forEach(s => {
-            config[s.key] = s.value;
+            if (s.key === "streak_config") {
+                config[s.key] = JSON.parse(s.value);
+            } else {
+                config[s.key] = s.value;
+            }
         });
 
-        return NextResponse.json({
-            currentDay: parseInt(config["current_journey_day"] || "1"),
-            missionStartDate: config["mission_start_date"] || "",
-            missionStatus: config["mission_status"] || "open" // "open" or "closed"
-        });
-    } catch (error) {
-        console.error("Settings GET error:", error);
+        // Defaults
+        if (!config.streak_config) {
+            config.streak_config = [
+                { days: 3, points: 50 },
+                { days: 7, points: 150 },
+                { days: 14, points: 500 }
+            ];
+        }
+        if (!config.current_journey_day) config.current_journey_day = "1";
+
+        return NextResponse.json(config);
+    } catch (error: any) {
+        console.error("Admin settings GET error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
 
-export async function PATCH(req: Request) {
+export async function POST(req: NextRequest) {
     try {
-        const user = await getCurrentUser();
-        if (!user || user.role !== "admin") {
+        const session = await getAdminSession();
+        if (!session) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const body = await req.json();
         const db = getDb();
+        const body = await req.json();
 
-        const updates = [];
+        const updates = Object.entries(body);
 
-        if (body.currentDay !== undefined) {
-            updates.push({ key: "current_journey_day", value: body.currentDay.toString() });
-        }
-        if (body.missionStartDate !== undefined) {
-            updates.push({ key: "mission_start_date", value: body.missionStartDate });
-        }
-        if (body.missionStatus !== undefined) {
-            updates.push({ key: "mission_status", value: body.missionStatus });
-        }
+        for (const [key, value] of updates) {
+            const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
 
-        for (const update of updates) {
-            await db.insert(systemSettings)
-                .values({
-                    key: update.key,
-                    value: update.value,
-                    updatedAt: new Date().toISOString()
-                })
-                .onConflictDoUpdate({
-                    target: systemSettings.key,
-                    set: {
-                        value: update.value,
+            const existing = await db.select()
+                .from(systemSettings)
+                .where(eq(systemSettings.key, key))
+                .get();
+
+            if (existing) {
+                await db.update(systemSettings)
+                    .set({
+                        value: stringValue,
                         updatedAt: new Date().toISOString()
-                    }
+                    })
+                    .where(eq(systemSettings.key, key));
+            } else {
+                await db.insert(systemSettings).values({
+                    key: key,
+                    value: stringValue,
                 });
+            }
         }
 
-        return NextResponse.json({ success: true });
-    } catch (error) {
-        console.error("Settings PATCH error:", error);
+        return NextResponse.json({ success: true, message: "Settings saved." });
+    } catch (error: any) {
+        console.error("Admin settings POST error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

@@ -6,7 +6,7 @@ import { X, Heart, Zap, ChevronLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from 'canvas-confetti';
 import { cn } from "@/lib/utils";
-import { NodeType, Slide } from "@/lib/types";
+import { NodeStatus, Slide } from "@/lib/types";
 
 // Slide Components
 import StorySlide from "./StorySlide";
@@ -71,9 +71,6 @@ export default function LessonContainer({
             }
         });
         if (currentStage) groups.push(currentStage);
-
-        // Ensure we always have exactly 6 stages visually if possible, 
-        // but here we follow the content.
         return groups;
     }, [slides]);
 
@@ -119,20 +116,20 @@ export default function LessonContainer({
             if (newStreak === 3) {
                 addXp(50);
                 setToast({
-                    message: "Luar Biasa! 3 Benar Berurutan! 🔥 +50 XP",
+                    message: "Luar Biasa! 3 Benar Berurutan! 🔥 +50 Poin",
                     pose: "cheer",
                     isVisible: true
                 });
             } else if (newStreak === 5) {
                 addXp(100);
                 setToast({
-                    message: "Menakjubkan! 5 Benar Berurutan! ⚡ +100 XP",
+                    message: "Menakjubkan! 5 Benar Berurutan! ⚡ +100 Poin",
                     pose: "cheer",
                     isVisible: true
                 });
             }
+            handleNext();
         }
-        handleNext();
     };
 
     const handleFinalComplete = () => {
@@ -140,12 +137,18 @@ export default function LessonContainer({
 
         // Perfect score bonus
         if (correctAnswersCount === quizSlidesCount && quizSlidesCount > 0) {
-            finalBonus += 200;
+            finalBonus = 200;
             // Confetti for perfect score
             confetti({
                 particleCount: 100,
                 spread: 70,
                 origin: { y: 0.6 }
+            });
+
+            setToast({
+                message: "Skor Sempurna! Bonus +200 Poin! 🌟",
+                pose: "success",
+                isVisible: true
             });
         }
 

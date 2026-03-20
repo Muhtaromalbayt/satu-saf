@@ -46,10 +46,14 @@ export default function LessonSummary({ xp, hearts, streak, onFinish }: LessonSu
             <h1 className="text-3xl font-bold text-slate-800">Lesson Complete!</h1>
 
             <div className="grid grid-cols-3 gap-4 w-full">
-                <div className="flex flex-col items-center bg-yellow-50 p-4 rounded-2xl border-2 border-yellow-200 shadow-sm">
-                    <Zap className="h-8 w-8 text-yellow-500 mb-1" />
-                    <span className="text-lg font-bold text-yellow-700">+{xp}</span>
-                    <span className="text-xs text-yellow-600 font-medium uppercase">XP</span>
+                <div className="flex items-center bg-yellow-50 p-4 rounded-2xl border-2 border-yellow-200 shadow-sm">
+                    <div className="h-10 w-10 bg-yellow-100 rounded-xl flex items-center justify-center mr-3 shadow-sm">
+                        <Zap className="h-5 w-5 text-yellow-600 fill-current" />
+                    </div>
+                    <div>
+                        <span className="text-xs text-yellow-600 font-medium uppercase">POIN</span>
+                        <p className="font-black text-slate-800 text-lg leading-none">+{xp}</p>
+                    </div>
                 </div>
                 <div className="flex flex-col items-center bg-red-50 p-4 rounded-2xl border-2 border-red-200 shadow-sm">
                     <Heart className="h-8 w-8 text-red-500 mb-1" />

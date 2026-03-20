@@ -811,7 +811,7 @@ export default function LessonEditor({ params }: { params: Promise<{ id: string 
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Poin XP yang Didapat</label>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Poin yang Didapat</label>
                                 <input
                                     type="number"
                                     placeholder="100"

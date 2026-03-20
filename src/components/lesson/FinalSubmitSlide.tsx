@@ -82,7 +82,7 @@ export default function FinalSubmitSlide({ lessonId, onComplete }: FinalSubmitSl
                         <div className="bg-emerald-50 px-8 py-6 rounded-[2.5rem] border-4 border-emerald-100 w-full max-w-sm flex items-center justify-between">
                             <div className="text-left">
                                 <p className="text-emerald-600 font-black text-xs uppercase tracking-widest">Rewards</p>
-                                <p className="text-emerald-800 font-black text-2xl">+150 XP</p>
+                                <p className="text-emerald-800 font-black text-2xl">+150 Poin</p>
                             </div>
                             <Star className="w-10 h-10 text-amber-400 fill-current animate-pulse" />
                         </div>

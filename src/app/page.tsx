@@ -175,8 +175,8 @@ export default function LandingPage() {
                   <Zap className="h-5 w-5 text-white fill-current" />
                 </div>
                 <div>
-                  <h4 className="text-white font-bold text-sm">XP & Level</h4>
-                  <p className="text-slate-400 text-xs">Kumpulkan XP dan tingkatkan level ketakwaanmu.</p>
+                  <h4 className="text-white font-bold text-sm">Poin & Level</h4>
+                  <p className="text-slate-400 text-xs">Kumpulkan Poin dan tingkatkan level ketakwaanmu.</p>
                 </div>
               </div>
             </div>
