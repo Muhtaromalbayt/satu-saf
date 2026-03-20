@@ -27,7 +27,14 @@ export async function POST(req: NextRequest) {
 
         // 1. Resolve Identity
         const mentorPassword = `nf${body.kelompok}`;
-        if (body.password === mentorPassword || body.password === "nurulfalah20") {
+        const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
+
+        if (body.password === adminPassword) {
+            // Admin Mode
+            name = "Super Admin";
+            role = "admin";
+            resolvedKelompok = "KONTROL";
+        } else if (body.password === mentorPassword || body.password === "nurulfalah20") {
             // Mentor Mode
             name = `Mentor ${body.kelompok}`;
             role = "mentor";
