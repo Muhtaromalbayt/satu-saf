@@ -179,7 +179,7 @@ export default function MapPage() {
         }
 
         const isLockedByDate = openDate && today < openDate;
-        const isDemo = user?.id === "demo_santri";
+        const isDemo = user?.id === "demo_santri" || (user?.name === "Santri Demo" && user?.kelompok === "Demo");
 
         if (!isDemo && (day > activeDay || isLockedByDate)) {
             return;
@@ -303,7 +303,7 @@ export default function MapPage() {
 
                         const isLockedByDate = openDate && today < openDate;
                         const isLockedByAdmin = day > activeDay;
-                        const isDemo = user?.id === "demo_santri";
+                        const isDemo = user?.id === "demo_santri" || (user?.name === "Santri Demo" && user?.kelompok === "Demo");
                         const isLocked = !isDemo && (isLockedByDate || isLockedByAdmin);
                         const isCurrent = day === activeDay && !isLockedByDate;
 
