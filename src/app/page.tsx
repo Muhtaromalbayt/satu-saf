@@ -6,6 +6,7 @@ import { User, BookOpen, HeartHandshake, Map as MapIcon, Trophy, Zap, Flame, Hea
 import { useAuth } from "@/components/providers/AuthProvider";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 
 export default function LandingPage() {
   const { user, loading } = useAuth();
@@ -36,7 +37,7 @@ export default function LandingPage() {
   
   const itemVariants = {
     hidden: { y: 30, opacity: 0 },
-    show: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 300, damping: 24 } }
+    show: { y: 0, opacity: 1, transition: { type: "spring" as const, stiffness: 300, damping: 24 } }
   };
 
   return (
