@@ -206,8 +206,8 @@ export default function MapPage() {
 
     return (
         <div className="min-h-screen bg-[#F4EBD0] pb-32 font-sans selection:bg-amber-100 selection:text-amber-900 relative">
-            {/* Texture Overlay */}
-            <div className="fixed inset-0 opacity-10 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/parchment.png')]" />
+            {/* Texture Overlay - CSS pattern instead of external image */}
+            <div className="fixed inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'repeating-conic-gradient(#8B7355 0% 25%, transparent 0% 50%)', backgroundSize: '3px 3px' }} />
 
             {/* Header */}
             <div className="sticky top-0 z-30 bg-emerald-900 p-5 pb-10 text-center rounded-b-[2.5rem] shadow-xl relative overflow-hidden border-b-4 border-emerald-950/30">
