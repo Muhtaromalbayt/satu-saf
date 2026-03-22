@@ -28,66 +28,64 @@ export default function MissionSelect({ isOpen, onClose, onSelectAspect, day, pr
                 exit={{ scale: 0.9, opacity: 0 }}
                 className="fixed inset-0 z-50 bg-white flex flex-col overflow-hidden"
             >
-                {/* Interactive Header */}
-                <div className="relative p-10 pb-20 bg-emerald-600 rounded-b-[5rem] text-white shadow-[0_20px_50px_rgba(5,150,105,0.3)] overflow-hidden border-b-[12px] border-emerald-700">
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.25),transparent)] pointer-events-none" />
-                    <div className="absolute -top-16 -left-16 w-64 h-64 bg-white/10 rounded-full blur-[80px] pointer-events-none" />
-                    <div className="absolute bottom-0 right-0 w-full h-1/2 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+                {/* Compact Header */}
+                <div className="relative px-4 pt-4 pb-8 bg-emerald-600 rounded-b-[2rem] text-white shadow-[0_10px_30px_rgba(5,150,105,0.25)] overflow-hidden border-b-4 border-emerald-700">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.2),transparent)] pointer-events-none" />
+                    <div className="absolute -top-8 -left-8 w-32 h-32 bg-white/10 rounded-full blur-[40px] pointer-events-none" />
 
-                    <div className="relative z-10 flex items-center justify-between mb-10">
+                    <div className="relative z-10 flex items-center justify-between mb-4">
                         <motion.button
-                            whileHover={{ scale: 1.1, rotate: -5 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => { sounds?.play("close"); onClose(); }}
-                            className="h-16 w-16 bg-white/20 backdrop-blur-2xl rounded-[2.5rem] flex items-center justify-center border-2 border-white/40 hover:bg-white/40 transition-all shadow-2xl active:scale-90"
+                            className="h-10 w-10 bg-white/20 backdrop-blur-xl rounded-xl flex items-center justify-center border border-white/30 hover:bg-white/30 transition-all active:scale-90"
                         >
-                            <X className="h-8 w-8 text-white font-black" />
+                            <X className="h-5 w-5 text-white" />
                         </motion.button>
-                        <div className="bg-amber-400 px-6 py-2.5 rounded-full border-4 border-amber-300 flex items-center gap-3 shadow-[0_10px_20px_rgba(251,191,36,0.4)]">
-                            <Trophy className="h-5 w-5 text-amber-800 fill-amber-800" />
-                            <span className="text-[10px] font-black text-amber-900 uppercase tracking-[0.2em] leading-none">Misi Spesial</span>
+                        <div className="bg-amber-400 px-3 py-1.5 rounded-full border-2 border-amber-300 flex items-center gap-1.5 shadow-md">
+                            <Trophy className="h-3.5 w-3.5 text-amber-800 fill-amber-800" />
+                            <span className="text-[9px] font-black text-amber-900 uppercase tracking-wider leading-none">Misi Spesial</span>
                         </div>
                     </div>
 
-                    <div className="relative z-10 flex flex-col items-center">
+                    <div className="relative z-10 flex items-center gap-4">
                         <motion.div
-                            initial={{ scale: 0, rotate: -45 }}
-                            animate={{ scale: 1, rotate: 0 }}
-                            transition={{ type: "spring", damping: 10 }}
-                            className="relative mb-8"
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: "spring", damping: 12 }}
+                            className="shrink-0"
                         >
-                            <div className="absolute inset-0 bg-white/20 blur-2xl rounded-full scale-150 animate-pulse" />
-                            <div className="h-28 w-28 bg-white rounded-[3rem] flex flex-col items-center justify-center border-[6px] border-amber-400 relative z-10 shadow-[0_15px_30px_rgba(0,0,0,0.2)]">
-                                <span className="text-[12px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">HARI</span>
-                                <span className="text-6xl font-black text-emerald-600 leading-none">{day}</span>
+                            <div className="h-16 w-16 bg-white rounded-2xl flex flex-col items-center justify-center border-[3px] border-amber-400 shadow-lg">
+                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-tight leading-none">HARI</span>
+                                <span className="text-3xl font-black text-emerald-600 leading-none">{day}</span>
                             </div>
                         </motion.div>
 
-                        <h2 className="text-4xl font-black tracking-tight uppercase leading-none mb-4 drop-shadow-lg text-white">Gerbang Taqwa</h2>
+                        <div className="flex-1 min-w-0">
+                            <h2 className="text-lg font-black tracking-tight uppercase leading-none mb-2 text-white">Gerbang Taqwa</h2>
 
-                        <div className="w-full max-w-[280px] space-y-2">
-                            <div className="flex justify-between items-center px-1">
-                                <span className="text-[10px] font-black uppercase tracking-widest opacity-80">Total Progress</span>
-                                <span className="text-sm font-black text-amber-300">{Math.round(progress)}%</span>
-                            </div>
-                            <div className="h-5 bg-black/20 rounded-full overflow-hidden border-2 border-white/20 p-1">
-                                <motion.div
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${progress}%` }}
-                                    className="h-full bg-gradient-to-r from-amber-400 to-orange-400 rounded-full shadow-[0_0_15px_rgba(251,191,36,0.6)]"
-                                />
+                            <div className="space-y-1">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-[9px] font-bold uppercase tracking-wider opacity-70">Progress</span>
+                                    <span className="text-xs font-black text-amber-300">{Math.round(progress)}%</span>
+                                </div>
+                                <div className="h-2.5 bg-black/20 rounded-full overflow-hidden p-0.5">
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${progress}%` }}
+                                        className="h-full bg-gradient-to-r from-amber-400 to-orange-400 rounded-full"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Aspect Cards List */}
-                <div className="flex-1 overflow-y-auto px-6 -mt-10 pt-4 pb-32">
-                    <div className="grid grid-cols-1 gap-6">
+                <div className="flex-1 overflow-y-auto px-4 -mt-4 pt-2 pb-24">
+                    <div className="grid grid-cols-1 gap-3">
                         {MONITORING_ASPECTS.map((aspect, idx) => {
                             const aspectTasks = tasks.filter(t => t.aspectId === aspect.id && t.isActive);
 
-                            // If no tasks found for this aspect, try to use hardcoded tasks from MONITORING_ASPECTS constant as a last resort
                             const tasksToShow = aspectTasks.length > 0 ? aspectTasks : (aspect as any).tasks?.map((label: string, i: number) => ({
                                 id: `fallback-${aspect.id}-${i}`,
                                 aspectId: aspect.id,
@@ -121,45 +119,32 @@ export default function MissionSelect({ isOpen, onClose, onSelectAspect, day, pr
                             return (
                                 <motion.div
                                     key={aspect.id}
-                                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                                    animate={{
-                                        opacity: 1,
-                                        scale: 1,
-                                        y: [0, -6, 0]
-                                    }}
-                                    transition={{
-                                        opacity: { duration: 0.4, delay: idx * 0.1 },
-                                        scale: { duration: 0.4, delay: idx * 0.1, type: "spring" },
-                                        y: {
-                                            repeat: Infinity,
-                                            repeatType: "mirror",
-                                            duration: 2 + idx * 0.5,
-                                            ease: "easeInOut"
-                                        }
-                                    }}
+                                    initial={{ opacity: 0, y: 15 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.3, delay: idx * 0.08 }}
                                 >
                                     <button
                                         onClick={() => { sounds?.play("open"); onSelectAspect(aspect.id); }}
                                         className={cn(
-                                            "w-full bg-white p-6 rounded-[3rem] flex items-center gap-6 border-b-[8px] transition-all hover:translate-y-[-4px] active:scale-95 shadow-2xl relative overflow-hidden group",
-                                            aspectProgress === 100 ? "border-emerald-500" : "border-slate-200"
+                                            "w-full bg-white p-3.5 rounded-2xl flex items-center gap-3 border-b-4 transition-all active:scale-[0.98] shadow-md relative overflow-hidden group",
+                                            aspectProgress === 100 ? "border-emerald-400" : "border-slate-100"
                                         )}
                                     >
-                                        <div className={cn("absolute inset-0 bg-gradient-to-br opacity-50 pointer-events-none", colors.gradient)} />
+                                        <div className={cn("absolute inset-0 bg-gradient-to-br opacity-40 pointer-events-none", colors.gradient)} />
 
                                         <div className={cn(
-                                            "h-20 w-20 rounded-[2.2rem] flex items-center justify-center transition-all shadow-[inset_0_-4px_10px_rgba(0,0,0,0.05)] border-4 relative overflow-hidden",
-                                            colors.lightBg, colors.border, colors.text, "group-hover:scale-110 group-hover:rotate-6"
+                                            "h-12 w-12 rounded-xl flex items-center justify-center shrink-0 border-2 relative overflow-hidden",
+                                            colors.lightBg, colors.border, colors.text
                                         )}>
-                                            <Icon className={cn("h-10 w-10 fill-current opacity-10 absolute scale-150")} />
-                                            <Icon className="h-10 w-10 relative z-10 drop-shadow-sm" />
+                                            <Icon className={cn("h-6 w-6 fill-current opacity-10 absolute scale-150")} />
+                                            <Icon className="h-6 w-6 relative z-10" />
                                         </div>
 
-                                        <div className="flex-1 text-left relative z-10">
-                                            <h4 className="font-black text-slate-800 uppercase tracking-tighter text-xl leading-none mb-3">{aspect.label}</h4>
+                                        <div className="flex-1 text-left relative z-10 min-w-0">
+                                            <h4 className="font-black text-slate-800 uppercase tracking-tight text-sm leading-none mb-2">{aspect.label}</h4>
 
-                                            <div className="space-y-2">
-                                                <div className="h-3 bg-slate-100 rounded-full overflow-hidden border-2 border-slate-50 p-0.5">
+                                            <div className="space-y-1">
+                                                <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                                                     <motion.div
                                                         initial={{ width: 0 }}
                                                         animate={{ width: `${aspectProgress}%` }}
@@ -167,21 +152,16 @@ export default function MissionSelect({ isOpen, onClose, onSelectAspect, day, pr
                                                     />
                                                 </div>
                                                 <div className="flex justify-between items-center">
-                                                    <div className={cn(
-                                                        "text-[9px] font-black px-2 py-0.5 rounded-full border",
-                                                        aspectProgress === 100
-                                                            ? "bg-emerald-50 border-emerald-100 text-emerald-600"
-                                                            : "bg-slate-50 border-slate-100 text-slate-400"
-                                                    )}>
-                                                        {aspectProgress === 100 ? "MISSION COMPLETE" : `${aspectTasks.length} AMALAN`}
-                                                    </div>
-                                                    <span className={cn("text-xs font-black tabular-nums", colors.dark)}>{Math.round(aspectProgress)}%</span>
+                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">
+                                                        {aspectProgress === 100 ? "SELESAI ✨" : `${aspectTasks.length} AMALAN`}
+                                                    </span>
+                                                    <span className={cn("text-[11px] font-black tabular-nums", colors.dark)}>{Math.round(aspectProgress)}%</span>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="h-14 w-14 rounded-3xl bg-slate-50 border-b-4 border-slate-100 flex items-center justify-center text-slate-300 group-hover:bg-emerald-500 group-hover:text-white group-hover:border-emerald-600 transition-all shadow-inner">
-                                            <ChevronRight className="h-8 w-8" />
+                                        <div className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-300 shrink-0">
+                                            <ChevronRight className="h-4 w-4" />
                                         </div>
                                     </button>
                                 </motion.div>
