@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Camera, MessageSquare, Send, ShieldCheck, Clock, Trash2, ArrowLeft, ChevronRight, Trophy } from "lucide-react";
+import { X, Camera, MessageSquare, Send, ShieldCheck, Clock, Trash2, ArrowLeft, ChevronRight, Trophy, Zap, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MONITORING_ASPECTS } from "@/lib/constants/monitoring";
 import CameraCapture from "./CameraCapture";
@@ -31,12 +31,12 @@ export default function TaskMission({ isOpen, onClose, day, aspectId, tasks, log
 
     const getLog = (taskName: string) => logs.find(l => l.deedName === taskName);
 
-    const colorMap: Record<string, { bg: string, accent: string, text: string, gradient: string }> = {
-        rose: { bg: "bg-rose-500", accent: "bg-rose-400", text: "text-rose-500", gradient: "from-rose-500 to-rose-600" },
-        amber: { bg: "bg-amber-500", accent: "bg-amber-400", text: "text-amber-500", gradient: "from-amber-500 to-amber-600" },
-        emerald: { bg: "bg-emerald-500", accent: "bg-emerald-400", text: "text-emerald-500", gradient: "from-emerald-500 to-emerald-600" },
-        indigo: { bg: "bg-indigo-500", accent: "bg-indigo-400", text: "text-indigo-500", gradient: "from-indigo-500 to-indigo-600" },
-        violet: { bg: "bg-violet-500", accent: "bg-violet-400", text: "text-violet-500", gradient: "from-violet-500 to-violet-600" },
+    const colorMap: Record<string, { bg: string, accent: string, text: string, gradient: string, light: string, border: string }> = {
+        rose: { bg: "bg-rose-500", accent: "bg-rose-400", text: "text-rose-500", gradient: "from-rose-500 via-pink-500 to-rose-600", light: "bg-rose-50", border: "border-rose-200" },
+        amber: { bg: "bg-amber-500", accent: "bg-amber-400", text: "text-amber-500", gradient: "from-amber-500 via-orange-400 to-amber-600", light: "bg-amber-50", border: "border-amber-200" },
+        emerald: { bg: "bg-emerald-500", accent: "bg-emerald-400", text: "text-emerald-500", gradient: "from-emerald-500 via-teal-400 to-emerald-600", light: "bg-emerald-50", border: "border-emerald-200" },
+        indigo: { bg: "bg-indigo-500", accent: "bg-indigo-400", text: "text-indigo-500", gradient: "from-indigo-500 via-blue-400 to-indigo-600", light: "bg-indigo-50", border: "border-indigo-200" },
+        violet: { bg: "bg-violet-500", accent: "bg-violet-400", text: "text-violet-500", gradient: "from-violet-500 via-purple-400 to-violet-600", light: "bg-violet-50", border: "border-violet-200" },
     };
 
     const colors = colorMap[aspect.color] || colorMap.rose;
@@ -74,6 +74,11 @@ export default function TaskMission({ isOpen, onClose, day, aspectId, tasks, log
         setExpandedTask(null);
     };
 
+    const doneCount = tasks.filter(t => {
+        const log = getLog(t.label);
+        return log?.status === "verified" || log?.status === "pending";
+    }).length;
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -91,39 +96,62 @@ export default function TaskMission({ isOpen, onClose, day, aspectId, tasks, log
                         />
                     )}
 
-                    {/* Immersive Header */}
-                    <div className={cn("relative p-10 pb-20 rounded-b-[5rem] text-white shadow-[0_20px_50px_rgba(0,0,0,0.15)] overflow-hidden border-b-[12px]", colors.bg, "border-black/20")}>
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.25),transparent)] pointer-events-none" />
-                        <div className="absolute -top-16 -left-16 w-64 h-64 bg-white/10 rounded-full blur-[80px] pointer-events-none" />
-                        <div className="absolute bottom-0 right-0 w-full h-1/2 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
-
-                        <div className="relative z-10 flex items-center justify-between mb-10">
-                            <motion.button
-                                whileHover={{ scale: 1.1, rotate: -5 }}
-                                whileTap={{ scale: 0.9 }}
-                                onClick={() => { sounds?.play("close"); onClose(); }}
-                                className="h-16 w-16 bg-white/20 backdrop-blur-2xl rounded-[2.5rem] flex items-center justify-center border-2 border-white/40 hover:bg-white/40 transition-all shadow-2xl active:scale-90"
-                            >
-                                <ArrowLeft className="h-8 w-8 text-white font-black" />
-                            </motion.button>
-                            <div className="bg-amber-400 px-6 py-2.5 rounded-full border-4 border-amber-300 flex items-center gap-3 shadow-[0_10px_20px_rgba(251,191,36,0.4)]">
-                                <Trophy className="h-5 w-5 text-amber-800 fill-amber-800" />
-                                <span className="text-[10px] font-black text-amber-900 uppercase tracking-[0.2em] leading-none">Misi Hari {day}</span>
-                            </div>
+                    {/* ═══ COMPACT HEADER ═══ */}
+                    <div className={cn("relative px-4 pt-4 pb-5 rounded-b-[2rem] text-white overflow-hidden shadow-lg", `bg-gradient-to-br ${colors.gradient}`)}>
+                        {/* Decorative elements */}
+                        <div className="absolute inset-0 pointer-events-none">
+                            <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+                            <div className="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-black/10 to-transparent" />
                         </div>
 
-                        <div className="relative z-10 flex flex-col items-center text-center">
-                            <h2 className="text-4xl font-black tracking-tight uppercase leading-none mb-4 drop-shadow-lg drop-shadow-emerald-900/50">{aspect.label}</h2>
-                            <div className="flex items-center gap-3 bg-white/20 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/20">
-                                <ShieldCheck className="h-4 w-4 text-amber-300" />
-                                <p className="text-[10px] font-black uppercase tracking-[0.1em] text-white">Target Kejujuran & Kedisplinan</p>
+                        {/* Top bar */}
+                        <div className="relative z-10 flex items-center gap-3 mb-3">
+                            <motion.button
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => { sounds?.play("close"); onClose(); }}
+                                className="h-9 w-9 bg-white/15 backdrop-blur-xl rounded-xl flex items-center justify-center border border-white/20 active:bg-white/25 transition-all shrink-0"
+                            >
+                                <ArrowLeft className="h-4.5 w-4.5 text-white" />
+                            </motion.button>
+
+                            <div className="flex-1 min-w-0">
+                                <motion.h2
+                                    initial={{ y: 8, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    className="text-lg font-black tracking-tight uppercase leading-none text-white truncate"
+                                >
+                                    {aspect.label}
+                                </motion.h2>
                             </div>
+
+                            <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ delay: 0.2, type: "spring" }}
+                                className="bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/15 flex items-center gap-1.5 shrink-0"
+                            >
+                                <Trophy className="h-3 w-3 text-amber-300 fill-amber-300" />
+                                <span className="text-[9px] font-black uppercase tracking-wider leading-none">Hari {day}</span>
+                            </motion.div>
+                        </div>
+
+                        {/* Progress strip */}
+                        <div className="relative z-10 flex items-center gap-3">
+                            <div className="flex-1 h-2 bg-black/20 rounded-full overflow-hidden p-[1px]">
+                                <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${tasks.length > 0 ? (doneCount / tasks.length) * 100 : 0}%` }}
+                                    transition={{ duration: 0.8, ease: "easeOut" }}
+                                    className="h-full bg-gradient-to-r from-white/80 to-white/60 rounded-full"
+                                />
+                            </div>
+                            <span className="text-[10px] font-black text-white/80 tabular-nums shrink-0">{doneCount}/{tasks.length}</span>
                         </div>
                     </div>
 
-                    {/* Task List Section */}
-                    <div className="flex-1 overflow-y-auto px-6 -mt-8 pb-32">
-                        <div className="space-y-4">
+                    {/* ═══ TASK LIST ═══ */}
+                    <div className="flex-1 overflow-y-auto px-4 pt-4 pb-28">
+                        <div className="space-y-3">
                             {tasks.map((taskItem, idx) => {
                                 const taskName = taskItem.label;
                                 const log = getLog(taskName);
@@ -134,137 +162,145 @@ export default function TaskMission({ isOpen, onClose, day, aspectId, tasks, log
                                 return (
                                     <motion.div
                                         key={idx}
-                                        initial={{ opacity: 0, scale: 0.9, y: 30 }}
-                                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                                        transition={{ delay: idx * 0.1, type: "spring", damping: 15 }}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: idx * 0.08, type: "spring", damping: 18 }}
                                         className={cn(
-                                            "rounded-[3rem] transition-all border-b-[8px] overflow-hidden shadow-2xl",
-                                            isExpanded ? "bg-white border-slate-300 translate-y-[-4px]" : "bg-white border-slate-200"
+                                            "rounded-2xl transition-all overflow-hidden border",
+                                            isExpanded
+                                                ? "bg-white shadow-xl border-slate-200 ring-1 ring-slate-100"
+                                                : "bg-white shadow-md border-slate-100 active:scale-[0.98]"
                                         )}
                                     >
                                         <button
                                             onClick={() => handleExpand(taskName)}
-                                            className="w-full flex items-center gap-6 p-6 text-left active:scale-98 transition-transform relative overflow-hidden"
+                                            className="w-full flex items-center gap-3.5 p-4 text-left transition-all relative"
                                         >
+                                            {/* Status icon */}
                                             <div className={cn(
-                                                "h-16 w-16 rounded-[1.8rem] flex items-center justify-center flex-shrink-0 transition-all shadow-[inset_0_-4px_8px_rgba(0,0,0,0.05)] border-2 relative overflow-hidden",
+                                                "h-11 w-11 rounded-xl flex items-center justify-center shrink-0 transition-all border-2",
                                                 isDone
-                                                    ? "bg-emerald-500 text-white border-emerald-400"
+                                                    ? "bg-emerald-500 text-white border-emerald-400 shadow-md shadow-emerald-500/20"
                                                     : isPending
-                                                        ? "bg-amber-500 text-white border-amber-400 shadow-[0_10px_20px_rgba(245,158,11,0.2)]"
+                                                        ? "bg-amber-500 text-white border-amber-400 shadow-md shadow-amber-500/20"
                                                         : "bg-slate-50 text-slate-300 border-slate-200"
                                             )}>
                                                 {isDone ? (
-                                                    <ShieldCheck className="h-10 w-10 text-white drop-shadow-sm" />
+                                                    <CheckCircle2 className="h-6 w-6 text-white" />
                                                 ) : isPending ? (
-                                                    <Clock className="h-9 w-9 text-white animate-pulse" />
+                                                    <Clock className="h-5 w-5 text-white animate-pulse" />
                                                 ) : (
-                                                    <div className="h-7 w-7 rounded-full border-[6px] border-slate-200 border-t-slate-300 opacity-50" />
+                                                    <div className="h-5 w-5 rounded-full border-[3px] border-slate-200" />
                                                 )}
                                             </div>
-                                            <div className="flex-1 relative z-10">
+
+                                            {/* Label + status */}
+                                            <div className="flex-1 min-w-0">
                                                 <h4 className={cn(
-                                                    "font-black text-base uppercase tracking-tight leading-none mb-2",
-                                                    isDone || isPending ? "text-slate-800" : "text-slate-400"
+                                                    "font-extrabold text-sm uppercase tracking-tight leading-none mb-1.5",
+                                                    isDone || isPending ? "text-slate-800" : "text-slate-500"
                                                 )}>
                                                     {taskName}
                                                 </h4>
-                                                <div className="flex items-center gap-2">
+                                                <span className={cn(
+                                                    "text-[9px] font-bold uppercase tracking-wider inline-flex items-center gap-1 px-2 py-0.5 rounded-md",
+                                                    isDone
+                                                        ? "bg-emerald-50 text-emerald-600"
+                                                        : isPending
+                                                            ? "bg-amber-50 text-amber-600"
+                                                            : "bg-slate-50 text-slate-400"
+                                                )}>
                                                     {isDone ? (
-                                                        <div className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-500 border border-emerald-100">
-                                                            Poin Didapat +10
-                                                        </div>
+                                                        <><Zap className="h-2.5 w-2.5" /> Poin +10</>
                                                     ) : isPending ? (
-                                                        <div className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-50 text-amber-500 border border-amber-100">
-                                                            Menunggu Verifikasi
-                                                        </div>
+                                                        <><Clock className="h-2.5 w-2.5" /> Menunggu Verifikasi</>
                                                     ) : (
-                                                        <div className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-50 text-slate-400 border border-slate-100">
-                                                            Tugas Wajib
-                                                        </div>
+                                                        "Tugas Wajib"
                                                     )}
-                                                </div>
+                                                </span>
                                             </div>
+
+                                            {/* Chevron */}
                                             {!isDone && !isPending && (
                                                 <motion.div
-                                                    animate={isExpanded ? { rotate: 90, scale: 1.2 } : { rotate: 0, scale: 1 }}
-                                                    className="h-12 w-12 rounded-[1.2rem] bg-slate-50 flex items-center justify-center text-slate-400 border-b-2 border-slate-200"
+                                                    animate={isExpanded ? { rotate: 90 } : { rotate: 0 }}
+                                                    className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0 border border-slate-100"
                                                 >
-                                                    <ChevronRight className="h-7 w-7" />
+                                                    <ChevronRight className="h-4 w-4" />
                                                 </motion.div>
                                             )}
                                         </button>
 
+                                        {/* ═══ EXPANDED FORM ═══ */}
                                         <AnimatePresence>
                                             {isExpanded && !isDone && !isPending && (
                                                 <motion.div
                                                     initial={{ height: 0, opacity: 0 }}
                                                     animate={{ height: "auto", opacity: 1 }}
                                                     exit={{ height: 0, opacity: 0 }}
-                                                    className="px-6 pb-6 space-y-6 overflow-hidden"
+                                                    className="px-4 pb-4 space-y-4 overflow-hidden"
                                                 >
                                                     <div className="h-px bg-slate-100 w-full" />
 
-                                                    {/* Evidence Preview */}
-                                                    <div className="grid grid-cols-1 gap-4">
-                                                        <div className="space-y-3">
-                                                            <div className="flex items-center justify-between">
-                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                                                    <Camera className="h-3 w-3" /> Bukti Foto Terkini
-                                                                </label>
-                                                                {evidenceUrl && (
-                                                                    <button onClick={() => setEvidenceUrl("")} className="text-[9px] font-black text-rose-500 flex items-center gap-1 uppercase tracking-widest">
-                                                                        <Trash2 className="h-3 w-3" /> Hapus
-                                                                    </button>
-                                                                )}
-                                                            </div>
-
-                                                            {evidenceUrl ? (
-                                                                <div className="relative rounded-[2rem] overflow-hidden border-4 border-white shadow-2xl flex items-center justify-center bg-slate-100">
-                                                                    <img src={evidenceUrl} alt="Bukti" className="w-full aspect-video object-cover" />
-                                                                    <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-2 text-[8px] font-black text-white uppercase tracking-widest">
-                                                                        <Clock className="h-3 w-3 text-emerald-400" />
-                                                                        {capturedAt ? new Date(capturedAt).toLocaleTimeString("id-ID") : "-"}
-                                                                    </div>
-                                                                </div>
-                                                            ) : (
-                                                                <button
-                                                                    onClick={() => { sounds?.play("click"); setShowCamera(true); }}
-                                                                    className="w-full aspect-video bg-slate-50 rounded-[2rem] border-4 border-dashed border-slate-200 flex flex-col items-center justify-center gap-3 text-slate-400 hover:border-emerald-300 hover:bg-emerald-50/50 transition-all group active:scale-95"
-                                                                >
-                                                                    <div className="h-16 w-16 rounded-3xl bg-white flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
-                                                                        <Camera className="h-8 w-8 text-emerald-500" />
-                                                                    </div>
-                                                                    <span className="text-[10px] font-black uppercase tracking-widest">Buka Kamera Misi</span>
+                                                    {/* Photo evidence */}
+                                                    <div className="space-y-2">
+                                                        <div className="flex items-center justify-between">
+                                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                                                <Camera className="h-3 w-3" /> Bukti Foto
+                                                            </label>
+                                                            {evidenceUrl && (
+                                                                <button onClick={() => setEvidenceUrl("")} className="text-[9px] font-bold text-rose-500 flex items-center gap-1 uppercase tracking-wider hover:text-rose-600">
+                                                                    <Trash2 className="h-2.5 w-2.5" /> Hapus
                                                                 </button>
                                                             )}
                                                         </div>
 
-                                                        {/* Reflection Input */}
-                                                        <div className="space-y-3">
-                                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                                                <MessageSquare className="h-3 w-3" /> Catatan Kejujuran
-                                                            </label>
-                                                            <textarea
-                                                                value={reflection}
-                                                                onChange={(e) => setReflection(e.target.value)}
-                                                                rows={3}
-                                                                placeholder="Tuliskan pengalamanmu hari ini..."
-                                                                className="w-full p-5 rounded-[2rem] bg-slate-50 border-2 border-slate-100 focus:border-emerald-500 focus:bg-white outline-none font-bold text-sm transition-all resize-none shadow-inner text-slate-700"
-                                                            />
-                                                        </div>
+                                                        {evidenceUrl ? (
+                                                            <div className="relative rounded-xl overflow-hidden border-2 border-slate-100 shadow-sm">
+                                                                <img src={evidenceUrl} alt="Bukti" className="w-full aspect-video object-cover" />
+                                                                <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg flex items-center gap-1.5 text-[8px] font-bold text-white uppercase tracking-wider">
+                                                                    <Clock className="h-2.5 w-2.5 text-emerald-400" />
+                                                                    {capturedAt ? new Date(capturedAt).toLocaleTimeString("id-ID") : "-"}
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <button
+                                                                onClick={() => { sounds?.play("click"); setShowCamera(true); }}
+                                                                className="w-full aspect-[2/1] bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-2 text-slate-400 hover:border-emerald-300 hover:bg-emerald-50/50 transition-all group active:scale-[0.98]"
+                                                            >
+                                                                <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                                                                    <Camera className="h-5 w-5 text-emerald-500" />
+                                                                </div>
+                                                                <span className="text-[10px] font-bold uppercase tracking-wider">Buka Kamera</span>
+                                                            </button>
+                                                        )}
                                                     </div>
 
+                                                    {/* Reflection */}
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                                            <MessageSquare className="h-3 w-3" /> Catatan
+                                                        </label>
+                                                        <textarea
+                                                            value={reflection}
+                                                            onChange={(e) => setReflection(e.target.value)}
+                                                            rows={2}
+                                                            placeholder="Tuliskan pengalamanmu..."
+                                                            className="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-emerald-400 focus:bg-white outline-none font-semibold text-sm transition-all resize-none text-slate-700 placeholder:text-slate-300"
+                                                        />
+                                                    </div>
+
+                                                    {/* Submit button */}
                                                     <button
                                                         onClick={() => handleSave(taskName)}
                                                         disabled={saving || !evidenceUrl || !reflection}
                                                         className={cn(
-                                                            "w-full py-5 rounded-[2rem] flex items-center justify-center gap-3 font-black text-white shadow-2xl transition-all active:scale-95 disabled:opacity-50 uppercase tracking-widest text-xs",
-                                                            colors.bg, "shadow-current/20"
+                                                            "w-full py-3.5 rounded-xl flex items-center justify-center gap-2 font-bold text-white shadow-lg transition-all active:scale-[0.97] disabled:opacity-40 uppercase tracking-wider text-xs",
+                                                            `bg-gradient-to-r ${colors.gradient}`
                                                         )}
                                                     >
-                                                        {saving ? "MENYIMPAN DATA..." : "LAPORKAN MISI SELESAI"}
-                                                        <Send className="h-4 w-4" />
+                                                        {saving ? "MENYIMPAN..." : "LAPORKAN MISI"}
+                                                        <Send className="h-3.5 w-3.5" />
                                                     </button>
                                                 </motion.div>
                                             )}
