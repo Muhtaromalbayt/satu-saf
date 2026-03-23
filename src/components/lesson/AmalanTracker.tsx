@@ -85,7 +85,11 @@ export default function AmalanTracker({ items, onComplete }: AmalanTrackerProps)
     // Save to localStorage
     useEffect(() => {
         if (isLoaded) {
-            localStorage.setItem("satusaf-amalan-progress", JSON.stringify({ checked, tadarusCount }));
+            try {
+                localStorage.setItem("satusaf-amalan-progress", JSON.stringify({ checked, tadarusCount }));
+            } catch (e) {
+                console.error("Failed to save amalan progress:", e);
+            }
         }
     }, [checked, tadarusCount, isLoaded]);
 

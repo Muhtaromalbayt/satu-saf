@@ -58,12 +58,16 @@ export function GamificationProvider({ children }: { children: React.ReactNode }
 
     // Save to local storage on change
     useEffect(() => {
-        localStorage.setItem("hearts", hearts.toString());
-        localStorage.setItem("xp", xp.toString());
-        localStorage.setItem("streak", streak.toString());
-        localStorage.setItem("completedNodes", JSON.stringify(completedNodes));
-        localStorage.setItem("chapterStatus", JSON.stringify(chapterStatus));
-        localStorage.setItem("tadarusCount", tadarusCount.toString());
+        try {
+            localStorage.setItem("hearts", hearts.toString());
+            localStorage.setItem("xp", xp.toString());
+            localStorage.setItem("streak", streak.toString());
+            localStorage.setItem("completedNodes", JSON.stringify(completedNodes));
+            localStorage.setItem("chapterStatus", JSON.stringify(chapterStatus));
+            localStorage.setItem("tadarusCount", tadarusCount.toString());
+        } catch (e) {
+            console.error("Failed to save Gamification state to localStorage:", e);
+        }
     }, [hearts, xp, streak, completedNodes, chapterStatus, tadarusCount]);
 
     const decrementHearts = () => {
