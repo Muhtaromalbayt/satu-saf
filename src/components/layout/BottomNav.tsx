@@ -132,7 +132,7 @@ export default function BottomNav() {
                 className={cn(
                     "fixed bottom-0 z-50 w-full transition-all duration-1000 border-t backdrop-blur-xl",
                     isMidnight 
-                        ? "bg-slate-950/80 border-indigo-500/20 shadow-[0_-4px_30px_rgba(0,0,0,0.3)]" 
+                        ? "bg-slate-900/80 border-slate-800 shadow-[0_-4px_30px_rgba(0,0,0,0.5)]" 
                         : "bg-white/80 border-white/20 shadow-[0_-4px_30px_rgba(0,0,0,0.06)]"
                 )}
                 onMouseEnter={() => resetHideTimer()}

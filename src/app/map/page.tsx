@@ -263,7 +263,7 @@ export default function MapPage() {
     return (
         <div className={cn(
             "min-h-screen pb-32 font-sans selection:bg-amber-100 selection:text-amber-900 relative transition-colors duration-1000",
-            isMidnight ? "bg-slate-950" : "bg-[#F4EBD0]"
+            isMidnight ? "bg-background" : "bg-[#F4EBD0]"
         )}>
             {/* Twinkling Stars for Midnight Mode */}
             {isMidnight && (
@@ -306,7 +306,7 @@ export default function MapPage() {
             <div className={cn(
                 "sticky top-0 z-30 p-5 pb-10 text-center rounded-b-[2.5rem] shadow-xl relative overflow-hidden border-b-4 transition-colors duration-1000",
                 isMidnight 
-                    ? "bg-slate-900 border-slate-950/30" 
+                    ? "bg-slate-900/80 backdrop-blur-xl border-slate-800" 
                     : "bg-emerald-900 border-emerald-950/30"
             )}>
                 <motion.div
@@ -354,15 +354,21 @@ export default function MapPage() {
                 <motion.div 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-white/80 backdrop-blur-sm border-2 border-slate-100 p-4 rounded-2xl shadow-sm flex items-center gap-4 overflow-hidden relative"
+                    className={cn(
+                        "p-4 rounded-2xl shadow-sm flex items-center gap-4 overflow-hidden relative border-2 transition-colors duration-1000",
+                        isMidnight ? "bg-card border-slate-700/50" : "bg-white/80 backdrop-blur-sm border-slate-100"
+                    )}
                 >
                     <div className="absolute top-0 right-0 p-2 opacity-5 scale-150"><Target className="h-12 w-12 text-primary" /></div>
-                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <div className={cn(
+                        "h-10 w-10 rounded-xl flex items-center justify-center shrink-0",
+                        isMidnight ? "bg-primary/20" : "bg-primary/10"
+                    )}>
                         <Star className="h-5 w-5 text-primary fill-primary/20" />
                     </div>
                     <div>
-                        <h4 className="text-xs font-black text-slate-800 uppercase tracking-tight">Kebut Semangatmu!</h4>
-                        <p className="text-[11px] font-medium text-slate-500 leading-tight mt-0.5">
+                        <h4 className={cn("text-xs font-black uppercase tracking-tight", isMidnight ? "text-emerald-400" : "text-slate-800")}>Kebut Semangatmu!</h4>
+                        <p className={cn("text-[11px] font-bold leading-tight mt-0.5", isMidnight ? "text-slate-400" : "text-slate-500")}>
                             {getDayProgress(clampedActiveDay) < 100 
                                 ? `Tinggal ${Math.max(1, Math.round(100 - getDayProgress(clampedActiveDay)))}% lagi untuk mencapai target hari ini! 🔥` 
                                 : "Luar biasa! Target hari ini telah tercapai sepenuhnya. ✨"}
@@ -579,10 +585,10 @@ export default function MapPage() {
                                     <div className={cn(
                                         "h-24 w-24 rounded-[2.5rem] flex items-center justify-center relative transition-all shadow-[0_15px_40px_rgba(0,0,0,0.15)] border-b-[8px] border-x-4 border-t-2 overflow-hidden",
                                         isLocked
-                                            ? isMidnight ? "bg-slate-800 border-slate-900 opacity-40" : "bg-slate-200/50 border-slate-300/50"
+                                            ? isMidnight ? "bg-slate-800/50 border-slate-900/50 opacity-40" : "bg-slate-200/50 border-slate-300/50"
                                             : isCurrent
-                                                ? isMidnight ? "bg-indigo-500 border-indigo-700 ring-[12px] ring-indigo-500/20" : "bg-amber-400 border-amber-600 ring-[12px] ring-amber-400/20"
-                                                : isMidnight ? "bg-slate-700 border-slate-900" : "bg-emerald-600 border-emerald-800 shadow-emerald-900/10"
+                                                ? isMidnight ? "bg-indigo-600 border-indigo-800 ring-[12px] ring-indigo-500/10" : "bg-amber-400 border-amber-600 ring-[12px] ring-amber-400/20"
+                                                : isMidnight ? "bg-slate-800 border-slate-900" : "bg-emerald-600 border-emerald-800 shadow-emerald-900/10"
                                     )}>
                                         {isCurrent && (
                                             <motion.div 

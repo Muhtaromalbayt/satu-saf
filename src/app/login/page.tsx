@@ -220,7 +220,7 @@ function LoginForm() {
                                             className={cn(
                                                 "w-full appearance-none p-4 rounded-2xl border-2 outline-none font-bold transition-all text-sm",
                                                 isMidnight 
-                                                    ? "bg-slate-900 border-slate-800 text-slate-200 focus:border-indigo-500" 
+                                                    ? "bg-slate-800/50 border-slate-700/50 text-slate-200 focus:border-indigo-500" 
                                                     : "bg-white border-slate-100 focus:border-primary text-slate-700"
                                             )}
                                             required
@@ -248,7 +248,7 @@ function LoginForm() {
                                             className={cn(
                                                 "w-full appearance-none p-4 rounded-2xl border-2 outline-none font-bold transition-all text-sm disabled:opacity-50",
                                                 isMidnight 
-                                                    ? "bg-slate-900 border-slate-800 text-slate-200 focus:border-indigo-500" 
+                                                    ? "bg-slate-800/50 border-slate-700/50 text-slate-200 focus:border-indigo-500" 
                                                     : "bg-white border-slate-100 focus:border-primary text-slate-700"
                                             )}
                                             disabled={!isParentMode && !selectedKelompok}
@@ -392,20 +392,20 @@ export default function LoginPage() {
     return (
         <div className={cn(
             "min-h-screen flex flex-col items-center justify-center p-5 transition-colors duration-1000",
-            isMidnight ? "bg-slate-950" : "bg-slate-50 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:20px_20px]"
+            isMidnight ? "bg-background" : "bg-slate-50 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:20px_20px]"
         )}>
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={cn(
-                    "w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden border transition-all duration-1000",
-                    isMidnight ? "bg-slate-900 border-slate-800" : "bg-white border-slate-100"
+                    "w-full max-w-sm rounded-[2.5rem] shadow-2xl overflow-hidden border transition-all duration-1000",
+                    isMidnight ? "bg-card border-slate-700/50" : "bg-white border-slate-100"
                 )}
             >
                 {/* Header */}
                 <div className={cn(
                     "p-6 flex flex-col items-center border-b transition-colors",
-                    isMidnight ? "bg-indigo-500/10 border-slate-800" : "bg-primary/5 border-slate-50"
+                    isMidnight ? "bg-indigo-500/10 border-slate-700/50" : "bg-primary/5 border-slate-50"
                 )}>
                     <Mascot pose="success" className="mb-3 scale-90" />
                     <h1 className={cn("text-3xl font-black tracking-tight", isMidnight ? "text-white" : "text-slate-800")}>SATU SAF</h1>

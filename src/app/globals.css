@@ -141,12 +141,16 @@
 }
 
 .dark-theme {
-  --background: #020617; /* Slate 950 for deeper midnight feel */
-  --foreground: #FDFCF6;
-  --card: #0F172A; /* Slate 900 for dark cards */
-  --card-foreground: #FDFCF6;
-  --border: #1E293B;
-  --primary: #10B981;
+  --background: #0f172a; /* Slate 900 - dark but with a blue hint */
+  --foreground: #f8fafc; /* Slate 50 */
+  --card: #1e293b; /* Slate 800 - distinct surface */
+  --card-foreground: #f8fafc;
+  --border: #334155; /* Slate 700 */
+  --primary: #10b981; /* Emerald 500 */
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8; /* Slate 400 */
+  --accent: #334155;
+  --accent-foreground: #f8fafc;
 }
 
 * {

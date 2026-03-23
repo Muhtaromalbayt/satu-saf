@@ -79,7 +79,7 @@ export default function LaporPakPage() {
     return (
         <div className={cn(
             "min-h-screen pb-32 font-sans relative overflow-x-hidden transition-colors duration-1000",
-            isMidnight ? "bg-slate-950" : "bg-[#F0F2F5]"
+            isMidnight ? "bg-background" : "bg-[#F0F2F5]"
         )}>
             {/* Islamic Decorative Elements */}
             <div className="fixed top-20 left-0 w-32 h-32 bg-emerald-500/5 blur-3xl rounded-full pointer-events-none" />
@@ -88,7 +88,7 @@ export default function LaporPakPage() {
             {/* Header */}
             <div className={cn(
                 "sticky top-0 z-30 pt-6 pb-12 text-center rounded-b-[3rem] shadow-2xl relative overflow-hidden border-b-8 transition-colors duration-1000",
-                isMidnight ? "bg-slate-900 border-slate-950/20" : "bg-emerald-900 border-emerald-950/20"
+                isMidnight ? "bg-slate-900/80 backdrop-blur-xl border-slate-950/20" : "bg-emerald-900 border-emerald-950/20"
             )}>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/islamic-art.png')] pointer-events-none" />
 
@@ -219,13 +219,13 @@ export default function LaporPakPage() {
                                     <div className={cn(
                                         "p-1 rounded-[1.75rem] rounded-tl-none shadow-md relative max-w-[95%] border transition-colors duration-1000 group",
                                         isMidnight 
-                                            ? "bg-slate-900 border-slate-800 shadow-slate-950/50" 
+                                            ? "bg-card border-slate-700/50 shadow-slate-950/50" 
                                             : "bg-white border-slate-100 shadow-slate-200/50"
                                     )}>
                                         {/* Tail */}
                                         <div className={cn(
                                             "absolute top-0 left-0 w-4 h-4 -translate-x-1.5 transition-colors duration-1000",
-                                            isMidnight ? "bg-slate-900" : "bg-white"
+                                            isMidnight ? "bg-card" : "bg-white"
                                         )}
                                             style={{ clipPath: 'polygon(100% 0, 0 0, 100% 100%)' }} />
 
