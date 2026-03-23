@@ -11,6 +11,7 @@ async function seedTasks() {
         console.log(`Processing aspect: ${aspect.label}`);
         for (let i = 0; i < aspect.tasks.length; i++) {
             const taskLabel = aspect.tasks[i];
+            const isMandatory = ["Sholat Subuh", "Sholat Dzuhur", "Sholat Ashar", "Sholat Maghrib", "Sholat Isya"].includes(taskLabel);
 
             // Check if exists
             const existing = await db.select()
@@ -28,7 +29,7 @@ async function seedTasks() {
                     aspectId: aspect.id,
                     label: taskLabel,
                     displayOrder: i,
-                    isActive: true
+                    isActive: isMandatory
                 });
                 console.log(`  + Added: ${taskLabel}`);
             } else {

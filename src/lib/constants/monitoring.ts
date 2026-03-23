@@ -10,10 +10,13 @@ export const MONITORING_ASPECTS = [
             "Sholat Maghrib",
             "Sholat Isya",
             "Sholat Rawatib",
-            "Sholat Tahajud",
             "Sholat Dhuha",
-            "Sholat Tahiyatul Masjid",
-            "Tadarus Al-Quran (1 Halaman)"
+            "Tadarus Al-Quran (1 Halaman)",
+            "Subuh Caller",
+            "Masjid Hunter",
+            "Quranic Explorer",
+            "Secret Sadaqah",
+            "Digital Detox"
         ]
     },
     {
@@ -22,8 +25,10 @@ export const MONITORING_ASPECTS = [
         color: "amber",
         tasks: [
             "Membantu Pekerjaan Rumah",
-            "Berkata Lembut & Sopan",
-            "Mendoakan Orang Tua"
+            "Mendoakan Orang Tua Sehabis Sholat",
+            "The Unplugged Chat",
+            "Master Chef",
+            "Undercover Helper"
         ]
     },
     {
@@ -31,9 +36,11 @@ export const MONITORING_ASPECTS = [
         label: "Lingkungan",
         color: "emerald",
         tasks: [
-            "Menjaga Kebersihan",
             "Infaq Harian",
-            "Membantu Teman/Tetangga"
+            "Menjaga Kebersihan Sekitar",
+            "Zero Waste Day",
+            "Green Thumb",
+            "Plastic Bounty Hunter"
         ]
     },
     {
@@ -42,9 +49,11 @@ export const MONITORING_ASPECTS = [
         color: "indigo",
         tasks: [
             "Belajar Mandiri",
-            "Olahraga Harian",
-            "Menjaga Kebersihan Diri",
-            "Tidur Tepat Waktu"
+            "Olahraga Harian (15 Menit)",
+            "Tidur Tepat Waktu (Sebelum Jam 10 Malam)",
+            "Brain Gain",
+            "Skill Up",
+            "Mindful Journaling"
         ]
     }
 ];

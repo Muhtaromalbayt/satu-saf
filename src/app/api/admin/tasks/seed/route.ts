@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
         for (const aspect of MONITORING_ASPECTS) {
             for (let i = 0; i < aspect.tasks.length; i++) {
                 const taskLabel = aspect.tasks[i];
+                const isMandatory = ["Sholat Subuh", "Sholat Dzuhur", "Sholat Ashar", "Sholat Maghrib", "Sholat Isya"].includes(taskLabel);
 
                 // Check if exists
                 const existing = await db.select()
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
                         aspectId: aspect.id,
                         label: taskLabel,
                         displayOrder: i,
-                        isActive: true
+                        isActive: isMandatory
                     });
                     results.push({ aspectId: aspect.id, label: taskLabel, status: "added" });
                 } else {

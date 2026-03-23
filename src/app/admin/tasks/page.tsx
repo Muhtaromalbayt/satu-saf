@@ -219,10 +219,28 @@ export default function AdminTasksPage() {
                                     />
                                     <div className="flex items-center gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button
+                                            onClick={() => {
+                                                const updatedTask = { ...task, isActive: !task.isActive };
+                                                setTasks(tasks.map(t => t.id === task.id ? updatedTask : t));
+                                                handleSaveTask(updatedTask);
+                                            }}
+                                            disabled={saving}
+                                            title={task.isActive ? "Nonaktifkan" : "Aktifkan"}
+                                            className={cn(
+                                                "px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border-2 active:scale-95 flex items-center gap-1.5",
+                                                task.isActive 
+                                                    ? "bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100" 
+                                                    : "bg-slate-50 text-slate-400 border-slate-100 hover:bg-slate-100"
+                                            )}
+                                        >
+                                            <div className={cn("h-2 w-2 rounded-full animate-pulse", task.isActive ? "bg-emerald-500" : "bg-slate-300")} />
+                                            {task.isActive ? "Aktif" : "Mati"}
+                                        </button>
+                                        <button
                                             onClick={() => handleSaveTask(task)}
                                             disabled={saving}
-                                            title="Simpan Perubahan"
-                                            className="h-11 w-11 flex items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all border-2 border-emerald-100 active:scale-95 shadow-sm shadow-emerald-500/10"
+                                            title="Simpan Nama"
+                                            className="h-11 w-11 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:bg-primary hover:text-white transition-all border-2 border-slate-100 active:scale-95"
                                         >
                                             <Save className="h-5 w-5" />
                                         </button>
