@@ -6,6 +6,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Home, Trophy, User, MessageCircle, ShieldCheck, Map as MapIcon, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { useTheme } from "@/components/providers/ThemeProvider";
 import { motion, AnimatePresence } from "framer-motion";
 
 const AUTO_HIDE_DELAY = 3000; // 3 seconds
@@ -13,6 +14,7 @@ const AUTO_HIDE_DELAY = 3000; // 3 seconds
 export default function BottomNav() {
     const pathname = usePathname();
     const { user } = useAuth();
+    const { isMidnight } = useTheme();
     const [mounted, setMounted] = useState(false);
     const [visible, setVisible] = useState(true);
     const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -127,7 +129,12 @@ export default function BottomNav() {
                 initial={{ y: 0 }}
                 animate={{ y: visible ? 0 : 80 }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className="fixed bottom-0 z-50 w-full glass border-t border-white/20 shadow-[0_-4px_30px_rgba(0,0,0,0.06)]"
+                className={cn(
+                    "fixed bottom-0 z-50 w-full transition-all duration-1000 border-t backdrop-blur-xl",
+                    isMidnight 
+                        ? "bg-slate-950/80 border-indigo-500/20 shadow-[0_-4px_30px_rgba(0,0,0,0.3)]" 
+                        : "bg-white/80 border-white/20 shadow-[0_-4px_30px_rgba(0,0,0,0.06)]"
+                )}
                 onMouseEnter={() => resetHideTimer()}
             >
                 <div className="flex h-16 items-center justify-around px-2 pb-safe max-w-lg mx-auto">
@@ -142,14 +149,17 @@ export default function BottomNav() {
                                 className={cn(
                                     "relative flex flex-col items-center justify-center gap-0.5 py-1.5 px-3 rounded-2xl transition-all duration-200",
                                     isActive
-                                        ? "text-primary"
-                                        : "text-slate-400 active:text-primary/70"
+                                        ? isMidnight ? "text-indigo-400" : "text-primary"
+                                        : isMidnight ? "text-slate-600 active:text-indigo-400/70" : "text-slate-400 active:text-primary/70"
                                 )}
                             >
                                 {isActive && (
                                     <motion.div
                                         layoutId="activeTab"
-                                        className="absolute inset-0 bg-primary/10 rounded-2xl"
+                                        className={cn(
+                                            "absolute inset-0 rounded-2xl transition-colors",
+                                            isMidnight ? "bg-indigo-500/10" : "bg-primary/10"
+                                        )}
                                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                                     />
                                 )}

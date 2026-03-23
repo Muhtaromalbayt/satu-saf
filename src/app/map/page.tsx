@@ -707,17 +707,20 @@ export default function MapPage() {
                             initial={{ scale: 0.9, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.9, y: 20 }}
-                            className="bg-white rounded-[3rem] p-8 max-w-xs w-full text-center relative overflow-hidden shadow-2xl"
+                            className={cn(
+                                "rounded-[3rem] p-8 max-w-xs w-full text-center relative shadow-2xl transition-all duration-1000",
+                                isMidnight ? "bg-slate-900 border border-slate-800" : "bg-white"
+                            )}
                         >
                             <div className="absolute -top-12 left-1/2 -translate-x-1/2 h-24 w-24 bg-amber-400 rounded-full flex items-center justify-center shadow-xl shadow-amber-400/20 border-6 border-white">
                                 <Trophy className="h-10 w-10 text-white" />
                             </div>
                             
                             <div className="mt-10">
-                                <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tighter leading-none mb-2">Daily Quest!</h2>
-                                <p className="text-slate-400 text-xs font-black uppercase tracking-widest mb-6 border-b-2 border-slate-50 pb-4">Hari Ke-{clampedActiveDay}</p>
+                                <h2 className={cn("text-2xl font-black uppercase tracking-tighter leading-none mb-2", isMidnight ? "text-white" : "text-slate-800")}>Daily Quest!</h2>
+                                <p className={cn("text-xs font-black uppercase tracking-widest mb-6 border-b-2 pb-4", isMidnight ? "text-slate-500 border-slate-800" : "text-slate-400 border-slate-50")}>Hari Ke-{clampedActiveDay}</p>
                                 
-                                <p className="text-slate-600 font-medium text-sm leading-relaxed mb-8">
+                                <p className={cn("font-medium text-sm leading-relaxed mb-8", isMidnight ? "text-slate-400" : "text-slate-600")}>
                                     Selamat datang kembali, Pahlawan! Misimu hari ini telah menunggu. Jaga konsistensimu dan jangan biarkan api ketaatanmu padam! 🔥
                                 </p>
                                 

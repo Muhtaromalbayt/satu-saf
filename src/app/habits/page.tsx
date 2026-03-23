@@ -134,13 +134,16 @@ export default function LaporPakPage() {
                     <motion.div
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="bg-emerald-50/80 backdrop-blur-md p-5 rounded-3xl border-2 border-emerald-100 shadow-sm text-center mb-8 relative overflow-hidden"
+                        className={cn(
+                            "p-5 rounded-3xl border-2 shadow-sm text-center mb-8 relative overflow-hidden transition-all duration-1000",
+                            isMidnight ? "bg-indigo-500/10 border-indigo-500/20" : "bg-emerald-50/80 backdrop-blur-md border-emerald-100"
+                        )}
                     >
                         <div className="absolute top-0 right-0 p-2 opacity-10">
-                            <Heart className="h-12 w-12 text-emerald-900" />
+                            <Heart className={cn("h-12 w-12", isMidnight ? "text-indigo-400" : "text-emerald-900")} />
                         </div>
-                        <p className="text-sm font-black text-slate-800">Assalamu'alaikum, Wali <span className="text-emerald-700">{user.name.replace('Wali ', '')}</span>!</p>
-                        <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest font-bold">Memantau Perkembangan Kelompok {user.kelompok}</p>
+                        <p className={cn("text-sm font-black", isMidnight ? "text-slate-100" : "text-slate-800")}>Assalamu'alaikum, Wali <span className={isMidnight ? "text-indigo-400" : "text-emerald-700"}>{user.name.replace('Wali ', '')}</span>!</p>
+                        <p className={cn("text-[10px] mt-1 uppercase tracking-widest font-bold", isMidnight ? "text-slate-500" : "text-slate-500")}>Memantau Perkembangan Kelompok {user.kelompok}</p>
                     </motion.div>
                 )}
 
@@ -156,12 +159,18 @@ export default function LaporPakPage() {
                             <p className="text-xs font-black uppercase tracking-[0.3em] animate-pulse">Memuat Berita Surga...</p>
                         </div>
                     ) : feed.length === 0 ? (
-                        <div className="text-center py-24 space-y-6 bg-white/40 backdrop-blur-sm rounded-[3rem] border border-white/60 shadow-inner">
+                        <div className={cn(
+                            "text-center py-24 space-y-6 rounded-[3rem] border shadow-inner transition-all duration-1000",
+                            isMidnight ? "bg-slate-900/40 border-slate-800/60" : "bg-white/40 backdrop-blur-sm border-white/60"
+                        )}>
                             <Mascot pose="thinking" className="h-28 w-28 mx-auto opacity-20 grayscale" />
                             <div className="space-y-2">
-                                <p className="text-xs font-black text-slate-400 uppercase tracking-widest leading-relaxed">
+                                <p className={cn(
+                                    "text-xs font-black uppercase tracking-widest leading-relaxed transition-colors",
+                                    isMidnight ? "text-slate-600" : "text-slate-400"
+                                )}>
                                     Belum ada aktivitas santri ter-update.<br />
-                                    <span className="text-[10px] text-slate-300">Mari terus doakan yang terbaik untuk mereka!</span>
+                                    <span className="text-[10px] text-slate-500">Mari terus doakan yang terbaik untuk mereka!</span>
                                 </p>
                             </div>
                         </div>
@@ -179,14 +188,23 @@ export default function LaporPakPage() {
                                 >
                                     {/* User Name Tag & Kelompok */}
                                     <div className="flex items-center gap-2 ml-4">
-                                        <span className="text-[10px] font-black text-emerald-800 uppercase tracking-tighter opacity-80">
+                                        <span className={cn(
+                                            "text-[10px] font-black uppercase tracking-tighter opacity-80",
+                                            isMidnight ? "text-indigo-400" : "text-emerald-800"
+                                        )}>
                                             Ananda {item.userName}
                                         </span>
                                         <div className="flex items-center gap-1">
-                                            <span className="text-[8px] bg-emerald-100/50 px-1.5 py-0.5 rounded-md font-bold text-emerald-700 uppercase">
+                                            <span className={cn(
+                                                "text-[8px] px-1.5 py-0.5 rounded-md font-bold uppercase",
+                                                isMidnight ? "bg-indigo-500/10 text-indigo-400" : "bg-emerald-100/50 text-emerald-700"
+                                            )}>
                                                 Kelompok {item.kelompok}
                                             </span>
-                                            <span className="text-[8px] bg-amber-100/50 px-1.5 py-0.5 rounded-md font-bold text-amber-700 uppercase">
+                                            <span className={cn(
+                                                "text-[8px] px-1.5 py-0.5 rounded-md font-bold uppercase",
+                                                isMidnight ? "bg-amber-500/10 text-amber-500" : "bg-amber-100/50 text-amber-700"
+                                            )}>
                                                 Hari ke-{item.day}
                                             </span>
                                             {item.status === 'verified' && (
@@ -275,7 +293,10 @@ export default function LaporPakPage() {
                                                         key={r.id}
                                                         initial={{ scale: 0 }}
                                                         animate={{ scale: 1 }}
-                                                        className="bg-white rounded-full p-1 shadow-md border border-slate-50 flex items-center justify-center w-7 h-7"
+                                                        className={cn(
+                                                            "rounded-full p-1 shadow-md border flex items-center justify-center w-7 h-7",
+                                                            isMidnight ? "bg-slate-800 border-slate-700" : "bg-white border-slate-50"
+                                                        )}
                                                         style={{ zIndex: 10 + i }}
                                                     >
                                                         <span className="text-sm">{r.content}</span>
@@ -314,7 +335,10 @@ export default function LaporPakPage() {
                                                     initial={{ opacity: 0, x: -20, scale: 0.8 }}
                                                     animate={{ opacity: 1, x: 0, scale: 1 }}
                                                     exit={{ opacity: 0, x: -20, scale: 0.8 }}
-                                                    className="flex gap-2.5 bg-white/90 backdrop-blur-xl rounded-2xl p-2 px-4 shadow-2xl border border-white shadow-emerald-900/5 z-50"
+                                                    className={cn(
+                                                        "flex gap-2.5 backdrop-blur-xl rounded-2xl p-2 px-4 shadow-2xl border z-50",
+                                                        isMidnight ? "bg-slate-800/90 border-slate-700 shadow-slate-950" : "bg-white/90 border-white shadow-emerald-900/5"
+                                                    )}
                                                 >
                                                     {['🔥', '💎', '🙌', '🚀', '🕌'].map(emoji => (
                                                         <button

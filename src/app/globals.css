@@ -132,6 +132,27 @@
   --sidebar-ring: #FDFCF6;
 }
 
+.light-theme {
+  --background: #FDFCF6;
+  --foreground: #1B4332;
+  --card: #FDFCF6;
+  --card-foreground: #1B4332;
+  --border: #E2E8F0;
+}
+
+.dark-theme {
+  --background: #020617; /* Slate 950 for deeper midnight feel */
+  --foreground: #FDFCF6;
+  --card: #0F172A; /* Slate 900 for dark cards */
+  --card-foreground: #FDFCF6;
+  --border: #1E293B;
+  --primary: #10B981;
+}
+
+* {
+  transition: background-color 0.8s ease, border-color 0.8s ease, color 0.8s ease, opacity 0.8s ease;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

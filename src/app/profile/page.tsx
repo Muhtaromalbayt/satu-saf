@@ -3,11 +3,14 @@
 import { User, Award, Zap, Flame, Heart, LogOut, ChevronRight, Star, Shield, Users } from "lucide-react";
 import { useGamification } from "@/context/GamificationContext";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { useTheme } from "@/components/providers/ThemeProvider";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 export default function ProfilePage() {
     const { streak } = useGamification();
     const { user, signOut } = useAuth();
+    const { isMidnight } = useTheme();
 
     // Role-specific identity builder
     const getRoleLabel = () => {
@@ -36,9 +39,15 @@ export default function ProfilePage() {
     const roleBadge = getRoleBadge();
 
     return (
-        <div className="flex flex-col min-h-screen bg-slate-50 pb-28">
+        <div className={cn(
+            "flex flex-col min-h-screen pb-28 transition-colors duration-1000",
+            isMidnight ? "bg-slate-950" : "bg-slate-50"
+        )}>
             {/* Gradient Header */}
-            <div className="relative bg-gradient-to-br from-primary via-primary to-emerald-600 px-5 pt-8 pb-16 rounded-b-[2rem] overflow-hidden">
+            <div className={cn(
+                "relative px-5 pt-8 pb-16 rounded-b-[2rem] overflow-hidden transition-all duration-1000",
+                isMidnight ? "bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-950 border-b border-indigo-500/20" : "bg-gradient-to-br from-primary via-primary to-emerald-600"
+            )}>
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
                 <div className="absolute top-4 right-4 text-white/10">
                     <Star className="h-28 w-28 fill-current rotate-12" />
@@ -48,7 +57,10 @@ export default function ProfilePage() {
                     <motion.div
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="h-20 w-20 rounded-full bg-white/20 border-4 border-white/40 flex items-center justify-center mb-3 shadow-xl"
+                        className={cn(
+                            "h-20 w-20 rounded-full border-4 flex items-center justify-center mb-3 shadow-xl transition-colors",
+                            isMidnight ? "bg-indigo-500/20 border-indigo-500/40" : "bg-white/20 border-white/40"
+                        )}
                     >
                         <User className="h-10 w-10 text-white" />
                     </motion.div>
@@ -87,13 +99,19 @@ export default function ProfilePage() {
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.25 }}
-                    className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl flex flex-col items-center min-w-[120px]"
+                    className={cn(
+                        "p-6 rounded-[2rem] border shadow-xl flex flex-col items-center min-w-[120px] transition-all duration-1000",
+                        isMidnight ? "bg-slate-900 border-slate-800" : "bg-white border-slate-100"
+                    )}
                 >
-                    <div className="h-14 w-14 bg-orange-50 rounded-2xl flex items-center justify-center mb-3">
+                    <div className={cn(
+                        "h-14 w-14 rounded-2xl flex items-center justify-center mb-3 transition-colors",
+                        isMidnight ? "bg-orange-500/10" : "bg-orange-50"
+                    )}>
                         <Flame className="h-8 w-8 text-orange-500 fill-orange-500" />
                     </div>
-                    <span className="font-black text-3xl text-slate-800">{streak}</span>
-                    <span className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-1">Hari Konsisten</span>
+                    <span className={cn("font-black text-3xl", isMidnight ? "text-white" : "text-slate-800")}>{streak}</span>
+                    <span className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-1 text-center">Hari Konsisten</span>
                 </motion.div>
             </div>
 
@@ -101,27 +119,39 @@ export default function ProfilePage() {
             <div className="px-4 mt-5 space-y-2">
                 <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 mb-2">Pengaturan</h3>
 
-                <button className="w-full bg-white p-3.5 rounded-xl border border-slate-100 flex items-center justify-between active:scale-[0.98] transition-transform">
+                <button className={cn(
+                    "w-full p-3.5 rounded-xl border flex items-center justify-between active:scale-[0.98] transition-all",
+                    isMidnight ? "bg-slate-900 border-slate-800" : "bg-white border-slate-100"
+                )}>
                     <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 bg-blue-50 rounded-lg flex items-center justify-center">
+                        <div className={cn(
+                            "h-8 w-8 rounded-lg flex items-center justify-center",
+                            isMidnight ? "bg-blue-500/10" : "bg-blue-50"
+                        )}>
                             <User className="h-4 w-4 text-blue-500" />
                         </div>
-                        <span className="text-sm font-bold text-slate-700">Edit Profil</span>
+                        <span className={cn("text-sm font-bold", isMidnight ? "text-slate-300" : "text-slate-700")}>Edit Profil</span>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-slate-300" />
+                    <ChevronRight className="h-4 w-4 text-slate-600" />
                 </button>
 
                 <button
                     onClick={() => signOut()}
-                    className="w-full bg-white p-3.5 rounded-xl border border-red-100 flex items-center justify-between active:scale-[0.98] transition-transform group"
+                    className={cn(
+                        "w-full p-3.5 rounded-xl border flex items-center justify-between active:scale-[0.98] transition-all group",
+                        isMidnight ? "bg-slate-900 border-red-500/20" : "bg-white border-red-100"
+                    )}
                 >
                     <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 bg-red-50 rounded-lg flex items-center justify-center">
+                        <div className={cn(
+                            "h-8 w-8 rounded-lg flex items-center justify-center",
+                            isMidnight ? "bg-red-500/10" : "bg-red-50"
+                        )}>
                             <LogOut className="h-4 w-4 text-red-500" />
                         </div>
                         <span className="text-sm font-bold text-red-600">Keluar Akun</span>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-red-300" />
+                    <ChevronRight className="h-4 w-4 text-red-400" />
                 </button>
             </div>
 

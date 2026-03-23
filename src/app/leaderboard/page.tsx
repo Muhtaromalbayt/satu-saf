@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { Trophy, Star, Crown, Loader2, BookOpen, PenLine, Moon } from "lucide-react";
 import { motion } from "framer-motion";
+import { useTheme } from "@/components/providers/ThemeProvider";
+import { cn } from "@/lib/utils";
 
 interface LeaderboardEntry {
     id: string;
@@ -18,6 +20,7 @@ interface LeaderboardEntry {
 export default function LeaderboardPage() {
     const [data, setData] = useState<LeaderboardEntry[]>([]);
     const [loading, setLoading] = useState(true);
+    const { isMidnight } = useTheme();
 
     useEffect(() => {
         fetch("/api/leaderboard")
@@ -34,9 +37,15 @@ export default function LeaderboardPage() {
     const podiumHeights = [80, 110, 65];
 
     return (
-        <div className="flex flex-col items-center min-h-screen bg-slate-50 pb-28">
+        <div className={cn(
+            "flex flex-col items-center min-h-screen pb-28 transition-colors duration-1000",
+            isMidnight ? "bg-slate-950" : "bg-slate-50"
+        )}>
             {/* Header */}
-            <div className="w-full bg-primary p-5 pb-12 text-center rounded-b-[2rem] shadow-xl relative overflow-hidden">
+            <div className={cn(
+                "w-full p-5 pb-12 text-center rounded-b-[2rem] shadow-xl relative overflow-hidden transition-colors border-b",
+                isMidnight ? "bg-indigo-600 border-indigo-500" : "bg-primary border-transparent"
+            )}>
                 <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -53,13 +62,22 @@ export default function LeaderboardPage() {
             </div>
 
             {/* Podium */}
-            <div className="w-full max-w-lg px-4 -mt-6 z-10">
-                <div className="bg-white rounded-2xl p-4 shadow-2xl border border-white relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-b from-amber-50/50 to-transparent pointer-events-none" />
+            <div className="w-full max-w-lg px-4 -mt-6 z-10 text-center">
+                <div className={cn(
+                    "rounded-2xl p-4 shadow-2xl border transition-all duration-1000 relative overflow-hidden",
+                    isMidnight ? "bg-slate-900 border-slate-800" : "bg-white border-white"
+                )}>
+                    <div className={cn(
+                        "absolute inset-0 pointer-events-none",
+                        isMidnight ? "bg-gradient-to-b from-indigo-500/5 to-transparent" : "bg-gradient-to-b from-amber-50/50 to-transparent"
+                    )} />
 
                     <div className="flex items-center gap-1.5 mb-4">
                         <Crown className="h-4 w-4 text-amber-500 fill-amber-500" />
-                        <h2 className="font-bold text-slate-800 uppercase tracking-widest text-xs">
+                        <h2 className={cn(
+                            "font-bold uppercase tracking-widest text-xs",
+                            isMidnight ? "text-indigo-300" : "text-slate-800"
+                        )}>
                             {loading ? "Memuat..." : "Golden Shaf (Top 3)"}
                         </h2>
                     </div>
@@ -93,14 +111,20 @@ export default function LeaderboardPage() {
                                             )}
                                         </motion.div>
 
-                                        <p className="text-[9px] font-bold text-slate-500 text-center leading-tight truncate w-full text-center">
+                                        <p className={cn(
+                                            "text-[9px] font-bold text-center leading-tight truncate w-full",
+                                            isMidnight ? "text-slate-400" : "text-slate-500"
+                                        )}>
                                             {entry.name.split(" ")[0]}
                                         </p>
 
                                         <motion.div
                                             initial={{ height: 0 }}
                                             animate={{ height: podiumHeights[i] }}
-                                            className={`w-full rounded-t-lg ${isFirst ? "bg-gradient-to-t from-amber-500 to-amber-300 shadow-lg" : "bg-slate-100"}`}
+                                            className={cn(
+                                                "w-full rounded-t-lg transition-all",
+                                                isFirst ? "bg-gradient-to-t from-amber-500 to-amber-300 shadow-lg" : isMidnight ? "bg-slate-800" : "bg-slate-100"
+                                            )}
                                         >
                                             <p className={`text-center text-[10px] font-black mt-2 ${isFirst ? "text-white" : "text-slate-500"}`}>
                                                 {entry.totalScore}
@@ -117,17 +141,29 @@ export default function LeaderboardPage() {
             {/* Score Legend */}
             <div className="w-full max-w-lg px-4 mt-4">
                 <div className="flex gap-2 text-[10px] text-slate-500 font-bold flex-wrap justify-center">
-                    <span className="flex items-center gap-1 bg-white px-2 py-1 rounded-full border border-slate-100">
-                        <Trophy className="h-3 w-3 text-primary" /> Monitoring (50pt)
+                    <span className={cn(
+                        "flex items-center gap-1 px-2 py-1 rounded-full border transition-colors",
+                        isMidnight ? "bg-slate-900 border-slate-800 text-slate-400" : "bg-white border-slate-100 text-slate-500"
+                    )}>
+                        <Trophy className="h-3 w-3 text-emerald-500" /> Monitoring (50pt)
                     </span>
-                    <span className="flex items-center gap-1 bg-white px-2 py-1 rounded-full border border-slate-100">
-                        <BookOpen className="h-3 w-3 text-violet-500" /> Hafalan (15pt)
+                    <span className={cn(
+                        "flex items-center gap-1 px-2 py-1 rounded-full border transition-colors",
+                        isMidnight ? "bg-slate-900 border-slate-800 text-slate-400" : "bg-white border-slate-100 text-slate-500"
+                    )}>
+                        <BookOpen className="h-3 w-3 text-violet-400" /> Hafalan (15pt)
                     </span>
-                    <span className="flex items-center gap-1 bg-white px-2 py-1 rounded-full border border-slate-100">
-                        <PenLine className="h-3 w-3 text-blue-500" /> Tes Tulis (15pt)
+                    <span className={cn(
+                        "flex items-center gap-1 px-2 py-1 rounded-full border transition-colors",
+                        isMidnight ? "bg-slate-900 border-slate-800 text-slate-400" : "bg-white border-slate-100 text-slate-500"
+                    )}>
+                        <PenLine className="h-3 w-3 text-blue-400" /> Tes Tulis (15pt)
                     </span>
-                    <span className="flex items-center gap-1 bg-white px-2 py-1 rounded-full border border-slate-100">
-                        <Moon className="h-3 w-3 text-indigo-500" /> Qiyamullail (20pt)
+                    <span className={cn(
+                        "flex items-center gap-1 px-2 py-1 rounded-full border transition-colors",
+                        isMidnight ? "bg-slate-900 border-slate-800 text-slate-400" : "bg-white border-slate-100 text-slate-500"
+                    )}>
+                        <Moon className="h-3 w-3 text-indigo-400" /> Qiyamullail (20pt)
                     </span>
                 </div>
             </div>
@@ -142,7 +178,12 @@ export default function LeaderboardPage() {
                             viewport={{ once: true }}
                             transition={{ delay: i * 0.04 }}
                             key={entry.id}
-                            className={`flex items-center justify-between p-3 rounded-xl border transition-all ${i < 3 ? "bg-white border-amber-100 shadow-sm" : "bg-white/70 border-slate-100"}`}
+                            className={cn(
+                                "flex items-center justify-between p-3 rounded-xl border transition-all",
+                                isMidnight 
+                                    ? i < 3 ? "bg-slate-900/80 border-indigo-500/30 shadow-lg" : "bg-slate-900/40 border-slate-800"
+                                    : i < 3 ? "bg-white border-amber-100 shadow-sm" : "bg-white/70 border-slate-100"
+                            )}
                         >
                             <div className="flex items-center gap-3">
                                 <span className={`font-black text-base w-6 text-center ${i === 0 ? "text-amber-500" : i <= 2 ? "text-slate-600" : "text-slate-300"}`}>
@@ -152,8 +193,8 @@ export default function LeaderboardPage() {
                                     {entry.name.charAt(0)}
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-slate-700 text-sm">{entry.name}</h3>
-                                    <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest">
+                                    <h3 className={cn("font-bold text-sm", isMidnight ? "text-slate-100" : "text-slate-700")}>{entry.name}</h3>
+                                    <p className={cn("text-[9px] uppercase font-bold tracking-widest", isMidnight ? "text-slate-500" : "text-muted-foreground")}>
                                         {entry.kelompok}
                                     </p>
                                 </div>

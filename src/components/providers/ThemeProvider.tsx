@@ -13,9 +13,22 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         const checkMidnight = () => {
-            const hour = new Date().getHours();
-            // Midnight Mode: 18:00 (6 PM) to 05:00 (5 AM)
-            setIsMidnight(hour >= 18 || hour < 5);
+            const now = new Date();
+            const hour = now.getHours();
+            const minute = now.getMinutes();
+            // Pagi: 06:00 - 18:00
+            // Malam: 18:01 - 05:59
+            const totalMinutes = hour * 60 + minute;
+            const startNight = 18 * 60 + 1; // 18:01
+            const endNight = 6 * 60;       // 06:00
+            
+            if (startNight <= endNight) {
+                // This case won't happen with 18:01 to 06:00, but for generic range:
+                setIsMidnight(totalMinutes >= startNight && totalMinutes < endNight);
+            } else {
+                // Night spans across midnight (18:01 to 05:59)
+                setIsMidnight(totalMinutes >= startNight || totalMinutes < endNight);
+            }
         };
         
         checkMidnight();

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Check, X, User, Clock, Camera, MessageSquare, Loader2, Search, Filter, Trophy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTheme } from "@/components/providers/ThemeProvider";
 import { cn } from "@/lib/utils";
 import { sounds } from "@/lib/utils/sounds";
 
@@ -23,6 +24,7 @@ export default function MentorDashboard() {
     const [items, setItems] = useState<PendingItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState<number | null>(null);
+    const { isMidnight } = useTheme();
 
     useEffect(() => {
         fetchPending();
@@ -64,25 +66,37 @@ export default function MentorDashboard() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+            <div className={cn(
+                "min-h-screen flex items-center justify-center transition-colors duration-1000",
+                isMidnight ? "bg-slate-950" : "bg-slate-50"
+            )}>
                 <Loader2 className="h-10 w-10 animate-spin text-emerald-500" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-24 font-sans">
+        <div className={cn(
+            "min-h-screen pb-24 font-sans transition-colors duration-1000",
+            isMidnight ? "bg-slate-950" : "bg-slate-50"
+        )}>
             {/* Immersive Header */}
-            <header className="bg-white border-b border-slate-100 p-8 pb-10 rounded-b-[3rem] shadow-xl relative overflow-hidden">
+            <header className={cn(
+                "p-8 pb-10 rounded-b-[3rem] shadow-xl relative overflow-hidden transition-all duration-1000 border-b",
+                isMidnight ? "bg-slate-900 border-slate-800" : "bg-white border-slate-100"
+            )}>
                 <div className="absolute top-0 right-0 p-8 opacity-5">
                     <ShieldCheck className="h-32 w-32" />
                 </div>
                 <div className="relative z-10">
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="h-12 w-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+                         <div className={cn(
+                            "h-12 w-12 rounded-2xl flex items-center justify-center text-white shadow-lg transition-colors",
+                            isMidnight ? "bg-indigo-600 shadow-indigo-600/20" : "bg-emerald-500 shadow-emerald-500/20"
+                        )}>
                             <Trophy className="h-6 w-6" />
                         </div>
-                        <h1 className="text-3xl font-black text-slate-800 tracking-tight uppercase leading-none">Review Center</h1>
+                        <h1 className={cn("text-3xl font-black tracking-tight uppercase leading-none", isMidnight ? "text-white" : "text-slate-800")}>Review Center</h1>
                     </div>
                     <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] flex items-center gap-2">
                         <span className="h-2 w-2 bg-amber-500 rounded-full animate-pulse" />
@@ -97,12 +111,18 @@ export default function MentorDashboard() {
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="bg-white p-12 rounded-[2.5rem] shadow-xl border border-slate-100 text-center space-y-4"
+                            className={cn(
+                                "p-12 rounded-[2.5rem] shadow-xl border text-center space-y-4 transition-all duration-1000",
+                                isMidnight ? "bg-slate-900 border-slate-800" : "bg-white border-slate-100"
+                            )}
                         >
-                            <div className="h-20 w-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto">
+                            <div className={cn(
+                                "h-20 w-20 rounded-full flex items-center justify-center mx-auto transition-colors",
+                                isMidnight ? "bg-emerald-500/10" : "bg-emerald-50"
+                            )}>
                                 <Check className="h-10 w-10 text-emerald-500" />
                             </div>
-                            <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">Semua Beres!</h2>
+                            <h2 className={cn("text-xl font-black uppercase tracking-tight", isMidnight ? "text-white" : "text-slate-800")}>Semua Beres!</h2>
                             <p className="text-slate-400 font-medium text-sm">Tidak ada lagi amalan yang perlu diverifikasi hari ini. Kerja bagus mentor!</p>
                         </motion.div>
                     ) : (
@@ -110,43 +130,61 @@ export default function MentorDashboard() {
                             <motion.div
                                 key={item.id}
                                 layout
-                                initial={{ opacity: 0, y: 20 }}
+                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.8 }}
-                                className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden flex flex-col group"
+                                className={cn(
+                                    "rounded-[2.5rem] shadow-2xl border overflow-hidden flex flex-col group transition-all duration-1000",
+                                    isMidnight ? "bg-slate-900 border-slate-800" : "bg-white border-slate-100"
+                                )}
                             >
-                                {/* Student Info Section */}
-                                <div className="p-6 flex items-center justify-between border-b border-slate-50">
+                                 {/* Student Info Section */}
+                                <div className={cn(
+                                    "p-6 flex items-center justify-between border-b transition-colors",
+                                    isMidnight ? "border-slate-800" : "border-slate-50"
+                                )}>
                                     <div className="flex items-center gap-4">
-                                        <div className="h-14 w-14 bg-slate-50 border-2 border-slate-100 rounded-2xl flex items-center justify-center group-hover:bg-emerald-50 transition-colors">
-                                            <User className="h-7 w-7 text-slate-300 group-hover:text-emerald-500" />
+                                        <div className={cn(
+                                            "h-14 w-14 border-2 rounded-2xl flex items-center justify-center transition-colors",
+                                            isMidnight ? "bg-slate-800 border-slate-700 group-hover:bg-indigo-500/20" : "bg-slate-50 border-slate-100 group-hover:bg-emerald-50"
+                                        )}>
+                                            <User className={cn("h-7 w-7 transition-colors", isMidnight ? "text-slate-600 group-hover:text-indigo-400" : "text-slate-300 group-hover:text-emerald-500")} />
                                         </div>
                                         <div>
-                                            <h3 className="font-black text-slate-800 text-lg leading-tight">{item.studentName}</h3>
-                                            <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded-full">Hari Ke-{item.day}</span>
+                                            <h3 className={cn("font-black text-lg leading-tight transition-colors", isMidnight ? "text-slate-100" : "text-slate-800")}>{item.studentName}</h3>
+                                            <span className={cn(
+                                                "text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full transition-colors",
+                                                isMidnight ? "text-indigo-400 bg-indigo-500/10" : "text-emerald-500 bg-emerald-50"
+                                            )}>Hari Ke-{item.day}</span>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">ASPEK</span>
-                                        <span className="text-xs font-black text-slate-700 uppercase tracking-tight">{item.aspect.replace('_', ' ')}</span>
+                                     <div className="text-right">
+                                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">ASPEK</span>
+                                        <span className={cn("text-xs font-black uppercase tracking-tight", isMidnight ? "text-slate-300" : "text-slate-700")}>{item.aspect.replace('_', ' ')}</span>
                                     </div>
                                 </div>
 
-                                {/* Task Detail Section */}
+                                 {/* Task Detail Section */}
                                 <div className="p-6 space-y-6">
-                                    <div className="bg-slate-50/50 p-5 rounded-3xl border border-slate-100">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-2">
+                                    <div className={cn(
+                                        "p-5 rounded-3xl border transition-colors",
+                                        isMidnight ? "bg-slate-800/50 border-slate-700" : "bg-slate-50/50 border-slate-100"
+                                    )}>
+                                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 mb-2">
                                             <Filter className="h-3 w-3" /> Nama Amalan
                                         </label>
-                                        <p className="font-black text-slate-800 text-base">{item.deedName}</p>
+                                        <p className={cn("font-black text-base transition-colors", isMidnight ? "text-white" : "text-slate-800")}>{item.deedName}</p>
                                     </div>
 
                                     {item.evidenceUrl && (
                                         <div className="space-y-3">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
                                                 <Camera className="h-3 w-3" /> Bukti Foto (Live)
                                             </label>
-                                            <div className="relative rounded-[2rem] overflow-hidden border-4 border-slate-50 shadow-lg">
+                                            <div className={cn(
+                                                "relative rounded-[2rem] overflow-hidden border-4 shadow-lg transition-colors",
+                                                isMidnight ? "border-slate-800/50" : "border-slate-50"
+                                            )}>
                                                 <img src={item.evidenceUrl} alt="Bukti" className="w-full aspect-[4/3] object-cover" />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex flex-col justify-end p-5">
                                                     <div className="flex items-center gap-2 text-white text-[10px] font-black uppercase tracking-widest">
@@ -160,10 +198,13 @@ export default function MentorDashboard() {
 
                                     {item.reflection && (
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
                                                 <MessageSquare className="h-3 w-3" /> Catatan Santri
                                             </label>
-                                            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 italic font-medium text-slate-600 text-sm">
+                                            <div className={cn(
+                                                "p-5 rounded-2xl border italic font-medium text-sm transition-colors",
+                                                isMidnight ? "bg-slate-800 border-slate-700 text-slate-400" : "bg-slate-50 border-slate-100 text-slate-600"
+                                            )}>
                                                 "{item.reflection}"
                                             </div>
                                         </div>

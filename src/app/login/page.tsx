@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ChevronDown, LogIn, Loader2, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { useTheme } from "@/components/providers/ThemeProvider";
 import Mascot from "@/components/gamification/Mascot";
 
 interface Participant {
@@ -17,6 +18,7 @@ interface Participant {
 function LoginForm() {
     const router = useRouter();
     const { refresh } = useAuth();
+    const { isMidnight } = useTheme();
     const [participants, setParticipants] = useState<Participant[]>([]);
     const [loadingData, setLoadingData] = useState(true);
     const [selectedNama, setSelectedNama] = useState("");
@@ -150,13 +152,18 @@ function LoginForm() {
             className="space-y-4"
         >
             {loginStep === "choice" && (
-                <div className="flex bg-slate-100 p-1 rounded-2xl mb-4">
+                <div className={cn(
+                    "flex p-1 rounded-2xl mb-4 transition-colors",
+                    isMidnight ? "bg-slate-800" : "bg-slate-100"
+                )}>
                     <button
                         type="button"
                         onClick={() => { setIsMentorMode(false); setIsParentMode(false); setError(""); }}
                         className={cn(
                             "flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                            (!isMentorMode && !isParentMode) ? "bg-white shadow-sm text-primary" : "text-slate-400"
+                            (!isMentorMode && !isParentMode) 
+                                ? isMidnight ? "bg-indigo-600 text-white shadow-lg" : "bg-white shadow-sm text-primary" 
+                                : isMidnight ? "text-slate-500" : "text-slate-400"
                         )}
                     >
                         Santri
@@ -166,7 +173,9 @@ function LoginForm() {
                         onClick={() => { setIsMentorMode(true); setIsParentMode(false); setError(""); }}
                         className={cn(
                             "flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                            isMentorMode ? "bg-white shadow-sm text-primary" : "text-slate-400"
+                            isMentorMode 
+                                ? isMidnight ? "bg-indigo-600 text-white shadow-lg" : "bg-white shadow-sm text-primary" 
+                                : isMidnight ? "text-slate-500" : "text-slate-400"
                         )}
                     >
                         Mentor
@@ -176,7 +185,9 @@ function LoginForm() {
                         onClick={() => { setIsParentMode(true); setIsMentorMode(false); setError(""); }}
                         className={cn(
                             "flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                            isParentMode ? "bg-white shadow-sm text-primary" : "text-slate-400"
+                            isParentMode 
+                                ? isMidnight ? "bg-indigo-600 text-white shadow-lg" : "bg-white shadow-sm text-primary" 
+                                : isMidnight ? "text-slate-500" : "text-slate-400"
                         )}
                     >
                         Wali
@@ -206,7 +217,12 @@ function LoginForm() {
                                                 setSelectedKelompok(e.target.value);
                                                 setSelectedNama("");
                                             }}
-                                            className="w-full appearance-none p-4 rounded-2xl border-2 border-slate-100 focus:border-primary outline-none text-slate-700 font-bold transition-all text-sm bg-white"
+                                            className={cn(
+                                                "w-full appearance-none p-4 rounded-2xl border-2 outline-none font-bold transition-all text-sm",
+                                                isMidnight 
+                                                    ? "bg-slate-900 border-slate-800 text-slate-200 focus:border-indigo-500" 
+                                                    : "bg-white border-slate-100 focus:border-primary text-slate-700"
+                                            )}
                                             required
                                         >
                                             <option value="">— Pilih Kelompok —</option>
@@ -229,7 +245,12 @@ function LoginForm() {
                                         <select
                                             value={selectedNama}
                                             onChange={e => setSelectedNama(e.target.value)}
-                                            className="w-full appearance-none p-4 rounded-2xl border-2 border-slate-100 focus:border-primary outline-none text-slate-700 font-bold transition-all text-sm bg-white disabled:opacity-50"
+                                            className={cn(
+                                                "w-full appearance-none p-4 rounded-2xl border-2 outline-none font-bold transition-all text-sm disabled:opacity-50",
+                                                isMidnight 
+                                                    ? "bg-slate-900 border-slate-800 text-slate-200 focus:border-indigo-500" 
+                                                    : "bg-white border-slate-100 focus:border-primary text-slate-700"
+                                            )}
                                             disabled={!isParentMode && !selectedKelompok}
                                             required
                                         >
@@ -366,27 +387,41 @@ function LoginForm() {
 }
 
 export default function LoginPage() {
+    const { isMidnight } = useTheme();
+    
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-5 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:20px_20px]">
+        <div className={cn(
+            "min-h-screen flex flex-col items-center justify-center p-5 transition-colors duration-1000",
+            isMidnight ? "bg-slate-950" : "bg-slate-50 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:20px_20px]"
+        )}>
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100"
+                className={cn(
+                    "w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden border transition-all duration-1000",
+                    isMidnight ? "bg-slate-900 border-slate-800" : "bg-white border-slate-100"
+                )}
             >
                 {/* Header */}
-                <div className="bg-primary/5 p-6 flex flex-col items-center border-b border-slate-50">
+                <div className={cn(
+                    "p-6 flex flex-col items-center border-b transition-colors",
+                    isMidnight ? "bg-indigo-500/10 border-slate-800" : "bg-primary/5 border-slate-50"
+                )}>
                     <Mascot pose="success" className="mb-3 scale-90" />
-                    <h1 className="text-3xl font-black text-slate-800 tracking-tight">SATU SAF</h1>
-                    <p className="text-slate-500 font-medium text-sm">Monitoring 14 Hari Pesantren Kilat</p>
+                    <h1 className={cn("text-3xl font-black tracking-tight", isMidnight ? "text-white" : "text-slate-800")}>SATU SAF</h1>
+                    <p className={cn("font-medium text-sm", isMidnight ? "text-slate-400" : "text-slate-500")}>Monitoring 14 Hari Pesantren Kilat</p>
                 </div>
 
                 <div className="p-6 space-y-5">
                     <div className="text-center space-y-1">
-                        <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full">
+                        <div className={cn(
+                            "inline-flex items-center gap-2 px-3 py-1.5 rounded-full",
+                            isMidnight ? "bg-indigo-500/20 text-indigo-400" : "bg-primary/10 text-primary"
+                        )}>
                             <Users className="h-3.5 w-3.5" />
                             <span className="text-[10px] font-black uppercase tracking-widest">Pilih Identitasmu</span>
                         </div>
-                        <h2 className="text-xl font-bold text-slate-800">Selamat Datang!</h2>
+                        <h2 className={cn("text-xl font-bold", isMidnight ? "text-white" : "text-slate-800")}>Selamat Datang!</h2>
                         <p className="text-slate-400 text-xs">Pilih kelompok dan nama kamu untuk masuk</p>
                     </div>
 
