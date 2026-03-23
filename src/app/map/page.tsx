@@ -170,18 +170,19 @@ export default function MapPage() {
         // Date-based locking logic
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const startDate = missionStartDate ? new Date(missionStartDate) : null;
-        let openDate = null;
-        if (startDate) {
-            openDate = new Date(startDate);
-            openDate.setDate(startDate.getDate() + (day - 1));
-            openDate.setHours(0, 0, 0, 0);
+        
+        let calculatedActiveDay = activeDay;
+        if (missionStartDate) {
+            const startDate = new Date(missionStartDate);
+            startDate.setHours(0, 0, 0, 0);
+            const diffTime = today.getTime() - startDate.getTime();
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            calculatedActiveDay = diffDays + 1;
         }
 
-        const isLockedByDate = openDate && today < openDate;
         const isDemo = user?.id === "demo_santri" || (user?.name === "Santri Demo" && user?.kelompok === "Demo");
 
-        if (!isDemo && (day > activeDay || isLockedByDate)) {
+        if (!isDemo && day !== calculatedActiveDay) {
             return;
         }
 
@@ -203,6 +204,18 @@ export default function MapPage() {
     const overallProgress = totalActiveTasksCount > 0
         ? (logs.filter(l => l.status === "verified").length / (TOTAL_DAYS * totalActiveTasksCount)) * 100
         : 0;
+
+    const todayDate = new Date();
+    todayDate.setHours(0, 0, 0, 0);
+    let computedActiveDay = activeDay;
+    if (missionStartDate) {
+        const startDate = new Date(missionStartDate);
+        startDate.setHours(0, 0, 0, 0);
+        const diffTime = todayDate.getTime() - startDate.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        computedActiveDay = diffDays + 1;
+    }
+    const clampedActiveDay = Math.max(0, Math.min(14, computedActiveDay));
 
     return (
         <div className="min-h-screen bg-[#F4EBD0] pb-32 font-sans selection:bg-amber-100 selection:text-amber-900 relative">
@@ -278,7 +291,7 @@ export default function MapPage() {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         initial={{ pathLength: 0 }}
-                        animate={{ pathLength: activeDay / 14 }}
+                        animate={{ pathLength: clampedActiveDay / 14 }}
                         transition={{ duration: 2, ease: "easeInOut" }}
                     />
                 </svg>
@@ -293,19 +306,25 @@ export default function MapPage() {
                         const today = new Date();
                         today.setHours(0, 0, 0, 0);
 
-                        const startDate = missionStartDate ? new Date(missionStartDate) : null;
+                        let calculatedActiveDay = activeDay;
                         let openDate = null;
-                        if (startDate) {
+                        
+                        if (missionStartDate) {
+                            const startDate = new Date(missionStartDate);
+                            startDate.setHours(0, 0, 0, 0);
+                            
                             openDate = new Date(startDate);
                             openDate.setDate(startDate.getDate() + (day - 1));
-                            openDate.setHours(0, 0, 0, 0);
+                            
+                            const diffTime = today.getTime() - startDate.getTime();
+                            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                            calculatedActiveDay = diffDays + 1;
                         }
 
-                        const isLockedByDate = openDate && today < openDate;
-                        const isLockedByAdmin = day > activeDay;
                         const isDemo = user?.id === "demo_santri" || (user?.name === "Santri Demo" && user?.kelompok === "Demo");
-                        const isLocked = !isDemo && (isLockedByDate || isLockedByAdmin);
-                        const isCurrent = day === activeDay && !isLockedByDate;
+                        const isLocked = !isDemo && day !== calculatedActiveDay;
+                        const isCurrent = day === calculatedActiveDay;
+                        const isPast = day < calculatedActiveDay;
 
                         const dateString = openDate ? openDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : "";
 
@@ -406,7 +425,7 @@ export default function MapPage() {
                                                     ? "bg-amber-50 text-amber-500 border-amber-200"
                                                     : "bg-emerald-50 text-emerald-500 border-emerald-200"
                                         )}>
-                                            {isLocked ? (isLockedByDate ? `Dibuka ${dateString}` : "Terkunci") : progress === 100 ? "Selesai! ✨" : `${Math.round(progress)}% Selesai`}
+                                            {isLocked ? (isPast ? "Telah Berlalu" : (openDate ? `Dibuka ${dateString}` : "Terkunci")) : progress === 100 ? "Selesai! ✨" : `${Math.round(progress)}% Selesai`}
                                         </div>
                                     </div>
                                 </button>
