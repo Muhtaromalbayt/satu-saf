@@ -6,6 +6,8 @@ import { MessageCircle, Heart, Star, Flame, User, Loader2, RefreshCw, Send, Smil
 import Mascot from "@/components/gamification/Mascot";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { useTheme } from "@/components/providers/ThemeProvider";
+import { sounds } from "@/lib/utils/sounds";
 
 interface Reaction {
     id: number;
@@ -31,6 +33,7 @@ interface FeedItem {
 
 export default function LaporPakPage() {
     const { user } = useAuth();
+    const { isMidnight } = useTheme();
     const [feed, setFeed] = useState<FeedItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [showEmojiPicker, setShowEmojiPicker] = useState<number | null>(null);
@@ -74,13 +77,19 @@ export default function LaporPakPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#F0F2F5] pb-32 font-sans relative overflow-x-hidden">
+        <div className={cn(
+            "min-h-screen pb-32 font-sans relative overflow-x-hidden transition-colors duration-1000",
+            isMidnight ? "bg-slate-950" : "bg-[#F0F2F5]"
+        )}>
             {/* Islamic Decorative Elements */}
             <div className="fixed top-20 left-0 w-32 h-32 bg-emerald-500/5 blur-3xl rounded-full pointer-events-none" />
             <div className="fixed bottom-20 right-0 w-48 h-48 bg-primary/5 blur-3xl rounded-full pointer-events-none" />
 
             {/* Header */}
-            <div className="sticky top-0 z-30 bg-emerald-900 pt-6 pb-12 text-center rounded-b-[3rem] shadow-2xl relative overflow-hidden border-b-8 border-emerald-950/20">
+            <div className={cn(
+                "sticky top-0 z-30 pt-6 pb-12 text-center rounded-b-[3rem] shadow-2xl relative overflow-hidden border-b-8 transition-colors duration-1000",
+                isMidnight ? "bg-slate-900 border-slate-950/20" : "bg-emerald-900 border-emerald-950/20"
+            )}>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/islamic-art.png')] pointer-events-none" />
 
                 <div className="relative z-10 flex flex-col items-center">
@@ -115,7 +124,10 @@ export default function LaporPakPage() {
             </div>
 
             {/* Background Pattern Wallpaper */}
-            <div className="fixed inset-0 pointer-events-none opacity-[0.03] bg-[url('https://whatsapp-wallpaper.com/wp-content/uploads/2021/05/WhatsApp-Wallpaper-Light-2.jpg')] bg-repeat" />
+            <div className={cn(
+                "fixed inset-0 pointer-events-none bg-repeat transition-opacity duration-1000",
+                isMidnight ? "opacity-[0.02] invert" : "opacity-[0.03]"
+            )} style={{ backgroundImage: "url('https://whatsapp-wallpaper.com/wp-content/uploads/2021/05/WhatsApp-Wallpaper-Light-2.jpg')" }} />
 
             <main className="relative z-10 p-4 max-w-lg mx-auto space-y-6 pt-8">
                 {user?.role === 'parent' && (
@@ -186,9 +198,17 @@ export default function LaporPakPage() {
                                     </div>
 
                                     {/* Bubble Chat Style */}
-                                    <div className="bg-white p-1 rounded-[1.75rem] rounded-tl-none shadow-md shadow-slate-200/50 relative max-w-[95%] border border-slate-100 group">
+                                    <div className={cn(
+                                        "p-1 rounded-[1.75rem] rounded-tl-none shadow-md relative max-w-[95%] border transition-colors duration-1000 group",
+                                        isMidnight 
+                                            ? "bg-slate-900 border-slate-800 shadow-slate-950/50" 
+                                            : "bg-white border-slate-100 shadow-slate-200/50"
+                                    )}>
                                         {/* Tail */}
-                                        <div className="absolute top-0 left-0 w-4 h-4 bg-white -translate-x-1.5"
+                                        <div className={cn(
+                                            "absolute top-0 left-0 w-4 h-4 -translate-x-1.5 transition-colors duration-1000",
+                                            isMidnight ? "bg-slate-900" : "bg-white"
+                                        )}
                                             style={{ clipPath: 'polygon(100% 0, 0 0, 100% 100%)' }} />
 
                                         <div className="p-3.5 pb-7 min-w-[200px]">
@@ -211,7 +231,10 @@ export default function LaporPakPage() {
                                             )}
 
                                             <div className="space-y-3">
-                                                <p className="text-sm text-slate-800 leading-relaxed font-semibold">
+                                                <p className={cn(
+                                                    "text-sm leading-relaxed font-semibold transition-colors duration-1000",
+                                                    isMidnight ? "text-slate-300" : "text-slate-800"
+                                                )}>
                                                     {item.message}
                                                 </p>
 
@@ -267,44 +290,48 @@ export default function LaporPakPage() {
                                         )}
                                     </div>
 
-                                    {/* Parent Action (Wali Only) */}
-                                    {user?.role === 'parent' && (
-                                        <div className="flex items-center gap-2 mt-2 ml-4">
-                                            <button
-                                                onClick={() => setShowEmojiPicker(showEmojiPicker === item.id ? null : item.id)}
-                                                className={cn(
-                                                    "p-2 rounded-2xl transition-all active:scale-90 flex items-center gap-1.5 border-2",
-                                                    showEmojiPicker === item.id
-                                                        ? "bg-slate-900 border-slate-900 text-white"
-                                                        : "bg-white border-slate-100 text-slate-400 hover:border-emerald-200 hover:text-emerald-500"
-                                                )}
-                                            >
-                                                <Smile className="h-4 w-4" />
-                                                <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">Kirim Doa</span>
-                                            </button>
+                                    {/* Universal Booster Action (Every Santri/Parent can boost) */}
+                                    <div className="flex items-center gap-2 mt-2 ml-4">
+                                        <button
+                                            onClick={() => {
+                                                sounds?.play("click");
+                                                setShowEmojiPicker(showEmojiPicker === item.id ? null : item.id);
+                                            }}
+                                            className={cn(
+                                                "p-2 rounded-2xl transition-all active:scale-90 flex items-center gap-1.5 border-2",
+                                                showEmojiPicker === item.id
+                                                    ? "bg-slate-900 border-slate-900 text-white"
+                                                    : "bg-white border-slate-100 text-slate-400 hover:border-emerald-200 hover:text-emerald-500"
+                                            )}
+                                        >
+                                            <Sparkles className={cn("h-4 w-4", showEmojiPicker === item.id ? "text-amber-400" : "text-emerald-500")} />
+                                            <span className="text-[10px] font-black uppercase tracking-widest">Kirim Booster</span>
+                                        </button>
 
-                                            <AnimatePresence>
-                                                {showEmojiPicker === item.id && (
-                                                    <motion.div
-                                                        initial={{ opacity: 0, x: -20, scale: 0.8 }}
-                                                        animate={{ opacity: 1, x: 0, scale: 1 }}
-                                                        exit={{ opacity: 0, x: -20, scale: 0.8 }}
-                                                        className="flex gap-2.5 bg-white/90 backdrop-blur-xl rounded-2xl p-2 px-4 shadow-2xl border border-white shadow-emerald-900/5"
-                                                    >
-                                                        {['❤️', '👍', '🔥', '👏', '🙌', '🤲'].map(emoji => (
-                                                            <button
-                                                                key={emoji}
-                                                                onClick={() => handleReact(item.id, emoji)}
-                                                                className="hover:scale-150 active:scale-125 transition-all text-xl"
-                                                            >
-                                                                {emoji}
-                                                            </button>
-                                                        ))}
-                                                    </motion.div>
-                                                )}
-                                            </AnimatePresence>
-                                        </div>
-                                    )}
+                                        <AnimatePresence>
+                                            {showEmojiPicker === item.id && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, x: -20, scale: 0.8 }}
+                                                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                                                    exit={{ opacity: 0, x: -20, scale: 0.8 }}
+                                                    className="flex gap-2.5 bg-white/90 backdrop-blur-xl rounded-2xl p-2 px-4 shadow-2xl border border-white shadow-emerald-900/5 z-50"
+                                                >
+                                                    {['🔥', '💎', '🙌', '🚀', '🕌'].map(emoji => (
+                                                        <button
+                                                            key={emoji}
+                                                            onClick={() => {
+                                                                sounds?.play("success");
+                                                                handleReact(item.id, emoji);
+                                                            }}
+                                                            className="hover:scale-150 active:scale-125 transition-all text-xl"
+                                                        >
+                                                            {emoji}
+                                                        </button>
+                                                    ))}
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
                                 </motion.div>
                             ))}
                         </AnimatePresence>

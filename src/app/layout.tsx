@@ -4,6 +4,7 @@ import "./globals.css";
 import AppShell from "@/components/layout/AppShell";
 import { GamificationProvider } from "@/context/GamificationContext";
 import { AuthProvider } from "@/components/providers/AuthProvider";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,11 +33,13 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <AuthProvider>
-          <GamificationProvider>
-            <AppShell>
-              {children}
-            </AppShell>
-          </GamificationProvider>
+          <ThemeProvider>
+            <GamificationProvider>
+              <AppShell>
+                {children}
+              </AppShell>
+            </GamificationProvider>
+          </ThemeProvider>
         </AuthProvider>
       </body>
     </html>

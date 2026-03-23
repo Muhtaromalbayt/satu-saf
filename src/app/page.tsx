@@ -4,12 +4,14 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { User, BookOpen, HeartHandshake, Map as MapIcon, Trophy, Zap, Flame, Heart, Star, Calendar, Sparkles, Compass, Rocket, ChevronRight, ShieldCheck, Target } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { useTheme } from "@/components/providers/ThemeProvider";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 export default function LandingPage() {
   const { user, loading } = useAuth();
+  const { isMidnight } = useTheme();
   const [isHovered, setIsHovered] = useState<string | null>(null);
   
   // Parallax scrolling setup
@@ -20,11 +22,14 @@ export default function LandingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+      <div className={cn(
+        "min-h-screen flex items-center justify-center transition-colors duration-1000",
+        isMidnight ? "bg-slate-950" : "bg-white"
+      )}>
         <div className="relative h-20 w-20">
-          <div className="absolute inset-0 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
-          <div className="absolute inset-2 border-4 border-amber-500/20 border-b-amber-500 rounded-full animate-spin-reverse" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} />
-          <Sparkles className="absolute inset-0 m-auto h-6 w-6 text-emerald-400 animate-pulse" />
+          <div className={cn("absolute inset-0 border-4 rounded-full animate-spin", isMidnight ? "border-indigo-500/20 border-t-indigo-500" : "border-emerald-500/20 border-t-emerald-500")} />
+          <div className={cn("absolute inset-2 border-4 rounded-full animate-spin-reverse", isMidnight ? "border-amber-500/20 border-b-amber-500" : "border-teal-500/20 border-b-teal-500")} style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} />
+          <Sparkles className={cn("absolute inset-0 m-auto h-6 w-6 animate-pulse", isMidnight ? "text-indigo-400" : "text-emerald-400")} />
         </div>
       </div>
     );
@@ -41,13 +46,16 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 overflow-hidden font-sans text-slate-100 selection:bg-emerald-500/30">
+    <div className={cn(
+        "min-h-screen overflow-hidden font-sans transition-colors duration-1000 selection:bg-emerald-500/30",
+        isMidnight ? "bg-slate-950 text-slate-100" : "bg-white text-slate-900"
+    )}>
       {/* Dynamic Background */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-600/20 rounded-full blur-[120px] mix-blend-screen animate-blob" />
-        <div className="absolute top-[20%] right-[-10%] w-[35%] h-[35%] bg-amber-500/15 rounded-full blur-[120px] mix-blend-screen animate-blob animation-delay-2000" />
-        <div className="absolute bottom-[-20%] left-[20%] w-[50%] h-[50%] bg-teal-600/20 rounded-full blur-[120px] mix-blend-screen animate-blob animation-delay-4000" />
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20" />
+        <div className={cn("absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] mix-blend-screen animate-blob", isMidnight ? "bg-indigo-600/20" : "bg-emerald-600/10")} />
+        <div className={cn("absolute top-[20%] right-[-10%] w-[35%] h-[35%] rounded-full blur-[120px] mix-blend-screen animate-blob animation-delay-2000", isMidnight ? "bg-amber-500/15" : "bg-amber-500/10")} />
+        <div className={cn("absolute bottom-[-20%] left-[20%] w-[50%] h-[50%] rounded-full blur-[120px] mix-blend-screen animate-blob animation-delay-4000", isMidnight ? "bg-purple-600/20" : "bg-teal-600/10")} />
+        <div className={cn("absolute inset-0 opacity-20", isMidnight ? "bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" : "bg-[url('https://www.transparenttextures.com/patterns/subtle-white-feathers.png')]")} />
       </div>
 
       {/* Hero Section */}
@@ -72,7 +80,10 @@ export default function LandingPage() {
             transition={{ duration: 0.8, type: "spring", bounce: 0.4 }}
             className="relative mb-8 md:mb-10"
           >
-            <h1 className="text-6xl md:text-8xl lg:text-[8rem] font-black tracking-tighter leading-[0.9] text-white my-0 uppercase">
+            <h1 className={cn(
+              "text-6xl md:text-8xl lg:text-[8rem] font-black tracking-tighter leading-[0.9] my-0 uppercase transition-colors duration-1000",
+              isMidnight ? "text-white" : "text-emerald-900"
+            )}>
               SATU <span className="text-emerald-500 inline-block hover:scale-105 transition-transform duration-300">SAF</span>
             </h1>
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[120%] bg-gradient-to-b from-transparent via-emerald-500/10 to-transparent blur-2xl -z-10" />
@@ -391,7 +402,10 @@ export default function LandingPage() {
       </section>
 
       {/* Footer / Login Links */}
-      <footer className="py-16 px-5 border-t border-slate-800 text-center relative z-10 bg-slate-950">
+      <footer className={cn(
+        "py-16 px-5 border-t text-center relative z-10 transition-colors duration-1000",
+        isMidnight ? "bg-slate-950 border-slate-800" : "bg-slate-50 border-slate-200"
+      )}>
         <div className="max-w-2xl mx-auto flex flex-col items-center">
           
           <div className="flex items-center gap-3 mb-8">

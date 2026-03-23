@@ -15,9 +15,10 @@ interface MissionSelectProps {
     progress: number;
     logs: any[];
     tasks: any[];
+    isMidnight?: boolean;
 }
 
-export default function MissionSelect({ isOpen, onClose, onSelectAspect, day, progress, logs, tasks }: MissionSelectProps) {
+export default function MissionSelect({ isOpen, onClose, onSelectAspect, day, progress, logs, tasks, isMidnight }: MissionSelectProps) {
     if (!isOpen) return null;
 
     return (
@@ -26,10 +27,18 @@ export default function MissionSelect({ isOpen, onClose, onSelectAspect, day, pr
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="fixed inset-0 z-50 bg-gradient-to-b from-slate-50 to-white flex flex-col overflow-hidden"
+                className={cn(
+                    "fixed inset-0 z-50 flex flex-col overflow-hidden transition-colors duration-1000",
+                    isMidnight ? "bg-slate-950" : "bg-gradient-to-b from-slate-50 to-white"
+                )}
             >
                 {/* ═══ HEADER ═══ */}
-                <div className="relative px-5 pt-4 pb-6 bg-gradient-to-br from-emerald-600 via-emerald-500 to-teal-500 rounded-b-[2.5rem] text-white overflow-hidden shadow-[0_8px_40px_rgba(5,150,105,0.35)]">
+                <div className={cn(
+                    "relative px-5 pt-4 pb-6 rounded-b-[2.5rem] text-white overflow-hidden shadow-xl transition-colors duration-1000",
+                    isMidnight 
+                        ? "bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 shadow-indigo-500/10" 
+                        : "bg-gradient-to-br from-emerald-600 via-emerald-500 to-teal-500 shadow-[0_8px_40px_rgba(5,150,105,0.35)]"
+                )}>
                     {/* Animated mesh background */}
                     <div className="absolute inset-0 pointer-events-none">
                         <div className="absolute -top-20 -right-20 w-48 h-48 bg-white/10 rounded-full blur-3xl animate-pulse" />
@@ -67,10 +76,13 @@ export default function MissionSelect({ isOpen, onClose, onSelectAspect, day, pr
                             className="shrink-0 relative"
                         >
                             {/* Glow ring */}
-                            <div className="absolute -inset-2 bg-amber-400/20 rounded-2xl blur-lg animate-pulse" />
-                            <div className="relative h-18 w-18 bg-white rounded-2xl flex flex-col items-center justify-center border-[3px] border-amber-400 shadow-xl shadow-emerald-900/20" style={{ height: '4.5rem', width: '4.5rem' }}>
-                                <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest leading-none">HARI</span>
-                                <span className="text-3xl font-black text-emerald-600 leading-none">{day}</span>
+                            <div className={cn("absolute -inset-2 rounded-2xl blur-lg animate-pulse", isMidnight ? "bg-indigo-400/20" : "bg-amber-400/20")} />
+                            <div className={cn(
+                                "relative h-18 w-18 rounded-2xl flex flex-col items-center justify-center border-[3px] shadow-xl",
+                                isMidnight ? "bg-slate-900 border-indigo-400" : "bg-white border-amber-400"
+                            )} style={{ height: '4.5rem', width: '4.5rem' }}>
+                                <span className={cn("text-[8px] font-black uppercase tracking-widest leading-none", isMidnight ? "text-indigo-400" : "text-emerald-400")}>HARI</span>
+                                <span className={cn("text-3xl font-black leading-none", isMidnight ? "text-white" : "text-emerald-600")}>{day}</span>
                             </div>
                         </motion.div>
 
@@ -160,16 +172,22 @@ export default function MissionSelect({ isOpen, onClose, onSelectAspect, day, pr
                                     <button
                                         onClick={() => { sounds?.play("open"); onSelectAspect(aspect.id); }}
                                         className={cn(
-                                            "w-full bg-white p-4 rounded-2xl flex items-center gap-3.5",
-                                            "border border-slate-100/80 border-l-4 transition-all duration-200",
+                                            "w-full p-4 rounded-2xl flex items-center gap-3.5",
+                                            "border border-l-4 transition-all duration-200",
+                                            isMidnight 
+                                                ? "bg-slate-900 border-slate-800 shadow-lg shadow-black/20" 
+                                                : "bg-white border-slate-100/80 shadow-lg shadow-emerald-900/5",
                                             "active:scale-[0.97] active:shadow-sm",
-                                            "shadow-lg hover:shadow-xl relative overflow-hidden group",
+                                            "hover:shadow-xl relative overflow-hidden group",
                                             colors.accent,
-                                            aspectProgress === 100 && "ring-2 ring-emerald-400/30"
+                                            aspectProgress === 100 && (isMidnight ? "ring-2 ring-indigo-500/30" : "ring-2 ring-emerald-400/30")
                                         )}
                                     >
                                         {/* Subtle gradient overlay */}
-                                        <div className="absolute inset-0 bg-gradient-to-r from-white via-white to-transparent opacity-0 group-active:opacity-60 transition-opacity pointer-events-none" />
+                                        <div className={cn(
+                                            "absolute inset-0 via-transparent to-transparent opacity-0 group-active:opacity-60 transition-opacity pointer-events-none",
+                                            isMidnight ? "bg-gradient-to-r from-slate-800" : "bg-gradient-to-r from-white"
+                                        )} />
                                         
                                         {/* Colored corner glow */}
                                         <div className={cn("absolute -top-4 -left-4 w-16 h-16 rounded-full blur-2xl opacity-30 pointer-events-none", colors.glow)} />
@@ -178,7 +196,9 @@ export default function MissionSelect({ isOpen, onClose, onSelectAspect, day, pr
                                         <div className="relative shrink-0">
                                             <div className={cn(
                                                 "h-14 w-14 rounded-2xl flex items-center justify-center border-2 relative overflow-hidden",
-                                                colors.iconBg, colors.border, colors.text
+                                                isMidnight ? "bg-slate-800 border-slate-700" : colors.iconBg, 
+                                                isMidnight ? "text-indigo-400" : colors.border, 
+                                                !isMidnight && colors.text
                                             )}>
                                                 <Icon className="h-6 w-6 fill-current opacity-[0.07] absolute scale-[2]" />
                                                 <Icon className="h-7 w-7 relative z-10 drop-shadow-sm" />
@@ -197,7 +217,10 @@ export default function MissionSelect({ isOpen, onClose, onSelectAspect, day, pr
 
                                         {/* Content */}
                                         <div className="flex-1 text-left relative z-10 min-w-0">
-                                            <h4 className="font-extrabold text-slate-800 uppercase tracking-tight text-[15px] leading-none mb-2">{aspect.label}</h4>
+                                            <h4 className={cn(
+                                                "font-extrabold uppercase tracking-tight text-[15px] leading-none mb-2",
+                                                isMidnight ? "text-slate-200" : "text-slate-800"
+                                            )}>{aspect.label}</h4>
 
                                             <div className="space-y-1.5">
                                                 {/* Progress bar */}
@@ -228,7 +251,8 @@ export default function MissionSelect({ isOpen, onClose, onSelectAspect, day, pr
                                         {/* Arrow */}
                                         <div className={cn(
                                             "h-10 w-10 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200",
-                                            "bg-slate-50 text-slate-300 group-active:text-white border border-slate-100",
+                                            isMidnight ? "bg-slate-800 text-slate-500 border-slate-700" : "bg-slate-50 text-slate-300 border-slate-100",
+                                            "group-active:text-white border",
                                             `group-active:bg-gradient-to-br group-active:${colors.gradient} group-active:border-transparent`
                                         )}>
                                             <ChevronRight className="h-5 w-5 group-active:translate-x-0.5 transition-transform" />

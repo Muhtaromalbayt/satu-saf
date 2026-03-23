@@ -22,6 +22,14 @@ export async function POST(req: NextRequest) {
                 console.log("Adding missing total_score column to scores table...");
                 await db.run(sql`ALTER TABLE scores ADD COLUMN total_score REAL DEFAULT 0`);
             }
+            
+            const hasStreak = tableInfo.some((col: any) => col.name === 'streak_count');
+            if (!hasStreak) {
+                console.log("Adding streak columns to scores table...");
+                await db.run(sql`ALTER TABLE scores ADD COLUMN streak_count INTEGER DEFAULT 0`);
+                await db.run(sql`ALTER TABLE scores ADD COLUMN best_streak INTEGER DEFAULT 0`);
+                await db.run(sql`ALTER TABLE scores ADD COLUMN last_streak_day INTEGER`);
+            }
         } catch (migError) {
             console.error("Migration check failed:", migError);
         }
@@ -158,6 +166,9 @@ export async function POST(req: NextRequest) {
                     .set({
                         monitoring: monitoringBase,
                         totalScore: totalScore,
+                        streakCount: streak,
+                        bestStreak: Math.max(scoreEntry.bestStreak || 0, streak),
+                        lastStreakDay: days.length > 0 ? days[0] : null,
                         updatedAt: new Date()
                     })
                     .where(eq(scoresTable.userId, s.id));
@@ -166,6 +177,9 @@ export async function POST(req: NextRequest) {
                     userId: s.id,
                     monitoring: monitoringBase,
                     totalScore: totalScore,
+                    streakCount: streak,
+                    bestStreak: streak,
+                    lastStreakDay: days.length > 0 ? days[0] : null,
                     updatedAt: new Date()
                 });
             }

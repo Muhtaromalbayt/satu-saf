@@ -16,9 +16,10 @@ interface TaskMissionProps {
     tasks: any[];
     logs: any[];
     onSave: (taskName: string, data: { status: string, evidenceUrl?: string, reflection?: string, capturedAt?: string }) => Promise<void>;
+    isMidnight?: boolean;
 }
 
-export default function TaskMission({ isOpen, onClose, day, aspectId, tasks, logs, onSave }: TaskMissionProps) {
+export default function TaskMission({ isOpen, onClose, day, aspectId, tasks, logs, onSave, isMidnight }: TaskMissionProps) {
     const [expandedTask, setExpandedTask] = useState<string | null>(null);
     const [evidenceUrl, setEvidenceUrl] = useState("");
     const [reflection, setReflection] = useState("");
@@ -87,7 +88,10 @@ export default function TaskMission({ isOpen, onClose, day, aspectId, tasks, log
                     animate={{ x: 0 }}
                     exit={{ x: "100%" }}
                     transition={{ type: "spring", damping: 30, stiffness: 300 }}
-                    className="fixed inset-0 z-50 bg-slate-50 flex flex-col"
+                    className={cn(
+                        "fixed inset-0 z-50 flex flex-col transition-colors duration-1000",
+                        isMidnight ? "bg-slate-950" : "bg-slate-50"
+                    )}
                 >
                     {showCamera && (
                         <CameraCapture
@@ -97,7 +101,12 @@ export default function TaskMission({ isOpen, onClose, day, aspectId, tasks, log
                     )}
 
                     {/* ═══ COMPACT HEADER ═══ */}
-                    <div className={cn("relative px-4 pt-4 pb-5 rounded-b-[2rem] text-white overflow-hidden shadow-lg", `bg-gradient-to-br ${colors.gradient}`)}>
+                    <div className={cn(
+                        "relative px-4 pt-4 pb-5 rounded-b-[2rem] text-white overflow-hidden shadow-lg transition-colors duration-1000",
+                        isMidnight 
+                            ? "bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 shadow-indigo-500/10" 
+                            : `bg-gradient-to-br ${colors.gradient}`
+                    )}>
                         {/* Decorative elements */}
                         <div className="absolute inset-0 pointer-events-none">
                             <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
@@ -168,8 +177,8 @@ export default function TaskMission({ isOpen, onClose, day, aspectId, tasks, log
                                         className={cn(
                                             "rounded-2xl transition-all overflow-hidden border",
                                             isExpanded
-                                                ? "bg-white shadow-xl border-slate-200 ring-1 ring-slate-100"
-                                                : "bg-white shadow-md border-slate-100 active:scale-[0.98]"
+                                                ? isMidnight ? "bg-slate-900 border-slate-800 shadow-xl shadow-black/40" : "bg-white shadow-xl border-slate-200 ring-1 ring-slate-100"
+                                                : isMidnight ? "bg-slate-900/50 border-slate-800" : "bg-white shadow-md border-slate-100 active:scale-[0.98]"
                                         )}
                                     >
                                         <button
@@ -183,7 +192,7 @@ export default function TaskMission({ isOpen, onClose, day, aspectId, tasks, log
                                                     ? "bg-emerald-500 text-white border-emerald-400 shadow-md shadow-emerald-500/20"
                                                     : isPending
                                                         ? "bg-amber-500 text-white border-amber-400 shadow-md shadow-amber-500/20"
-                                                        : "bg-slate-50 text-slate-300 border-slate-200"
+                                                        : isMidnight ? "bg-slate-800 text-slate-600 border-slate-700" : "bg-slate-50 text-slate-300 border-slate-200"
                                             )}>
                                                 {isDone ? (
                                                     <CheckCircle2 className="h-6 w-6 text-white" />
@@ -198,7 +207,9 @@ export default function TaskMission({ isOpen, onClose, day, aspectId, tasks, log
                                             <div className="flex-1 min-w-0">
                                                 <h4 className={cn(
                                                     "font-extrabold text-sm uppercase tracking-tight leading-none mb-1.5",
-                                                    isDone || isPending ? "text-slate-800" : "text-slate-500"
+                                                    isDone || isPending 
+                                                        ? isMidnight ? "text-slate-200" : "text-slate-800" 
+                                                        : isMidnight ? "text-slate-500" : "text-slate-500"
                                                 )}>
                                                     {taskName}
                                                 </h4>
@@ -208,7 +219,7 @@ export default function TaskMission({ isOpen, onClose, day, aspectId, tasks, log
                                                         ? "bg-emerald-50 text-emerald-600"
                                                         : isPending
                                                             ? "bg-amber-50 text-amber-600"
-                                                            : "bg-slate-50 text-slate-400"
+                                                            : isMidnight ? "bg-slate-800 text-slate-500" : "bg-slate-50 text-slate-400"
                                                 )}>
                                                     {isDone ? (
                                                         <><Zap className="h-2.5 w-2.5" /> Poin +10</>
@@ -224,7 +235,10 @@ export default function TaskMission({ isOpen, onClose, day, aspectId, tasks, log
                                             {!isDone && !isPending && (
                                                 <motion.div
                                                     animate={isExpanded ? { rotate: 90 } : { rotate: 0 }}
-                                                    className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0 border border-slate-100"
+                                                    className={cn(
+                                                        "h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border",
+                                                        isMidnight ? "bg-slate-800 text-slate-500 border-slate-700" : "bg-slate-50 text-slate-400 border-slate-100"
+                                                    )}
                                                 >
                                                     <ChevronRight className="h-4 w-4" />
                                                 </motion.div>
@@ -240,7 +254,7 @@ export default function TaskMission({ isOpen, onClose, day, aspectId, tasks, log
                                                     exit={{ height: 0, opacity: 0 }}
                                                     className="px-4 pb-4 space-y-4 overflow-hidden"
                                                 >
-                                                    <div className="h-px bg-slate-100 w-full" />
+                                                    <div className={cn("h-px w-full", isMidnight ? "bg-slate-800" : "bg-slate-100")} />
 
                                                     {/* Photo evidence */}
                                                     <div className="space-y-2">
@@ -249,14 +263,14 @@ export default function TaskMission({ isOpen, onClose, day, aspectId, tasks, log
                                                                 <Camera className="h-3 w-3" /> Bukti Foto
                                                             </label>
                                                             {evidenceUrl && (
-                                                                <button onClick={() => setEvidenceUrl("")} className="text-[9px] font-bold text-rose-500 flex items-center gap-1 uppercase tracking-wider hover:text-rose-600">
+                                                                <button onClick={() => setEvidenceUrl("")} className={cn("text-[9px] font-bold flex items-center gap-1 uppercase tracking-wider", isMidnight ? "text-rose-400 hover:text-rose-300" : "text-rose-500 hover:text-rose-600")}>
                                                                     <Trash2 className="h-2.5 w-2.5" /> Hapus
                                                                 </button>
                                                             )}
                                                         </div>
 
                                                         {evidenceUrl ? (
-                                                            <div className="relative rounded-xl overflow-hidden border-2 border-slate-100 shadow-sm">
+                                                            <div className={cn("relative rounded-xl overflow-hidden border-2 shadow-sm", isMidnight ? "border-slate-800" : "border-slate-100")}>
                                                                 <img src={evidenceUrl} alt="Bukti" className="w-full aspect-video object-cover" />
                                                                 <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg flex items-center gap-1.5 text-[8px] font-bold text-white uppercase tracking-wider">
                                                                     <Clock className="h-2.5 w-2.5 text-emerald-400" />
@@ -266,10 +280,18 @@ export default function TaskMission({ isOpen, onClose, day, aspectId, tasks, log
                                                         ) : (
                                                             <button
                                                                 onClick={() => { sounds?.play("click"); setShowCamera(true); }}
-                                                                className="w-full aspect-[2/1] bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-2 text-slate-400 hover:border-emerald-300 hover:bg-emerald-50/50 transition-all group active:scale-[0.98]"
+                                                                className={cn(
+                                                                    "w-full aspect-[2/1] rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all group active:scale-[0.98]",
+                                                                    isMidnight 
+                                                                        ? "bg-slate-900 border-slate-700 text-slate-600 hover:border-indigo-500 hover:bg-indigo-500/5" 
+                                                                        : "bg-slate-50 border-slate-200 text-slate-400 hover:border-emerald-300 hover:bg-emerald-50/50"
+                                                                )}
                                                             >
-                                                                <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                                                                    <Camera className="h-5 w-5 text-emerald-500" />
+                                                                <div className={cn(
+                                                                    "h-10 w-10 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform",
+                                                                    isMidnight ? "bg-slate-800" : "bg-white"
+                                                                )}>
+                                                                    <Camera className={cn("h-5 w-5", isMidnight ? "text-indigo-400" : "text-emerald-500")} />
                                                                 </div>
                                                                 <span className="text-[10px] font-bold uppercase tracking-wider">Buka Kamera</span>
                                                             </button>
@@ -286,7 +308,12 @@ export default function TaskMission({ isOpen, onClose, day, aspectId, tasks, log
                                                             onChange={(e) => setReflection(e.target.value)}
                                                             rows={2}
                                                             placeholder="Tuliskan pengalamanmu..."
-                                                            className="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-emerald-400 focus:bg-white outline-none font-semibold text-sm transition-all resize-none text-slate-700 placeholder:text-slate-300"
+                                                            className={cn(
+                                                                "w-full p-3.5 rounded-xl border outline-none font-semibold text-sm transition-all resize-none",
+                                                                isMidnight 
+                                                                    ? "bg-slate-900 border-slate-800 text-slate-200 focus:border-indigo-500 placeholder:text-slate-700" 
+                                                                    : "bg-slate-50 border-slate-200 text-slate-700 placeholder:text-slate-300 focus:border-emerald-400 focus:bg-white"
+                                                            )}
                                                         />
                                                     </div>
 

@@ -67,6 +67,9 @@ export const scores = sqliteTable("scores", {
     qiyamullail: real("qiyamullail").default(0), // from CSV
     monitoring: real("monitoring").default(0), // calculated from daily_monitoring
     totalScore: real("total_score").default(0), // synced total for leaderboard
+    streakCount: integer("streak_count").default(0),
+    bestStreak: integer("best_streak").default(0),
+    lastStreakDay: integer("last_streak_day"), 
     hafalanTotal: real("hafalan_total").default(0), // legacy/accumulated
     hafalanCount: integer("hafalan_count").default(0), // legacy
     tesTulis: real("tes_tulis").default(0), // legacy
@@ -213,3 +216,15 @@ export const progress = sqliteTable("progress", {
         .default(sql`CURRENT_TIMESTAMP`)
         .notNull(),
 });
+// ===== Badges Table (Achievements) =====
+ 
+ export const userBadges = sqliteTable("user_badges", {
+     id: integer("id").primaryKey({ autoIncrement: true }),
+     userId: text("user_id")
+         .notNull()
+         .references(() => user.id, { onDelete: "cascade" }),
+     badgeType: text("badge_type").notNull(), // 'streak_3', 'perfect_day', etc.
+     awardedAt: integer("awarded_at", { mode: "timestamp" })
+         .default(sql`(current_timestamp)`)
+         .notNull(),
+ });
