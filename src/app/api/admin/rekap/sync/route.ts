@@ -67,8 +67,11 @@ export async function POST(req: NextRequest) {
             console.error("Failed to parse configs, using defaults:", confError);
         }
 
-        // 2. Fetch all santri
-        const santris = await db.select().from(userTable).where(eq(userTable.role, 'santri')).all();
+        // 2. Fetch all santri (Exclude Demo)
+        const santris = await db.select()
+            .from(userTable)
+            .where(and(eq(userTable.role, 'santri'), sql`${userTable.id} != 'demo_santri'`))
+            .all();
         const scores = await db.select().from(scoresTable).all();
 
         // 3. Calculate Monitoring Scores & Streaks

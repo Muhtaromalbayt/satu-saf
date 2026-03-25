@@ -13,7 +13,8 @@ export async function GET(_req: NextRequest) {
 
     // Get all santri from both DB and Spreadsheet
     const participants = await fetchParticipants();
-    const santriList = participants.filter(p => p.role === "santri");
+    const dbUserIds = new Set(allScores.map(s => s.userId));
+    const santriList = participants.filter(p => p.role === "santri" && dbUserIds.has(p.id));
 
     if (santriList.length === 0) {
         return NextResponse.json({ leaderboard: [] });

@@ -16,7 +16,7 @@ export interface Participant {
     nama: string;
     kelompok: string;
     role: string; // 'santri' | 'mentor' | 'admin'
-    score?: number;
+    score: number;
 }
 
 // Cache to avoid hammering Sheets API
@@ -30,12 +30,15 @@ export async function fetchParticipants(): Promise<Participant[]> {
 
     const db = getDb();
     const dbUsers = await db.select().from(userTable);
-    const dbParticipants: Participant[] = dbUsers.map((u: any) => ({
-        id: u.sheetRowId || u.id,
-        nama: u.name,
-        kelompok: u.kelompok,
-        role: u.role || 'santri'
-    }));
+    const dbParticipants: Participant[] = dbUsers
+        .filter((u: any) => u.id !== 'demo_santri')
+        .map((u: any) => ({
+            id: u.sheetRowId || u.id,
+            nama: u.name,
+            kelompok: u.kelompok,
+            role: u.role || 'santri',
+            score: 0
+        }));
 
     const apiKey = process.env.GOOGLE_SHEETS_API_KEY;
     let sheetParticipants: Participant[] = [];
@@ -103,20 +106,6 @@ export async function fetchParticipants(): Promise<Participant[]> {
     }
 
     const combined = [...dbParticipants];
-
-    // Hardcode Demo User for tutorial purposes (ensures visibility on Vercel/Production)
-    const demoUser: Participant = {
-        id: "demo_santri",
-        nama: "Santri Demo",
-        kelompok: "Demo",
-        role: "santri",
-        score: 0
-    };
-
-    // Add demo user if not already in combined list
-    if (!combined.some(p => p.id === demoUser.id)) {
-        combined.push(demoUser);
-    }
 
     sheetParticipants.forEach(sp => {
         const existingIdx = combined.findIndex(cp =>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/server/db";
-import { user as userTable, scores as scoresTable } from "@/lib/server/db/schema";
-import { eq, and } from "drizzle-orm";
+import { user as userTable, scores as scoresTable, systemSettings } from "@/lib/server/db/schema";
+import { eq, and, inArray } from "drizzle-orm";
 import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(req: NextRequest) {
@@ -24,6 +24,21 @@ export async function POST(req: NextRequest) {
         let processedCount = 0;
         let addedCount = 0;
         let updatedCount = 0;
+
+        // Load Scoring Weights
+        let scoringWeight = {
+            hafalan: 15,
+            ujianTulis: 15,
+            qiyamullail: 20,
+            monitoring: 50
+        };
+        try {
+            const settings = await db.select()
+                .from(systemSettings)
+                .where(eq(systemSettings.key, "scoring_weight"))
+                .get();
+            if (settings) scoringWeight = JSON.parse(settings.value);
+        } catch (e) {}
 
         // Skip top 2 header rows
         for (let i = 2; i < lines.length; i++) {
@@ -81,21 +96,36 @@ export async function POST(req: NextRequest) {
                 .get();
 
             if (existingScore) {
+                const totalScore = Math.round(
+                    (hafalan * (scoringWeight.hafalan / 100)) +
+                    (ujianTulis * (scoringWeight.ujianTulis / 100)) +
+                    (qiyamullail * (scoringWeight.qiyamullail / 100)) +
+                    ((existingScore.monitoring || 0) * (scoringWeight.monitoring / 100))
+                );
+
                 await db.update(scoresTable)
                     .set({
                         hafalan,
                         ujianTulis,
                         qiyamullail,
+                        totalScore,
                         updatedAt: new Date()
                     })
                     .where(eq(scoresTable.userId, userId!));
                 updatedCount++;
             } else {
+                const totalScore = Math.round(
+                    (hafalan * (scoringWeight.hafalan / 100)) +
+                    (ujianTulis * (scoringWeight.ujianTulis / 100)) +
+                    (qiyamullail * (scoringWeight.qiyamullail / 100))
+                );
+
                 await db.insert(scoresTable).values({
                     userId: userId!,
                     hafalan,
                     ujianTulis,
-                    qiyamullail
+                    qiyamullail,
+                    totalScore
                 });
                 updatedCount++;
             }
