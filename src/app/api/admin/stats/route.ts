@@ -1,7 +1,7 @@
 import { getAdminSession } from "@/lib/admin";
 import { getDb } from "@/lib/server/db";
 import { user as userTable, lessons, progress, session as sessionTable, userAmalan } from "@/lib/server/db/schema";
-import { count, eq, sql, isNotNull, countDistinct } from "drizzle-orm";
+import { count, eq, sql, isNotNull, countDistinct, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -13,10 +13,10 @@ export async function GET() {
 
         const db = getDb();
 
-        // 1. Total Santri
+        // 1. Total Santri (Excluding Demo)
         const santriCountResult = await db.select({ value: count() })
             .from(userTable)
-            .where(eq(userTable.role, 'santri'));
+            .where(and(eq(userTable.role, 'santri'), sql`${userTable.id} != 'demo_santri'`));
         const totalSantri = santriCountResult[0]?.value || 0;
 
         // 2. Total Lessons
@@ -34,37 +34,58 @@ export async function GET() {
         const today = new Date().toISOString().split('T')[0];
         const checkinsTodayResult = await db.select({ value: count() })
             .from(progress)
-            .where(sql`${progress.createdAt} LIKE ${today + '%'}`);
+            .innerJoin(userTable, eq(progress.userId, userTable.id))
+            .where(and(
+                sql`${progress.createdAt} LIKE ${today + '%'}`,
+                sql`${userTable.id} != 'demo_santri'`
+            ));
         const checkinsToday = checkinsTodayResult[0]?.value || 0;
         
-        // --- NEW METRICS ---
+        // --- REFINED METRICS ---
         
-        // 5. Students Logged In (ever had a session)
-        const loggedInCountResult = await db.select({ value: countDistinct(sessionTable.userId) })
+        // 5. Students Logged In Breakdown (excluding demo)
+        const loggedInByRole = await db.select({ 
+            role: userTable.role, 
+            count: countDistinct(sessionTable.userId) 
+        })
             .from(sessionTable)
             .innerJoin(userTable, eq(sessionTable.userId, userTable.id))
-            .where(eq(userTable.role, 'santri'));
-        const studentsLoggedIn = loggedInCountResult[0]?.value || 0;
+            .where(sql`${userTable.id} != 'demo_santri'`)
+            .groupBy(userTable.role)
+            .all();
+            
+        const loginStats = {
+            santri: loggedInByRole.find(r => r.role === 'santri')?.count || 0,
+            mentor: loggedInByRole.find(r => r.role === 'mentor')?.count || 0,
+            wali: loggedInByRole.find(r => r.role === 'parent')?.count || 0,
+            admin: loggedInByRole.find(r => r.role === 'admin')?.count || 0,
+        };
         
-        // 6. Overall Students Doing Tasks (at least one activity)
+        // 6. Overall Students Doing Tasks (excluding demo)
         const overallActivityCountResult = await db.select({ value: countDistinct(userAmalan.userId) })
-            .from(userAmalan);
+            .from(userAmalan)
+            .where(sql`${userAmalan.userId} != 'demo_santri'`);
         const overallActivity = overallActivityCountResult[0]?.value || 0;
         
-        // 7. Daily Task activity (unique students per day for last 14 days)
+        // 7. Daily Task activity (unique students per day & percentage)
         const dailyActivityRaw = await db.select({ 
             day: userAmalan.day, 
             count: countDistinct(userAmalan.userId) 
         })
             .from(userAmalan)
-            .where(isNotNull(userAmalan.day))
+            .where(and(isNotNull(userAmalan.day), sql`${userAmalan.userId} != 'demo_santri'`))
             .groupBy(userAmalan.day)
             .all();
+            
+        const dailyActivity = dailyActivityRaw.map(da => ({
+            ...da,
+            percentage: totalSantri > 0 ? ((da.count / totalSantri) * 100).toFixed(1) : "0"
+        }));
         
         // 8. Average Task Uploads (total verified tasks / total santri)
         const totalVerifiedTasksResult = await db.select({ value: count() })
             .from(userAmalan)
-            .where(eq(userAmalan.status, 'verified'));
+            .where(and(eq(userAmalan.status, 'verified'), sql`${userAmalan.userId} != 'demo_santri'`));
         const totalVerifiedTasks = totalVerifiedTasksResult[0]?.value || 0;
         const averageUploads = totalSantri > 0 ? (totalVerifiedTasks / totalSantri).toFixed(2) : "0";
 
@@ -73,9 +94,9 @@ export async function GET() {
             totalLessons,
             pendingApprovals,
             checkinsToday,
-            studentsLoggedIn,
+            loginStats,
             overallActivity,
-            dailyActivity: dailyActivityRaw,
+            dailyActivity,
             averageUploads
         });
     } catch (error) {

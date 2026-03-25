@@ -14,10 +14,10 @@ export async function GET(req: NextRequest) {
 
         const db = getDb();
 
-        // 1. Fetch all santri
+        // 1. Fetch all santri (Excluding Demo)
         const santris = await db.select()
             .from(userTable)
-            .where(eq(userTable.role, 'santri'))
+            .where(and(eq(userTable.role, 'santri'), sql`${userTable.id} != 'demo_santri'`))
             .all();
 
         // 2. Fetch all scores
@@ -268,5 +268,34 @@ export async function PATCH(req: NextRequest) {
     } catch (error) {
         console.error("Rekap PATCH error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}
+
+export async function DELETE(req: NextRequest) {
+    try {
+        const session = await getAdminSession();
+        if (!session) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const db = getDb();
+        const { searchParams } = new URL(req.url);
+        const userId = searchParams.get("userId");
+
+        if (!userId) {
+            return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+        }
+
+        // Delete user (cascades to scores, sessions, userAmalan, etc. based on schema)
+        await db.delete(userTable).where(eq(userTable.id, userId));
+
+        return NextResponse.json({ message: "Data santri berhasil dihapus" });
+
+    } catch (error: any) {
+        console.error("Rekap DELETE error:", error);
+        return NextResponse.json({ 
+            error: "Internal Server Error",
+            details: error.message 
+        }, { status: 500 });
     }
 }

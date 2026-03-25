@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { BookOpen, Users, CheckCircle, Clock, Download, LogIn, LayoutDashboard, BarChart3 } from "lucide-react";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 
 export default function AdminDashboard() {
     const [statsData, setStatsData] = useState<any>(null);
@@ -26,7 +26,14 @@ export default function AdminDashboard() {
 
     const stats = [
         { label: "Total Santri", value: statsData?.totalSantri || "0", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
-        { label: "Udah Login", value: statsData?.studentsLoggedIn || "0", icon: LogIn, color: "text-indigo-600", bg: "bg-indigo-50" },
+        { 
+            label: "Santri Login", 
+            value: statsData?.loginStats?.santri || "0", 
+            icon: LogIn, 
+            color: "text-indigo-600", 
+            bg: "bg-indigo-50",
+            subtitle: `Mentor: ${statsData?.loginStats?.mentor || 0}, Wali: ${statsData?.loginStats?.wali || 0}`
+        },
         { label: "Mengerjakan Tugas", value: statsData?.overallActivity || "0", icon: CheckCircle, color: "text-emerald-600", bg: "bg-emerald-50" },
         { label: "Rata-rata Upload", value: statsData?.averageUploads || "0", icon: BarChart3, color: "text-amber-600", bg: "bg-amber-50" },
     ];
@@ -43,7 +50,7 @@ export default function AdminDashboard() {
         
         doc.setFontSize(10);
         doc.setTextColor(100);
-        doc.text(`Sistem: SATU SAF Control Center`, 14, 28);
+        doc.text(`Sistem: SATU SAF Control Center (DEMO EXCLUDED)`, 14, 28);
         doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 14, 34);
         
         // Summary Cards Section
@@ -53,19 +60,21 @@ export default function AdminDashboard() {
         
         const summaryData = [
             ["Total Santri", statsData.totalSantri],
-            ["Sudah Login", statsData.studentsLoggedIn],
+            ["Sudah Login (Santri)", statsData.loginStats.santri],
+            ["Sudah Login (Mentor)", statsData.loginStats.mentor],
+            ["Sudah Login (Wali)", statsData.loginStats.wali],
             ["Aktif Mengerjakan", statsData.overallActivity],
             ["Rata-rata Upload", statsData.averageUploads],
             ["Pending Approval", statsData.pendingApprovals],
             ["Materi Aktif", statsData.totalLessons]
         ];
         
-        (doc as any).autoTable({
+        autoTable(doc, {
             body: summaryData,
             startY: 54,
             theme: 'plain',
             styles: { fontSize: 11, cellPadding: 4 },
-            columnStyles: { 0: { fontStyle: 'bold', width: 50 }, 1: { halign: 'right' } }
+            columnStyles: { 0: { fontStyle: 'bold', cellWidth: 60 }, 1: { halign: 'right' } }
         });
         
         // Daily Activity Section
@@ -75,14 +84,15 @@ export default function AdminDashboard() {
             
             const dailyData = statsData.dailyActivity
                 .sort((a: any, b: any) => a.day - b.day)
-                .map((da: any) => [`Hari ke-${da.day}`, `${da.count} Santri`]);
+                .map((da: any) => [`Hari ke-${da.day}`, `${da.count} Santri`, `${da.percentage}%`]);
                 
-            (doc as any).autoTable({
-                head: [["Periode", "Jumlah Partisipasi"]],
+            autoTable(doc, {
+                head: [["Periode", "Jumlah Partisipasi", "Persentase (%)"]],
                 body: dailyData,
                 startY: (doc as any).lastAutoTable.finalY + 20,
                 theme: 'striped',
-                headStyles: { fillColor: [79, 70, 229] }
+                headStyles: { fillColor: [79, 70, 229] },
+                columnStyles: { 1: { halign: 'center' }, 2: { halign: 'center' } }
             });
         }
         
@@ -133,10 +143,15 @@ export default function AdminDashboard() {
                                 <Icon className={cn("h-8 w-8", stat.color)} />
                             </div>
                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">{stat.label}</p>
-                            <div className="flex items-baseline gap-2">
+                            <div className="flex flex-col">
                                 <p className="text-4xl font-black text-slate-900 tracking-tight">
                                     {loading ? "..." : stat.value}
                                 </p>
+                                {stat.subtitle && (
+                                    <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider">
+                                        {stat.subtitle}
+                                    </p>
+                                )}
                             </div>
                         </motion.div>
                     );

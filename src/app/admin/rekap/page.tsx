@@ -13,14 +13,15 @@ import {
     AlertCircle,
     ChevronRight,
     Trophy,
-    Target
+    Target,
+    Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 
 interface SantriScore {
     id: string;
@@ -77,6 +78,30 @@ export default function RekapNilaiPage() {
         });
     };
 
+    const handleDelete = async (id: string, name: string) => {
+        if (!confirm(`Hapus data santri ${name}? Tindakan ini tidak dapat dibatalkan.`)) return;
+        
+        setSaving(true);
+        try {
+            const res = await fetch(`/api/admin/rekap?userId=${id}`, {
+                method: "DELETE"
+            });
+
+            if (res.ok) {
+                setToast({ type: 'success', message: "Data santri berhasil dihapus!" });
+                fetchData();
+            } else {
+                const errData = await res.json();
+                setToast({ type: 'error', message: errData.error || "Gagal menghapus data." });
+            }
+        } catch (err) {
+            setToast({ type: 'error', message: "Terjadi kesalahan jaringan." });
+        } finally {
+            setSaving(false);
+            setTimeout(() => setToast(null), 3000);
+        }
+    };
+
     const handleSave = async (id: string) => {
         setSaving(true);
         try {
@@ -112,7 +137,7 @@ export default function RekapNilaiPage() {
         doc.text("Rekap Nilai Santri - SATU SAF", 14, 22);
         doc.setFontSize(11);
         doc.setTextColor(100);
-        doc.text(`Tanggal: ${new Date().toLocaleDateString('id-ID')}`, 14, 30);
+        doc.text(`Tanggal: ${new Date().toLocaleDateString('id-ID')} (DEMO EXCLUDED)`, 14, 30);
         
         const tableColumn = ["Nama", "Kelompok", "Hafalan", "Ujian", "Qiyam", "Monit", "Total"];
         const tableRows = filteredData.map(s => [
@@ -125,7 +150,7 @@ export default function RekapNilaiPage() {
             s.total
         ]);
 
-        (doc as any).autoTable({
+        autoTable(doc, {
             head: [tableColumn],
             body: tableRows,
             startY: 40,
@@ -321,13 +346,22 @@ export default function RekapNilaiPage() {
                                                         </Button>
                                                     </div>
                                                 ) : (
-                                                    <Button
-                                                        onClick={() => handleEdit(santri)}
-                                                        variant="outline"
-                                                        className="h-10 px-4 rounded-xl bg-slate-50 hover:bg-primary/5 hover:text-primary transition-all font-black text-[11px] uppercase tracking-widest text-slate-400 border-2 border-transparent group-hover:border-primary/10"
-                                                    >
-                                                        <Edit2 className="h-4 w-4 mr-2" /> Edit
-                                                    </Button>
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <Button
+                                                            onClick={() => handleEdit(santri)}
+                                                            variant="outline"
+                                                            className="h-10 px-4 rounded-xl bg-slate-50 hover:bg-primary/5 hover:text-primary transition-all font-black text-[11px] uppercase tracking-widest text-slate-400 border-2 border-transparent group-hover:border-primary/10"
+                                                        >
+                                                            <Edit2 className="h-4 w-4 mr-2" /> Edit
+                                                        </Button>
+                                                        <Button
+                                                            onClick={() => handleDelete(santri.id, santri.name)}
+                                                            variant="ghost"
+                                                            className="h-10 w-10 p-0 rounded-xl text-slate-300 hover:bg-rose-50 hover:text-rose-600 transition-all border-2 border-transparent hover:border-rose-100"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
                                                 )}
                                             </td>
                                         </motion.tr>
