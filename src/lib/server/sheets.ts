@@ -33,7 +33,7 @@ export async function fetchParticipants(): Promise<Participant[]> {
     const dbParticipants: Participant[] = dbUsers
         .filter((u: any) => u.id !== 'demo_santri')
         .map((u: any) => ({
-            id: u.sheetRowId || u.id,
+            id: u.id,
             nama: u.name,
             kelompok: u.kelompok,
             role: u.role || 'santri',

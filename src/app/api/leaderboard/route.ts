@@ -11,25 +11,32 @@ import { fetchParticipants } from "@/lib/server/sheets";
 export async function GET(_req: NextRequest) {
     const db = getDb();
 
-    // Get all santri from both DB and Spreadsheet
+    // 1. Get Master List from Sheets (and local users)
     const participants = await fetchParticipants();
+
+    // 2. Get all local scores for points mapping
+    const allScores = await db.select().from(scores);
     const dbUserIds = new Set(allScores.map(s => s.userId));
-    const santriList = participants.filter(p => p.role === "santri" && dbUserIds.has(p.id));
+
+    // 3. Filter santri: 
+    // - Always show if they are in the Master List
+    // - BUT exclude demo_santri
+    const santriList = participants.filter(p => 
+        p.role === "santri" && 
+        p.id !== 'demo_santri'
+    );
 
     if (santriList.length === 0) {
         return NextResponse.json({ leaderboard: [] });
     }
 
-    // Get current active tasks count
+    // 4. Get current active tasks count
     const activeTasksCountResult = await db.select({ count: count() })
         .from(monitoringTasks)
         .where(eq(monitoringTasks.isActive, true))
         .get();
 
     const activeTasksCount = (activeTasksCountResult as any)?.count || 0;
-
-    // Get all local scores
-    const allScores = await db.select().from(scores);
 
     // Get monitoring done counts per user from userAmalan
     const monitoringCounts = await db
