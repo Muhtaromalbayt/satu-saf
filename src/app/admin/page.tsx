@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { BookOpen, Users, CheckCircle, Clock } from "lucide-react";
+import { BookOpen, Users, CheckCircle, Clock, Download, LogIn, LayoutDashboard, BarChart3 } from "lucide-react";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
 export default function AdminDashboard() {
     const [statsData, setStatsData] = useState<any>(null);
@@ -24,10 +26,68 @@ export default function AdminDashboard() {
 
     const stats = [
         { label: "Total Santri", value: statsData?.totalSantri || "0", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
-        { label: "Materi Aktif", value: statsData?.totalLessons || "0", icon: BookOpen, color: "text-emerald-600", bg: "bg-emerald-50" },
-        { label: "Pending Approval", value: statsData?.pendingApprovals || "0", icon: Clock, color: "text-amber-600", bg: "bg-amber-50" },
-        { label: "Check-in Hari Ini", value: statsData?.checkinsToday || "0", icon: CheckCircle, color: "text-purple-600", bg: "bg-purple-50" },
+        { label: "Udah Login", value: statsData?.studentsLoggedIn || "0", icon: LogIn, color: "text-indigo-600", bg: "bg-indigo-50" },
+        { label: "Mengerjakan Tugas", value: statsData?.overallActivity || "0", icon: CheckCircle, color: "text-emerald-600", bg: "bg-emerald-50" },
+        { label: "Rata-rata Upload", value: statsData?.averageUploads || "0", icon: BarChart3, color: "text-amber-600", bg: "bg-amber-50" },
     ];
+
+    const handleExportPDF = () => {
+        if (!statsData) return;
+
+        const doc = new jsPDF();
+        
+        // Header
+        doc.setFontSize(22);
+        doc.setTextColor(15, 23, 42); // slate-900
+        doc.text("Laporan Aktivitas Santri", 14, 20);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text(`Sistem: SATU SAF Control Center`, 14, 28);
+        doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 14, 34);
+        
+        // Summary Cards Section
+        doc.setFontSize(14);
+        doc.setTextColor(15, 23, 42);
+        doc.text("Ringkasan Statistik", 14, 48);
+        
+        const summaryData = [
+            ["Total Santri", statsData.totalSantri],
+            ["Sudah Login", statsData.studentsLoggedIn],
+            ["Aktif Mengerjakan", statsData.overallActivity],
+            ["Rata-rata Upload", statsData.averageUploads],
+            ["Pending Approval", statsData.pendingApprovals],
+            ["Materi Aktif", statsData.totalLessons]
+        ];
+        
+        (doc as any).autoTable({
+            body: summaryData,
+            startY: 54,
+            theme: 'plain',
+            styles: { fontSize: 11, cellPadding: 4 },
+            columnStyles: { 0: { fontStyle: 'bold', width: 50 }, 1: { halign: 'right' } }
+        });
+        
+        // Daily Activity Section
+        if (statsData.dailyActivity && statsData.dailyActivity.length > 0) {
+            doc.setFontSize(14);
+            doc.text("Partisipasi Harian (14 Hari)", 14, (doc as any).lastAutoTable.finalY + 15);
+            
+            const dailyData = statsData.dailyActivity
+                .sort((a: any, b: any) => a.day - b.day)
+                .map((da: any) => [`Hari ke-${da.day}`, `${da.count} Santri`]);
+                
+            (doc as any).autoTable({
+                head: [["Periode", "Jumlah Partisipasi"]],
+                body: dailyData,
+                startY: (doc as any).lastAutoTable.finalY + 20,
+                theme: 'striped',
+                headStyles: { fillColor: [79, 70, 229] }
+            });
+        }
+        
+        doc.save(`laporan_admin_${new Date().toISOString().split('T')[0]}.pdf`);
+    };
 
     return (
         <div className="space-y-12 animate-in fade-in duration-700">
@@ -39,7 +99,14 @@ export default function AdminDashboard() {
                         Selamat datang kembali di <span className="text-primary font-black">Control Center</span> SATU SAF. Pantau progres santri dan amalan harian di sini.
                     </p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-col items-end gap-4">
+                    <Button 
+                        onClick={handleExportPDF}
+                        variant="outline"
+                        className="rounded-2xl font-black border-2 border-slate-100 hover:bg-slate-50 h-12 px-6"
+                    >
+                        <Download className="mr-2 h-5 w-5" /> Export PDF Report
+                    </Button>
                     <div className="h-14 w-1 bg-primary/20 rounded-full hidden md:block" />
                     <div className="text-right hidden md:block">
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status Sistem</p>
@@ -129,6 +196,25 @@ export default function AdminDashboard() {
                 </div>
             </div>
         </div>
+    );
+}
+
+// Utility components
+function Button({ className, variant, ...props }: any) {
+    const variants: any = {
+        outline: "border-2 border-slate-100 bg-white hover:bg-slate-50 text-slate-900",
+        ghost: "hover:bg-slate-100 text-slate-600",
+        primary: "bg-primary text-white hover:bg-primary/90"
+    };
+    return (
+        <button 
+            className={cn(
+                "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+                variants[variant || "primary"],
+                className
+            )} 
+            {...props} 
+        />
     );
 }
 

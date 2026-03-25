@@ -19,6 +19,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
 interface SantriScore {
     id: string;
@@ -28,6 +30,8 @@ interface SantriScore {
     ujianTulis: number;
     qiyamullail: number;
     monitoring: number;
+    streak?: number;
+    streakBonus?: number;
     total: number;
 }
 
@@ -100,6 +104,45 @@ export default function RekapNilaiPage() {
         }
     };
 
+    const handleExportPDF = () => {
+        const doc = new jsPDF();
+        
+        // Add Title
+        doc.setFontSize(18);
+        doc.text("Rekap Nilai Santri - SATU SAF", 14, 22);
+        doc.setFontSize(11);
+        doc.setTextColor(100);
+        doc.text(`Tanggal: ${new Date().toLocaleDateString('id-ID')}`, 14, 30);
+        
+        const tableColumn = ["Nama", "Kelompok", "Hafalan", "Ujian", "Qiyam", "Monit", "Total"];
+        const tableRows = filteredData.map(s => [
+            s.name,
+            s.kelompok,
+            s.hafalan,
+            s.ujianTulis,
+            s.qiyamullail,
+            `${s.monitoring}%`,
+            s.total
+        ]);
+
+        (doc as any).autoTable({
+            head: [tableColumn],
+            body: tableRows,
+            startY: 40,
+            theme: 'grid',
+            headStyles: { fillColor: [79, 70, 229], halign: 'center' }, // Indigo-600 (Primary)
+            columnStyles: {
+                2: { halign: 'center' },
+                3: { halign: 'center' },
+                4: { halign: 'center' },
+                5: { halign: 'center' },
+                6: { halign: 'center', fontStyle: 'bold' }
+            }
+        });
+
+        doc.save(`rekap_nilai_${new Date().toISOString().split('T')[0]}.pdf`);
+    };
+
     const filteredData = data.filter(s =>
         s.name.toLowerCase().includes(search.toLowerCase()) ||
         s.kelompok.toLowerCase().includes(search.toLowerCase())
@@ -113,9 +156,16 @@ export default function RekapNilaiPage() {
                     <p className="text-slate-500 font-medium">Pantau dan kelola nilai akhir dari semua aspek penilaian.</p>
                 </div>
                 <div className="flex items-center gap-3">
+                    <Button 
+                        onClick={handleExportPDF}
+                        variant="outline" 
+                        className="rounded-2xl font-black border-2 border-slate-100 hover:bg-slate-50 h-12 px-6"
+                    >
+                        <Download className="mr-2 h-5 w-5" /> Export PDF
+                    </Button>
                     <Link href="/admin/import">
                         <Button variant="outline" className="rounded-2xl font-black border-2 border-slate-100 hover:bg-slate-50 h-12 px-6">
-                            <Upload className="mr-2 h-5 w-5" /> Import CSV
+                            <Upload className="mr-2 h-5 w-5" /> Import
                         </Button>
                     </Link>
                     <Button
@@ -238,9 +288,16 @@ export default function RekapNilaiPage() {
                                             </td>
 
                                             <td className="px-6 py-5 text-center">
-                                                <span className="px-4 py-2 bg-primary/10 rounded-2xl font-black text-primary text-base border-2 border-primary/5">
-                                                    {santri.total % 1 === 0 ? santri.total : santri.total.toFixed(2)}
-                                                </span>
+                                                <div className="inline-flex flex-col items-center">
+                                                    <span className="px-4 py-2 bg-primary/10 rounded-2xl font-black text-primary text-base border-2 border-primary/5">
+                                                        {santri.total % 1 === 0 ? santri.total : santri.total.toFixed(2)}
+                                                    </span>
+                                                    {santri.streakBonus ? (
+                                                        <span className="text-[10px] font-black text-amber-500 mt-1 uppercase tracking-tighter">
+                                                            +{santri.streakBonus} Streak
+                                                        </span>
+                                                    ) : null}
+                                                </div>
                                             </td>
 
                                             <td className="px-8 py-5 text-right">
